@@ -1,0 +1,194 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/objects/level.gd" id="level"]
+[ext_resource type="PackedScene" path="res://scenes/person.tscn" id="person"]
+[ext_resource type="PackedScene" path="res://scenes/door.tscn" id="door"]
+[ext_resource type="PackedScene" path="res://scenes/curtain.tscn" id="curtain"]
+[ext_resource type="PackedScene" path="res://scenes/battery.tscn" id="battery"]
+[ext_resource type="PackedScene" path="res://scenes/emergency_light.tscn" id="elight"]
+[ext_resource type="PackedScene" path="res://scenes/stairs.tscn" id="stairs"]
+
+[sub_resource type="StandardMaterial3D" id="wall"]
+albedo_color = Color(0.62, 0.62, 0.55, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="floor"]
+albedo_color = Color(0.32, 0.31, 0.28, 1)
+roughness = 0.9
+
+[node name="Level1F" type="Node3D"]
+script = ExtResource("level")
+wall_map = "################################
+#........#..........#..........#
+#.##.....#...##.....#....##....#
+#........#..........#..........#
+#.##.....#....##....#....##....#
+#........#..........#..........#
+#####.#########.##########.#####
+#..............................#
+##.###############.#########.###
+#..#....#....#...#.............#
+#..#....#....#...#..####..####.#
+#...................#......#...#
+#.####.....####..#..#......#...#
+#................#..####..####.#
+#.......##.......#.............#
+#.......##.......#####....######
+#................#.............#
+#................#.............#
+################################"
+entrance_tile = Vector2i(4, 16)
+wall_material = SubResource("wall")
+floor_material = SubResource("floor")
+
+[node name="People" type="Node3D" parent="."]
+
+[node name="Doors" type="Node3D" parent="."]
+
+[node name="Curtains" type="Node3D" parent="."]
+
+[node name="Lights" type="Node3D" parent="."]
+
+[node name="Pickups" type="Node3D" parent="."]
+
+[node name="차광막_4_0" parent="Curtains" instance=ExtResource("curtain")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.0, 0, 1.0)
+
+[node name="차광막_14_0" parent="Curtains" instance=ExtResource("curtain")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.0, 0, 1.0)
+
+[node name="차광막_25_0" parent="Curtains" instance=ExtResource("curtain")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 51.0, 0, 1.0)
+
+[node name="배터리_27_1" parent="Pickups" instance=ExtResource("battery")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 55.0, 0, 3.0)
+
+[node name="환자_6_2" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.0, 0, 5.0)
+person_name = "환자 임채원"
+
+[node name="환자_11_2" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.0, 0, 5.0)
+person_name = "환자 이서연"
+
+[node name="환자_17_2" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35.0, 0, 5.0)
+person_name = "환자 배시온"
+
+[node name="환자_21_2" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 43.0, 0, 5.0)
+person_name = "환자 차은호"
+
+[node name="환자_29_2" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 59.0, 0, 5.0)
+person_name = "환자 최은서"
+
+[node name="환자_3_3" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.0, 0, 7.0)
+person_name = "환자 정하람"
+
+[node name="환자_14_3" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.0, 0, 7.0)
+person_name = "환자 남궁현"
+
+[node name="환자_24_3" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 49.0, 0, 7.0)
+person_name = "환자 김도윤"
+
+[node name="환자_12_4" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.0, 0, 9.0)
+person_name = "환자 조우현"
+
+[node name="환자_28_4" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 57.0, 0, 9.0)
+person_name = "환자 황보람"
+
+[node name="환자_5_5" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.0, 0, 11.0)
+person_name = "환자 탁윤슬"
+
+[node name="환자_23_5" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 47.0, 0, 11.0)
+person_name = "환자 백승아"
+
+[node name="환자_5_6" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.0, 0, 13.0)
+person_name = "환자 오민재"
+
+[node name="문_15_6" parent="Doors" instance=ExtResource("door")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 31.0, 0, 13.0)
+
+[node name="환자_26_6" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 53.0, 0, 13.0)
+person_name = "환자 노을"
+
+[node name="환자_12_7" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.0, 0, 15.0)
+person_name = "환자 길도하"
+
+[node name="환자_24_7" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 49.0, 0, 15.0)
+person_name = "환자 송지안"
+
+[node name="환자_18_8" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 37.0, 0, 17.0)
+person_name = "환자 류건"
+
+[node name="환자_22_9" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45.0, 0, 19.0)
+person_name = "환자 엄태린"
+
+[node name="환자_5_10" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.0, 0, 21.0)
+person_name = "환자 표하늘"
+
+[node name="환자_11_10" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.0, 0, 21.0)
+person_name = "환자 진소담"
+
+[node name="문_17_11" parent="Doors" instance=ExtResource("door")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35.0, 0, 23.0)
+sideways = true
+
+[node name="환자_23_11" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 47.0, 0, 23.0)
+person_name = "환자 문태오"
+
+[node name="환자_8_12" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.0, 0, 25.0)
+person_name = "환자 신예린"
+
+[node name="환자_24_13" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 49.0, 0, 27.0)
+person_name = "환자 박지후"
+
+[node name="환자_3_14" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.0, 0, 29.0)
+person_name = "환자 서다인"
+
+[node name="환자_14_14" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.0, 0, 29.0)
+person_name = "환자 구하윤"
+
+[node name="환자_23_15" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 47.0, 0, 31.0)
+person_name = "환자 강소율"
+
+[node name="배터리_10_16" parent="Pickups" instance=ExtResource("battery")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21.0, 0, 33.0)
+
+[node name="환자_24_16" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 49.0, 0, 33.0)
+person_name = "환자 방서후"
+
+[node name="유도등_8_7" parent="Lights" instance=ExtResource("elight")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.0, 2.7, 15.0)
+
+[node name="유도등_12_15" parent="Lights" instance=ExtResource("elight")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.0, 2.7, 31.0)
+
+[node name="유도등_24_9" parent="Lights" instance=ExtResource("elight")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 49.0, 2.7, 19.0)
+
+[node name="Stairs" parent="." instance=ExtResource("stairs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 58, 0, 34)

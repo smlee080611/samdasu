@@ -1,0 +1,11 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/objects/point_light_source.gd" id="1"]
+
+[node name="EmergencyLight" type="OmniLight3D"]
+light_color = Color(0.3, 1, 0.5, 1)
+light_energy = 0.6
+omni_range = 5.0
+script = ExtResource("1")
+power = 0.45
+protects_body = false
