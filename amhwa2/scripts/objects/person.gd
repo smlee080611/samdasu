@@ -1,7 +1,8 @@
 extends AnimatableBody3D
 ## 병원 사람 한 명. 상태: STATUE(석상) → MAD(광인) → CURED(정신 회복, 입구로 걸어감)
 ##                        MAD → (어둠 속 오래) → STATUE
-## 자식 노드: CollisionShape3D, Body(MeshInstance3D), Head(MeshInstance3D)
+## 자식 노드: CollisionShape3D, Model(사람 3D 모델, models/patient.glb), Breath(숨소리)
+## 상태는 모델 재질의 색으로 구분한다: 석상=회색, 광인=붉은빛, 회복=원래 색
 
 enum State { STATUE, MAD, CURED }
 
@@ -15,10 +16,10 @@ enum State { STATUE, MAD, CURED }
 @export var chase_speed := 2.4
 @export var walk_out_speed := 1.5
 
-@onready var body_mesh: MeshInstance3D = $Body
-@onready var head_mesh: MeshInstance3D = $Head
+@onready var model: Node3D = $Model
+@onready var breath: AudioStreamPlayer3D = $Breath
 
-var mat: StandardMaterial3D
+var mats: Array[BaseMaterial3D] = []   # 이 사람만의 재질 사본(모델의 모든 면)
 var level: Level
 var player: Node3D
 var tile := Vector2i.ZERO
@@ -27,13 +28,12 @@ var body_t := 0.0
 var sanity := 0.0
 var dark_t := 0.0
 var blocked_said := false
+var step_t := 0.0
 
 func _ready() -> void:
 	add_to_group("person")
 	sync_to_physics = false
-	mat = (body_mesh.get_active_material(0) as StandardMaterial3D).duplicate()
-	body_mesh.material_override = mat
-	head_mesh.material_override = mat
+	_collect_materials(model)
 	rotation.y = randf() * TAU
 	_set_state(state)
 	_late_ready.call_deferred()
@@ -49,16 +49,22 @@ func _set_state(s: State) -> void:
 	state = s
 	if s == State.STATUE:
 		add_to_group("blocker")
-		mat.albedo_color = Color(0.55, 0.57, 0.6)
-		mat.emission_enabled = true
-		mat.emission = Color(1.0, 0.65, 0.25)
-		mat.emission_energy_multiplier = 0.0
 	else:
 		remove_from_group("blocker")
-		mat.emission_enabled = false
-		mat.albedo_color = Color(0.55, 0.22, 0.17) if s == State.MAD else Color(0.45, 0.75, 0.68)
+	var tint := Color(0.72, 0.74, 0.77) if s == State.STATUE else (Color(1.0, 0.5, 0.45) if s == State.MAD else Color.WHITE)
+	for m in mats:
+		m.albedo_color = tint
+		m.emission_enabled = s == State.STATUE
+		m.emission = Color(1.0, 0.6, 0.2)
+		m.emission_energy_multiplier = 0.0
 	if level:
 		level.refresh_nav()
+	# 광인일 때만 숨소리
+	if s == State.MAD:
+		breath.pitch_scale = randf_range(0.85, 1.15)
+		breath.play(randf() * 2.0)
+	else:
+		breath.stop()
 
 func _process(dt: float) -> void:
 	if level == null or GameState.game_over or GameState.won:
@@ -78,11 +84,13 @@ func _statue(dt: float, ex: Array[RID]) -> void:
 		body_t += dt * (0.4 + lv) * wake_speed
 	else:
 		body_t = max(0.0, body_t - dt * 0.15)
-	mat.emission_energy_multiplier = body_t * 1.5
+	for m in mats:
+		m.emission_energy_multiplier = body_t * 0.8
 	if body_t >= 1.0:
 		sanity = 0.0
 		dark_t = 0.0
 		_set_state(State.MAD)
+		Sfx.play_at("stone_crack", global_position + Vector3.UP)
 		GameState.say("돌 깨지는 소리. %s의 몸이 풀렸다." % person_name)
 
 func _mad(dt: float, ex: Array[RID]) -> void:
@@ -105,15 +113,21 @@ func _mad(dt: float, ex: Array[RID]) -> void:
 			target = next
 	else:
 		_move(flee_speed if lit else chase_speed, dt)
+		step_t -= dt
+		if step_t <= 0.0:
+			step_t = 0.7 if lit else 0.32
+			Sfx.play_at("mad_step_%d" % (randi() % 2), global_position, -6.0 if lit else 0.0)
 	if not lit and global_position.distance_to(player.global_position) < 0.95:
 		player.grabbed(person_name)
 	if sanity >= 1.0:
 		_set_state(State.CURED)
+		Sfx.play_at("cured", global_position + Vector3.UP, -4.0)
 		GameState.say("%s의 정신이 돌아왔다. 입구로 나간다." % person_name)
 	elif dark_t > petrify_after and tile != player_tile and _arrived():
 		global_position = level.tile_center(tile)
 		body_t = 0.0
 		_set_state(State.STATUE)
+		Sfx.play_at("petrify", global_position + Vector3.UP, -3.0)
 
 func _cured(dt: float) -> void:
 	if not _arrived():
@@ -166,3 +180,20 @@ func _taken(t: Vector2i) -> bool:
 		if p != self and p.state != State.STATUE and (p.tile == t or p.target == t):
 			return true
 	return false
+
+## 모델 안의 모든 메시 면에 이 사람 전용 재질 사본을 붙인다 (석상마다 따로 빛나도록)
+func _collect_materials(n: Node) -> void:
+	if n is MeshInstance3D:
+		var mi := n as MeshInstance3D
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF   # 자기 그림자로 검게 얼룩지는 것 방지
+		for i in mi.mesh.get_surface_count():
+			var src := mi.get_active_material(i)
+			var m: BaseMaterial3D = src.duplicate() if src is BaseMaterial3D else StandardMaterial3D.new()
+			m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
+			m.metallic = 0.0
+			m.roughness = 1.0
+			m.cull_mode = BaseMaterial3D.CULL_DISABLED   # 얇은 옷자락 뒷면도 보이게
+			mi.set_surface_override_material(i, m)
+			mats.append(m)
+	for c in n.get_children():
+		_collect_materials(c)

@@ -4,6 +4,7 @@
 [ext_resource type="PackedScene" path="res://scenes/level_1f.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="3"]
 [ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="4"]
+[ext_resource type="AudioStream" path="res://sounds/ambience.wav" id="5"]
 
 [sub_resource type="Environment" id="env"]
 background_mode = 1
@@ -28,3 +29,8 @@ environment = SubResource("env")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 33)
 
 [node name="HUD" parent="." instance=ExtResource("4")]
+
+[node name="Ambience" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("5")
+volume_db = -14.0
+autoplay = true

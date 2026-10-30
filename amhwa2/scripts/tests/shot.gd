@@ -14,6 +14,15 @@ func _run() -> void:
 		await get_tree().process_frame
 	player.global_position = level.tile_center(Vector2i(int(args[i + 2]), int(args[i + 3])))
 	player.rotation.y = deg_to_rad(float(args[i + 4]))
+	if args.size() > i + 5:
+		player.head.rotation.x = deg_to_rad(float(args[i + 5]))  # pitch
+	if args.size() > i + 6 and args[i + 6] == "freeze":
+		for p in get_tree().get_nodes_in_group("person"):
+			p.set_process(false)
+			p.rotation.y = PI
+			if "unshaded" in args:
+				for m in p.mats:
+					m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	for k in 40:
 		await get_tree().process_frame
 	get_viewport().get_texture().get_image().save_png(out)

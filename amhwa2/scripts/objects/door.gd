@@ -24,6 +24,7 @@ func interact(_by: Node) -> void:
 			return
 	open = not open
 	_apply()
+	Sfx.play_at("door_open" if open else "door_close", global_position + Vector3.UP * 1.5)
 	level.refresh_nav()
 
 func _apply() -> void:

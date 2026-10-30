@@ -24,6 +24,7 @@ func hold(seconds: float) -> bool:
 	open = true
 	mesh.material_override = open_material
 	moon.set_active(true)
+	Sfx.play_at("curtain", global_position + Vector3(0, 1.5, 1))
 	GameState.curtain_opened()
 	return true
 

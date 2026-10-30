@@ -17,6 +17,7 @@ func toggle() -> void:
 		GameState.say("배터리가 없다.")
 		return
 	on = not on
+	Sfx.play("click", -6.0)
 
 func recharge(amount: float) -> void:
 	battery = min(100.0, battery + amount)
@@ -28,14 +29,14 @@ func _process(dt: float) -> void:
 			battery = 0.0
 			GameState.say("헤드램프가 꺼졌다.")
 	visible = is_on()
-	light_energy = 2.2 if battery > 20.0 or randf() > 0.08 else 0.1   # 배터리가 적으면 깜빡임
+	light_energy = 2.6 if battery > 20.0 or randf() > 0.08 else 0.1   # 배터리가 적으면 깜빡임
 
 func light_value(target: Vector3, exclude: Array[RID]) -> float:
 	if not is_on():
 		return 0.0
 	var to := target - global_position
 	var d := to.length()
-	if d >= spot_range or rad_to_deg((-global_transform.basis.z).angle_to(to)) >= spot_angle * 0.8:
+	if d >= spot_range or rad_to_deg((-global_transform.basis.z).angle_to(to)) >= spot_angle * 0.65:
 		return 0.0
 	if not LightSystem.ray_clear(global_position, target, exclude):
 		return 0.0

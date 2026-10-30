@@ -10,11 +10,13 @@ extends CharacterBody3D
 @onready var head: Camera3D = $Head
 @onready var headlamp = $Head/Headlamp
 @onready var ray: RayCast3D = $Head/InteractRay
+@onready var heartbeat: AudioStreamPlayer = $Heartbeat
 
 var stiff := 0.0          # 0~100, 100이면 완전히 굳음
 var grab_cooldown := 0.0
 var hold_time := 0.0
 var placed_lanterns: Array[Node3D] = []
+var step_t := 0.0
 
 func _ready() -> void:
 	add_to_group("player")
@@ -38,7 +40,7 @@ func _unhandled_input(e: InputEvent) -> void:
 		if t and t.has_method("interact"):
 			t.interact(self)
 
-func _physics_process(_dt: float) -> void:
+func _physics_process(dt: float) -> void:
 	if GameState.game_over or GameState.won:
 		velocity = Vector3.ZERO
 		return
@@ -47,6 +49,14 @@ func _physics_process(_dt: float) -> void:
 	var speed := walk_speed * (1.0 - stiff / 100.0 * 0.5)
 	velocity = Vector3(dir.x * speed, 0, dir.z * speed)
 	move_and_slide()
+	# 발소리: 굳을수록 느리고 무거워짐
+	if input.length() > 0.1:
+		step_t -= dt
+		if step_t <= 0.0:
+			step_t = 0.45 + stiff / 100.0 * 0.3
+			Sfx.play("step_%d" % (randi() % 3), -10.0)
+	else:
+		step_t = 0.0
 
 func _process(dt: float) -> void:
 	if GameState.game_over or GameState.won:
@@ -69,6 +79,7 @@ func _process(dt: float) -> void:
 			headlamp.recharge(12.0 * dt)
 	else:
 		stiff += (0.6 if headlamp.is_on() else 2.0) * dt
+	_update_heartbeat()
 	if stiff >= 100.0:
 		GameState.game_over = true
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -84,6 +95,7 @@ func grabbed(by_name: String) -> void:
 		return
 	grab_cooldown = 1.2
 	stiff += 25.0
+	Sfx.play("grab", 0.0, 0.0)
 	GameState.say("%s에게 붙잡혔다. 몸이 굳어 온다." % by_name)
 
 func _toggle_lantern() -> void:
@@ -92,6 +104,7 @@ func _toggle_lantern() -> void:
 			placed_lanterns.erase(l)
 			l.queue_free()
 			lanterns_held += 1
+			Sfx.play("lantern", -6.0)
 			GameState.say("랜턴을 회수했다.")
 			return
 	if lanterns_held <= 0:
@@ -102,4 +115,15 @@ func _toggle_lantern() -> void:
 	l.global_position = global_position - global_transform.basis.z * 0.8
 	placed_lanterns.append(l)
 	lanterns_held -= 1
+	Sfx.play("lantern", -3.0)
 	GameState.say("랜턴을 내려놓았다.")
+
+## 어둠 속 광인이 가까울수록, 몸이 굳을수록 심장이 크고 빨리 뛴다
+func _update_heartbeat() -> void:
+	var danger := clampf((stiff - 40.0) / 60.0, 0.0, 1.0)
+	for p in get_tree().get_nodes_in_group("person"):
+		if p.state == 1:  # MAD
+			var d: float = p.global_position.distance_to(global_position)
+			danger = maxf(danger, clampf(1.0 - (d - 1.5) / 7.0, 0.0, 1.0))
+	heartbeat.volume_db = linear_to_db(maxf(danger, 0.0001)) + 2.0
+	heartbeat.pitch_scale = 0.9 + danger * 0.6

@@ -16,23 +16,23 @@
 albedo_texture = ExtResource("t_wall")
 roughness = 0.95
 cull_mode = 2
-texture_filter = 0
+texture_filter = 4
 
 [sub_resource type="StandardMaterial3D" id="floor"]
 albedo_texture = ExtResource("t_floor")
 roughness = 0.8
 cull_mode = 2
-texture_filter = 0
+texture_filter = 4
 
 [sub_resource type="StandardMaterial3D" id="ceil"]
 albedo_texture = ExtResource("t_ceil")
 roughness = 1.0
 cull_mode = 2
-texture_filter = 0
+texture_filter = 4
 
 [sub_resource type="StandardMaterial3D" id="sign"]
 albedo_texture = ExtResource("t_sign")
-texture_filter = 0
+texture_filter = 4
 
 [sub_resource type="QuadMesh" id="signq"]
 material = SubResource("sign")
