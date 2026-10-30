@@ -26,10 +26,10 @@ func _unhandled_input(e: InputEvent) -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	elif e is InputEventKey and e.pressed and e.physical_keycode == KEY_ESCAPE:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	elif e is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+	elif e is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and not GameState.ui_blocking:
 		rotate_y(-e.relative.x * mouse_sens)
 		head.rotation.x = clamp(head.rotation.x - e.relative.y * mouse_sens, -1.3, 1.3)
-	if GameState.game_over or GameState.won:
+	if GameState.is_frozen():
 		return
 	if e.is_action_pressed("toggle_lamp"):
 		headlamp.toggle()
@@ -41,7 +41,7 @@ func _unhandled_input(e: InputEvent) -> void:
 			t.interact(self)
 
 func _physics_process(dt: float) -> void:
-	if GameState.game_over or GameState.won:
+	if GameState.is_frozen():
 		velocity = Vector3.ZERO
 		return
 	var input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
@@ -59,7 +59,7 @@ func _physics_process(dt: float) -> void:
 		step_t = 0.0
 
 func _process(dt: float) -> void:
-	if GameState.game_over or GameState.won:
+	if GameState.is_frozen():
 		return
 	grab_cooldown -= dt
 	# 길게 누르는 상호작용(차광막)
@@ -105,6 +105,7 @@ func _toggle_lantern() -> void:
 			l.queue_free()
 			lanterns_held += 1
 			Sfx.play("lantern", -6.0)
+			GameState.status_poke.emit()
 			GameState.say("랜턴을 회수했다.")
 			return
 	if lanterns_held <= 0:
@@ -116,6 +117,7 @@ func _toggle_lantern() -> void:
 	placed_lanterns.append(l)
 	lanterns_held -= 1
 	Sfx.play("lantern", -3.0)
+	GameState.status_poke.emit()
 	GameState.say("랜턴을 내려놓았다.")
 
 ## 어둠 속 광인이 가까울수록, 몸이 굳을수록 심장이 크고 빨리 뛴다

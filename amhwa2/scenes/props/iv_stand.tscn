@@ -1,0 +1,107 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/objects/prop.gd" id="e1"]
+
+[sub_resource type="StandardMaterial3D" id="m_pole"]
+albedo_color = Color(0.62, 0.64, 0.66, 1)
+roughness = 0.4
+metallic = 0.6
+
+[sub_resource type="StandardMaterial3D" id="m_bag"]
+transparency = 1
+albedo_color = Color(0.8, 0.86, 0.85, 0.6)
+roughness = 0.3
+metallic = 0.0
+
+[sub_resource type="CylinderMesh" id="r3"]
+material = SubResource("m_pole")
+top_radius = 0.012
+bottom_radius = 0.012
+height = 1.9
+radial_segments = 6
+rings = 1
+
+[sub_resource type="BoxMesh" id="r4"]
+material = SubResource("m_pole")
+size = Vector3(0.3, 0.02, 0.025)
+
+[sub_resource type="BoxMesh" id="r5"]
+material = SubResource("m_pole")
+size = Vector3(0.3, 0.02, 0.025)
+
+[sub_resource type="BoxMesh" id="r6"]
+material = SubResource("m_pole")
+size = Vector3(0.3, 0.02, 0.025)
+
+[sub_resource type="BoxMesh" id="r7"]
+material = SubResource("m_pole")
+size = Vector3(0.3, 0.02, 0.025)
+
+[sub_resource type="BoxMesh" id="r8"]
+material = SubResource("m_pole")
+size = Vector3(0.3, 0.02, 0.025)
+
+[sub_resource type="BoxMesh" id="r9"]
+material = SubResource("m_pole")
+size = Vector3(0.3, 0.015, 0.015)
+
+[sub_resource type="BoxMesh" id="r10"]
+material = SubResource("m_bag")
+size = Vector3(0.12, 0.2, 0.04)
+
+[sub_resource type="CylinderMesh" id="r11"]
+material = SubResource("m_bag")
+top_radius = 0.004
+bottom_radius = 0.004
+height = 0.9
+radial_segments = 4
+rings = 1
+
+[sub_resource type="BoxShape3D" id="r12"]
+size = Vector3(0.2, 1.9, 0.2)
+
+[node name="IVStand" type="StaticBody3D"]
+collision_layer = 1
+collision_mask = 0
+script = ExtResource("e1")
+blocks_path = false
+
+[node name="Pole" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, 0)
+mesh = SubResource("r3")
+
+[node name="Foot0" type="MeshInstance3D" parent="."]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 0.15, 0.04, 0.0)
+mesh = SubResource("r4")
+
+[node name="Foot1" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.30902, 0, -0.95106, 0, 1, 0, 0.95106, 0, 0.30902, 0.046, 0.04, 0.143)
+mesh = SubResource("r5")
+
+[node name="Foot2" type="MeshInstance3D" parent="."]
+transform = Transform3D(-0.80902, 0, -0.58779, 0, 1, 0, 0.58779, 0, -0.80902, -0.121, 0.04, 0.088)
+mesh = SubResource("r6")
+
+[node name="Foot3" type="MeshInstance3D" parent="."]
+transform = Transform3D(-0.80902, 0, 0.58779, 0, 1, 0, -0.58779, 0, -0.80902, -0.121, 0.04, -0.088)
+mesh = SubResource("r7")
+
+[node name="Foot4" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.30902, 0, 0.95106, 0, 1, 0, -0.95106, 0, 0.30902, 0.046, 0.04, -0.143)
+mesh = SubResource("r8")
+
+[node name="Hook" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.88, 0)
+mesh = SubResource("r9")
+
+[node name="Bag" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.12, 1.72, 0)
+mesh = SubResource("r10")
+
+[node name="Tube" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.12, 1.15, 0.02)
+mesh = SubResource("r11")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, 0)
+shape = SubResource("r12")

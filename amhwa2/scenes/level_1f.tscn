@@ -11,6 +11,12 @@
 [ext_resource type="Texture2D" path="res://textures/floor.png" id="t_floor"]
 [ext_resource type="Texture2D" path="res://textures/ceiling.png" id="t_ceil"]
 [ext_resource type="Texture2D" path="res://textures/sign_3f.png" id="t_sign"]
+[ext_resource type="PackedScene" path="res://scenes/props/bed.tscn" id="p_bed"]
+[ext_resource type="PackedScene" path="res://scenes/props/cart.tscn" id="p_cart"]
+[ext_resource type="PackedScene" path="res://scenes/props/divider.tscn" id="p_divider"]
+[ext_resource type="PackedScene" path="res://scenes/props/wheelchair.tscn" id="p_wheelchair"]
+[ext_resource type="PackedScene" path="res://scenes/props/iv_stand.tscn" id="p_iv_stand"]
+[ext_resource type="PackedScene" path="res://scenes/props/note.tscn" id="p_note"]
 
 [sub_resource type="StandardMaterial3D" id="wall"]
 albedo_texture = ExtResource("t_wall")
@@ -219,3 +225,168 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 58, 0, 34)
 [node name="Sign1F" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 2.1, 26.02)
 mesh = SubResource("signq")
+
+[node name="Props" type="Node3D" parent="."]
+
+[node name="Notes" type="Node3D" parent="."]
+
+[node name="bed_12_2" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 25, 0, 5)
+
+[node name="bed_24_4" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 49, 0, 9)
+
+[node name="bed_13_4" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 27, 0, 9)
+
+[node name="bed_24_2" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 49, 0, 5)
+
+[node name="bed_15_2" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 31, 0, 5)
+
+[node name="bed_16_4" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 33, 0, 9)
+
+[node name="cart_4_2" parent="Props" instance=ExtResource("p_cart")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 8.55, 0, 5.0)
+
+[node name="cart_27_2" parent="Props" instance=ExtResource("p_cart")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 54.55, 0, 5.0)
+
+[node name="bed_27_4" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 55, 0, 9)
+
+[node name="bed_4_4" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 9, 0, 9)
+
+[node name="bed_6_5" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 13, 0, 11)
+
+[node name="bed_6_12" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 13, 0, 25)
+
+[node name="cart_16_12" parent="Props" instance=ExtResource("p_cart")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 33.45, 0, 25.0)
+
+[node name="divider_29_12" parent="Props" instance=ExtResource("p_divider")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 59.0, 0, 25.6)
+
+[node name="divider_10_12" parent="Props" instance=ExtResource("p_divider")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 21.6, 0, 25.0)
+
+[node name="divider_8_11" parent="Props" instance=ExtResource("p_divider")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 17.0, 0, 22.4)
+
+[node name="wheelchair_5_9" parent="Props" instance=ExtResource("p_wheelchair")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 11.125, 0, 18.45)
+
+[node name="wheelchair_28_1" parent="Props" instance=ExtResource("p_wheelchair")]
+transform = Transform3D(-0.17365, 0, -0.98481, 0, 1, 0, 0.98481, 0, -0.17365, 57.342, 0, 2.45)
+
+[node name="wheelchair_16_13" parent="Props" instance=ExtResource("p_wheelchair")]
+transform = Transform3D(-0.17365, 0, -0.98481, 0, 1, 0, 0.98481, 0, -0.17365, 33.55, 0, 26.847)
+
+[node name="wheelchair_22_1" parent="Props" instance=ExtResource("p_wheelchair")]
+transform = Transform3D(-0.86603, 0, 0.5, 0, 1, 0, -0.5, 0, -0.86603, 45.175, 0, 2.45)
+
+[node name="wheelchair_10_14" parent="Props" instance=ExtResource("p_wheelchair")]
+transform = Transform3D(-0.93969, 0, -0.34202, 0, 1, 0, 0.34202, 0, -0.93969, 20.45, 0, 28.946)
+
+[node name="wheelchair_14_13" parent="Props" instance=ExtResource("p_wheelchair")]
+transform = Transform3D(-0.93969, 0, -0.34202, 0, 1, 0, 0.34202, 0, -0.93969, 28.625, 0, 26.45)
+
+[node name="iv_stand_7_10" parent="Props" instance=ExtResource("p_iv_stand")]
+transform = Transform3D(-0.93969, 0, -0.34202, 0, 1, 0, 0.34202, 0, -0.93969, 15.55, 0, 20.577)
+
+[node name="iv_stand_25_17" parent="Props" instance=ExtResource("p_iv_stand")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 50.629, 0, 35.55)
+
+[node name="iv_stand_26_16" parent="Props" instance=ExtResource("p_iv_stand")]
+transform = Transform3D(-0.17365, 0, -0.98481, 0, 1, 0, 0.98481, 0, -0.17365, 52.757, 0, 32.45)
+
+[node name="iv_stand_21_3" parent="Props" instance=ExtResource("p_iv_stand")]
+transform = Transform3D(-0.93969, 0, -0.34202, 0, 1, 0, 0.34202, 0, -0.93969, 42.45, 0, 6.652)
+
+[node name="iv_stand_9_10" parent="Props" instance=ExtResource("p_iv_stand")]
+transform = Transform3D(-0.86603, 0, 0.5, 0, 1, 0, -0.5, 0, -0.86603, 18.45, 0, 21.144)
+
+[node name="iv_stand_22_17" parent="Props" instance=ExtResource("p_iv_stand")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 44.78, 0, 35.55)
+
+[node name="iv_stand_12_3" parent="Props" instance=ExtResource("p_iv_stand")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 25.0, 0, 6.4)
+
+[node name="iv_stand_23_4" parent="Props" instance=ExtResource("p_iv_stand")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 47.6, 0, 9.0)
+
+[node name="iv_stand_17_4" parent="Props" instance=ExtResource("p_iv_stand")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 34.4, 0, 9.0)
+
+[node name="iv_stand_5_4" parent="Props" instance=ExtResource("p_iv_stand")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 10.4, 0, 9.0)
+
+[node name="iv_stand_7_5" parent="Props" instance=ExtResource("p_iv_stand")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 14.4, 0, 11.0)
+
+[node name="iv_stand_7_12" parent="Props" instance=ExtResource("p_iv_stand")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 14.4, 0, 25.0)
+
+[node name="note_5_7" parent="Notes" instance=ExtResource("p_note")]
+transform = Transform3D(0.53696, 0, -0.84361, 0, 1, 0, 0.84361, 0, 0.53696, 10.748, 0.01, 14.763)
+title = "간호 일지 — 11월 2일 01:40"
+body = "108호 김순자 님, 손가락이 돌처럼 무겁다고 호소.
+불 꺼진 병동을 몹시 무서워함.
+
+야간 조명 유지를 요청했으나, 지하 공사로 오늘도 정전 예정이라고 함.
+
+— 야간 근무 윤서"
+
+[node name="note_27_7" parent="Notes" instance=ExtResource("p_note")]
+transform = Transform3D(0.82621, 0, 0.56336, 0, 1, 0, -0.56336, 0, 0.82621, 55.392, 0.01, 15.342)
+title = "연구 메모 A-7"
+body = "광량 50lx 이하에 6시간 이상 노출되면 피부가 각질화되기 시작함.
+빛에 다시 노출하면 가역적.
+
+단, 신경계 회복이 늦음. 몸이 풀린 뒤 한동안 이상행동을 보임.
+빛을 피해 어두운 곳으로 이동하는 경향.
+
+원장님께 즉시 보고할 것."
+
+[node name="note_23_2" parent="Notes" instance=ExtResource("p_note")]
+transform = Transform3D(-0.97174, 0, 0.23607, 0, 1, 0, -0.23607, 0, -0.97174, 46.65, 0.01, 5.361)
+title = "삐뚤빼뚤한 글씨"
+body = "불 끄지 마세요
+불 끄면 몸이 무거워요
+
+옆 침대 할아버지가 밤에 일어나서 걸어다녀요
+근데 아침에는 돌이에요
+
+엄마 보고 싶어요"
+
+[node name="note_3_11" parent="Notes" instance=ExtResource("p_note")]
+transform = Transform3D(-0.97853, 0, 0.20611, 0, 1, 0, -0.20611, 0, -0.97853, 7.212, 0.01, 22.861)
+title = "경비 일지"
+body = "02:10 전관 정전. 비상발전기 기동 실패.
+02:25 지하 연구동 출입문 잠금 확인.
+03:00 1층 순찰. 복도에 환자 다수, 미동 없음.
+03:05 무전 응답 없음.
+
+손이 잘 안 움직인다. 랜턴을 입구에 두고"
+
+[node name="note_2_3" parent="Notes" instance=ExtResource("p_note")]
+transform = Transform3D(-0.80557, 0, -0.5925, 0, 1, 0, 0.5925, 0, -0.80557, 5.012, 0.01, 6.944)
+title = "연구 메모 A-9"
+body = "차광막은 실험 조건 유지를 위한 것. 절대 걷지 말 것.
+
+햇빛(자연광)에 노출되면 실험군 전원 '회복'됨.
+실험이 무효가 되므로 병실 차광은 반드시 유지."
+
+[node name="note_29_14" parent="Notes" instance=ExtResource("p_note")]
+transform = Transform3D(0.55825, 0, -0.82967, 0, 1, 0, 0.82967, 0, 0.55825, 58.611, 0.01, 29.161)
+title = "원무과 안내문"
+body = "야간 소등 안내
+22시 이후 병실 소등을 원칙으로 합니다.
+
+(빨간 펜으로 덧쓴 글씨)
+절대 불 끄지 마. 절대로."

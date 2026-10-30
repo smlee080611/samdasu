@@ -67,7 +67,7 @@ func _set_state(s: State) -> void:
 		breath.stop()
 
 func _process(dt: float) -> void:
-	if level == null or GameState.game_over or GameState.won:
+	if level == null or GameState.is_frozen():
 		return
 	var ex: Array[RID] = [get_rid(), player.get_rid()]
 	match state:

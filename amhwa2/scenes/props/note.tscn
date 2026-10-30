@@ -1,0 +1,31 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/objects/note.gd" id="e1"]
+
+[sub_resource type="StandardMaterial3D" id="m_paper"]
+albedo_color = Color(0.86, 0.84, 0.76, 1)
+roughness = 0.95
+metallic = 0.0
+emission_enabled = true
+emission = Color(0.86, 0.84, 0.76, 1)
+emission_energy_multiplier = 0.08
+
+[sub_resource type="BoxMesh" id="r2"]
+material = SubResource("m_paper")
+size = Vector3(0.21, 0.004, 0.297)
+
+[sub_resource type="BoxShape3D" id="r3"]
+size = Vector3(0.5, 0.25, 0.5)
+
+[node name="Note" type="StaticBody3D"]
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e1")
+
+[node name="Paper" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.9563, 0, 0.29237, 0, 1, 0, -0.29237, 0, 0.9563, 0, 0.004, 0)
+mesh = SubResource("r2")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.12, 0)
+shape = SubResource("r3")

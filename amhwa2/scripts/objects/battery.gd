@@ -10,5 +10,6 @@ func _on_body(b: Node) -> void:
 	if b.is_in_group("player"):
 		b.headlamp.recharge(amount)
 		Sfx.play("click")
+		GameState.status_poke.emit()
 		GameState.say("예비 배터리를 끼웠다.")
 		queue_free()

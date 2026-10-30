@@ -1,27 +1,145 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://scripts/objects/point_light_source.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/objects/lantern.gd" id="e1"]
+[ext_resource type="Script" path="res://scripts/objects/point_light_source.gd" id="e2"]
 
-[sub_resource type="StandardMaterial3D" id="mat"]
-albedo_color = Color(0.3, 0.25, 0.15, 1)
+[sub_resource type="StandardMaterial3D" id="m_metal"]
+albedo_color = Color(0.18, 0.2, 0.19, 1)
+roughness = 0.5
+metallic = 0.6
+
+[sub_resource type="StandardMaterial3D" id="m_brass"]
+albedo_color = Color(0.45, 0.33, 0.16, 1)
+roughness = 0.45
+metallic = 0.6
+
+[sub_resource type="StandardMaterial3D" id="m_glass"]
+transparency = 1
+albedo_color = Color(1.0, 0.86, 0.55, 0.85)
+roughness = 0.2
+metallic = 0.0
 emission_enabled = true
-emission = Color(1, 0.85, 0.5, 1)
-emission_energy_multiplier = 2.0
+emission = Color(1.0, 0.72, 0.35, 1)
+emission_energy_multiplier = 2.2
 
-[sub_resource type="BoxMesh" id="box"]
-material = SubResource("mat")
-size = Vector3(0.25, 0.4, 0.25)
+[sub_resource type="StandardMaterial3D" id="m_flame"]
+albedo_color = Color(1.0, 0.9, 0.6, 1)
+roughness = 0.5
+metallic = 0.0
+emission_enabled = true
+emission = Color(1.0, 0.8, 0.45, 1)
+emission_energy_multiplier = 5.0
+
+[sub_resource type="CylinderMesh" id="r5"]
+material = SubResource("m_metal")
+top_radius = 0.085
+bottom_radius = 0.095
+height = 0.05
+radial_segments = 8
+rings = 1
+
+[sub_resource type="CylinderMesh" id="r6"]
+material = SubResource("m_glass")
+top_radius = 0.062
+bottom_radius = 0.07
+height = 0.17
+radial_segments = 8
+rings = 1
+
+[sub_resource type="CylinderMesh" id="r7"]
+material = SubResource("m_flame")
+top_radius = 0.008
+bottom_radius = 0.018
+height = 0.05
+radial_segments = 6
+rings = 1
+
+[sub_resource type="BoxMesh" id="r8"]
+material = SubResource("m_metal")
+size = Vector3(0.014, 0.19, 0.014)
+
+[sub_resource type="BoxMesh" id="r9"]
+material = SubResource("m_metal")
+size = Vector3(0.014, 0.19, 0.014)
+
+[sub_resource type="BoxMesh" id="r10"]
+material = SubResource("m_metal")
+size = Vector3(0.014, 0.19, 0.014)
+
+[sub_resource type="BoxMesh" id="r11"]
+material = SubResource("m_metal")
+size = Vector3(0.014, 0.19, 0.014)
+
+[sub_resource type="CylinderMesh" id="r12"]
+material = SubResource("m_metal")
+top_radius = 0.03
+bottom_radius = 0.09
+height = 0.05
+radial_segments = 8
+rings = 1
+
+[sub_resource type="CylinderMesh" id="r13"]
+material = SubResource("m_brass")
+top_radius = 0.02
+bottom_radius = 0.025
+height = 0.03
+radial_segments = 6
+rings = 1
+
+[sub_resource type="TorusMesh" id="r14"]
+material = SubResource("m_brass")
+inner_radius = 0.05
+outer_radius = 0.062
+rings = 12
+ring_segments = 4
 
 [node name="Lantern" type="Node3D"]
+script = ExtResource("e1")
 
-[node name="Mesh" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
-mesh = SubResource("box")
+[node name="Base" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, 0)
+mesh = SubResource("r5")
+
+[node name="Glass" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.135, 0)
+mesh = SubResource("r6")
+
+[node name="Flame" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.11, 0)
+mesh = SubResource("r7")
+
+[node name="Bar0" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0552, 0.135, 0.0552)
+mesh = SubResource("r8")
+
+[node name="Bar1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0552, 0.135, 0.0552)
+mesh = SubResource("r9")
+
+[node name="Bar2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0552, 0.135, -0.0552)
+mesh = SubResource("r10")
+
+[node name="Bar3" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0552, 0.135, -0.0552)
+mesh = SubResource("r11")
+
+[node name="Cap" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.245, 0)
+mesh = SubResource("r12")
+
+[node name="Chimney" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.285, 0)
+mesh = SubResource("r13")
+
+[node name="Handle" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.0, -1.0, 0, 1.0, 0.0, 0, 0.31, 0)
+mesh = SubResource("r14")
 
 [node name="Light" type="OmniLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
-light_color = Color(1, 0.85, 0.6, 1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
+light_color = Color(1, 0.8, 0.55, 1)
 light_energy = 1.6
 shadow_enabled = true
 omni_range = 6.0
-script = ExtResource("1")
+script = ExtResource("e2")

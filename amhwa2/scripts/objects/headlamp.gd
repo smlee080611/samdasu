@@ -18,16 +18,18 @@ func toggle() -> void:
 		return
 	on = not on
 	Sfx.play("click", -6.0)
+	GameState.status_poke.emit()
 
 func recharge(amount: float) -> void:
 	battery = min(100.0, battery + amount)
 
 func _process(dt: float) -> void:
-	if is_on():
+	if is_on() and not GameState.is_frozen():
 		battery -= drain_per_sec * dt
 		if battery <= 0.0:
 			battery = 0.0
 			GameState.say("헤드램프가 꺼졌다.")
+			GameState.status_poke.emit()
 	visible = is_on()
 	light_energy = 2.6 if battery > 20.0 or randf() > 0.08 else 0.1   # 배터리가 적으면 깜빡임
 
