@@ -1,16 +1,19 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/objects/door.gd" id="1"]
+[ext_resource type="Texture2D" path="res://textures/door.png" id="tex"]
 
 [sub_resource type="BoxShape3D" id="shape"]
 size = Vector3(2, 3, 0.2)
 
 [sub_resource type="StandardMaterial3D" id="mat"]
-albedo_color = Color(0.4, 0.3, 0.2, 1)
+albedo_texture = ExtResource("tex")
+cull_mode = 2
+texture_filter = 0
 
-[sub_resource type="BoxMesh" id="box"]
+[sub_resource type="QuadMesh" id="quad"]
 material = SubResource("mat")
-size = Vector3(2, 3, 0.2)
+size = Vector2(2, 3)
 
 [node name="Door" type="StaticBody3D"]
 collision_layer = 5
@@ -21,6 +24,13 @@ script = ExtResource("1")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 shape = SubResource("shape")
 
-[node name="Mesh" type="MeshInstance3D" parent="."]
+[node name="Mesh" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
-mesh = SubResource("box")
+
+[node name="Front" type="MeshInstance3D" parent="Mesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.08)
+mesh = SubResource("quad")
+
+[node name="Back" type="MeshInstance3D" parent="Mesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.08)
+mesh = SubResource("quad")

@@ -7,14 +7,36 @@
 [ext_resource type="PackedScene" path="res://scenes/battery.tscn" id="battery"]
 [ext_resource type="PackedScene" path="res://scenes/emergency_light.tscn" id="elight"]
 [ext_resource type="PackedScene" path="res://scenes/stairs.tscn" id="stairs"]
+[ext_resource type="Texture2D" path="res://textures/wall.png" id="t_wall"]
+[ext_resource type="Texture2D" path="res://textures/floor.png" id="t_floor"]
+[ext_resource type="Texture2D" path="res://textures/ceiling.png" id="t_ceil"]
+[ext_resource type="Texture2D" path="res://textures/sign_3f.png" id="t_sign"]
 
 [sub_resource type="StandardMaterial3D" id="wall"]
-albedo_color = Color(0.62, 0.62, 0.55, 1)
-roughness = 0.9
+albedo_texture = ExtResource("t_wall")
+roughness = 0.95
+cull_mode = 2
+texture_filter = 0
 
 [sub_resource type="StandardMaterial3D" id="floor"]
-albedo_color = Color(0.32, 0.31, 0.28, 1)
-roughness = 0.9
+albedo_texture = ExtResource("t_floor")
+roughness = 0.8
+cull_mode = 2
+texture_filter = 0
+
+[sub_resource type="StandardMaterial3D" id="ceil"]
+albedo_texture = ExtResource("t_ceil")
+roughness = 1.0
+cull_mode = 2
+texture_filter = 0
+
+[sub_resource type="StandardMaterial3D" id="sign"]
+albedo_texture = ExtResource("t_sign")
+texture_filter = 0
+
+[sub_resource type="QuadMesh" id="signq"]
+material = SubResource("sign")
+size = Vector2(0.9, 0.6)
 
 [node name="Level1F" type="Node3D"]
 script = ExtResource("level")
@@ -40,6 +62,7 @@ wall_map = "################################
 entrance_tile = Vector2i(4, 16)
 wall_material = SubResource("wall")
 floor_material = SubResource("floor")
+ceiling_material = SubResource("ceil")
 
 [node name="People" type="Node3D" parent="."]
 
@@ -192,3 +215,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 49.0, 2.7, 19.0)
 
 [node name="Stairs" parent="." instance=ExtResource("stairs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 58, 0, 34)
+
+[node name="Sign1F" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 2.1, 26.02)
+mesh = SubResource("signq")

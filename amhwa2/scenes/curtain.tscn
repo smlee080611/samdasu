@@ -2,22 +2,29 @@
 
 [ext_resource type="Script" path="res://scripts/objects/curtain.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/objects/point_light_source.gd" id="2"]
+[ext_resource type="Texture2D" path="res://textures/curtain.png" id="t_cloth"]
+[ext_resource type="Texture2D" path="res://textures/window.png" id="t_window"]
 
 [sub_resource type="BoxShape3D" id="shape"]
 size = Vector3(1.8, 2.6, 0.12)
 
 [sub_resource type="StandardMaterial3D" id="cloth"]
-albedo_color = Color(0.42, 0.13, 0.11, 1)
+albedo_texture = ExtResource("t_cloth")
+cull_mode = 2
+texture_filter = 0
 
 [sub_resource type="StandardMaterial3D" id="window"]
-albedo_color = Color(0.6, 0.65, 0.75, 1)
+albedo_texture = ExtResource("t_window")
 emission_enabled = true
-emission = Color(0.55, 0.65, 0.85, 1)
-emission_energy_multiplier = 1.2
+emission = Color(1, 1, 1, 1)
+emission_texture = ExtResource("t_window")
+emission_energy_multiplier = 0.9
+cull_mode = 2
+texture_filter = 0
 
-[sub_resource type="BoxMesh" id="box"]
+[sub_resource type="QuadMesh" id="box"]
 material = SubResource("cloth")
-size = Vector3(1.8, 2.6, 0.12)
+size = Vector2(1.8, 2.6)
 
 [node name="Curtain" type="StaticBody3D"]
 collision_layer = 5

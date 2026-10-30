@@ -13,3 +13,7 @@ func _ready() -> void:
 		var t := Node.new()
 		t.set_script(load("res://scripts/tests/selftest.gd"))
 		add_child(t)
+	if "shot" in OS.get_cmdline_user_args():
+		var t2 := Node.new()
+		t2.set_script(load("res://scripts/tests/shot.gd"))
+		add_child(t2)

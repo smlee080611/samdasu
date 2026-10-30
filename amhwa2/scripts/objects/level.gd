@@ -9,8 +9,9 @@ const WALL_H := 3.0
 
 @export_multiline var wall_map := ""
 @export var entrance_tile := Vector2i(4, 16)
-@export var wall_material: StandardMaterial3D
-@export var floor_material: StandardMaterial3D
+@export var wall_material: StandardMaterial3D     ## 벽 한 면(2m × 3m)에 한 장씩 붙는 텍스처
+@export var floor_material: StandardMaterial3D    ## 바닥 한 칸에 한 장
+@export var ceiling_material: StandardMaterial3D  ## 천장 한 칸에 한 장
 
 var rows: PackedStringArray
 var size := Vector2i.ZERO
@@ -24,38 +25,61 @@ func _ready() -> void:
 	refresh_nav.call_deferred()
 
 func _build_walls() -> void:
-	var mesh := BoxMesh.new()
-	mesh.size = Vector3(TS, WALL_H, TS)
+	# 충돌: 벽 칸마다 상자 하나
 	var shape := BoxShape3D.new()
-	shape.size = mesh.size
+	shape.size = Vector3(TS, WALL_H, TS)
 	var walls := StaticBody3D.new()
 	walls.name = "Walls"
 	walls.collision_layer = GameState.LAYER_WALL
 	walls.collision_mask = 0
 	add_child(walls)
+	# 그래픽: 바닥 쪽으로 드러난 벽 면만 사각형으로 만든다 (텍스처가 면마다 한 장씩 정확히 붙음)
+	var wall_st := SurfaceTool.new()
+	var floor_st := SurfaceTool.new()
+	var ceil_st := SurfaceTool.new()
+	for st in [wall_st, floor_st, ceil_st]:
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for y in size.y:
 		for x in size.x:
+			var x0 := x * TS
+			var x1 := x0 + TS
+			var z0 := y * TS
+			var z1 := z0 + TS
 			if rows[y][x] != "#":
+				_quad(floor_st, Vector3(x0, 0, z0), Vector3(x1, 0, z0), Vector3(x1, 0, z1), Vector3(x0, 0, z1), Vector3.UP)
+				_quad(ceil_st, Vector3(x0, WALL_H, z1), Vector3(x1, WALL_H, z1), Vector3(x1, WALL_H, z0), Vector3(x0, WALL_H, z0), Vector3.DOWN)
 				continue
-			var mi := MeshInstance3D.new()
-			mi.mesh = mesh
-			mi.material_override = wall_material
-			mi.position = tile_center(Vector2i(x, y), WALL_H * 0.5)
-			walls.add_child(mi)
 			var cs := CollisionShape3D.new()
 			cs.shape = shape
-			cs.position = mi.position
+			cs.position = tile_center(Vector2i(x, y), WALL_H * 0.5)
 			walls.add_child(cs)
-	var plane := PlaneMesh.new()
-	plane.size = Vector2(size.x * TS, size.y * TS)
-	for i in 2:
-		var p := MeshInstance3D.new()
-		p.mesh = plane
-		p.material_override = floor_material
-		p.position = Vector3(size.x * TS * 0.5, WALL_H * i, size.y * TS * 0.5)
-		if i == 1:
-			p.rotation.x = PI
-		add_child(p)
+			var h := WALL_H
+			if _open(x, y + 1):  # 남쪽 면
+				_quad(wall_st, Vector3(x0, h, z1), Vector3(x1, h, z1), Vector3(x1, 0, z1), Vector3(x0, 0, z1), Vector3.BACK)
+			if _open(x, y - 1):  # 북쪽 면
+				_quad(wall_st, Vector3(x1, h, z0), Vector3(x0, h, z0), Vector3(x0, 0, z0), Vector3(x1, 0, z0), Vector3.FORWARD)
+			if _open(x + 1, y):  # 동쪽 면
+				_quad(wall_st, Vector3(x1, h, z1), Vector3(x1, h, z0), Vector3(x1, 0, z0), Vector3(x1, 0, z1), Vector3.RIGHT)
+			if _open(x - 1, y):  # 서쪽 면
+				_quad(wall_st, Vector3(x0, h, z0), Vector3(x0, h, z1), Vector3(x0, 0, z1), Vector3(x0, 0, z0), Vector3.LEFT)
+	for pair in [[wall_st, wall_material, "WallMesh"], [floor_st, floor_material, "FloorMesh"], [ceil_st, ceiling_material, "CeilingMesh"]]:
+		var mi := MeshInstance3D.new()
+		mi.name = pair[2]
+		mi.mesh = pair[0].commit()
+		mi.material_override = pair[1]
+		add_child(mi)
+
+func _open(x: int, y: int) -> bool:
+	return x >= 0 and y >= 0 and x < size.x and y < size.y and rows[y][x] != "#"
+
+## a 왼쪽 위, b 오른쪽 위, c 오른쪽 아래, d 왼쪽 아래 (바라보는 쪽 기준)
+func _quad(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3, n: Vector3) -> void:
+	var uv := [Vector2(0, 0), Vector2(1, 0), Vector2(1, 1), Vector2(0, 1)]
+	var v := [a, b, c, d]
+	for i in [0, 1, 2, 0, 2, 3]:   # Godot은 시계 방향이 앞면
+		st.set_normal(n)
+		st.set_uv(uv[i])
+		st.add_vertex(v[i])
 
 func tile_center(t: Vector2i, y := 0.0) -> Vector3:
 	return Vector3(t.x * TS + TS * 0.5, y, t.y * TS + TS * 0.5)

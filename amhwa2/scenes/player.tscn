@@ -27,10 +27,12 @@ near = 0.05
 [node name="Headlamp" type="SpotLight3D" parent="Head"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1, 0.05, 0)
 light_color = Color(1, 0.92, 0.75, 1)
-light_energy = 3.0
+light_energy = 2.2
 shadow_enabled = true
 spot_range = 14.0
-spot_angle = 24.0
+spot_attenuation = 1.0
+spot_angle = 30.0
+spot_angle_attenuation = 2.8
 script = ExtResource("2")
 
 [node name="InteractRay" type="RayCast3D" parent="Head"]
