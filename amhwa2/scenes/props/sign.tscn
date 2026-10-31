@@ -1,0 +1,33 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/objects/sign.gd" id="e1"]
+
+[sub_resource type="StandardMaterial3D" id="m_plate"]
+albedo_color = Color(0.16, 0.2, 0.22, 1)
+roughness = 0.6
+metallic = 0.0
+
+[sub_resource type="BoxMesh" id="r2"]
+material = SubResource("m_plate")
+size = Vector3(0.7, 0.24, 0.03)
+
+[sub_resource type="SystemFont" id="font"]
+font_names = PackedStringArray("Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans CJK KR", "NanumGothic", "sans-serif")
+
+[node name="Sign" type="Node3D"]
+script = ExtResource("e1")
+
+[node name="Plate" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.015)
+mesh = SubResource("r2")
+
+[node name="Label" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.035)
+pixel_size = 0.0035
+shaded = true
+double_sided = false
+modulate = Color(0.9, 0.9, 0.85, 1)
+outline_size = 0
+font = SubResource("font")
+font_size = 44
+text = "101"

@@ -8,3 +8,4 @@ extends StaticBody3D
 func _ready() -> void:
 	if blocks_path:
 		add_to_group("blocker")
+	MeshMerge.merge(self)

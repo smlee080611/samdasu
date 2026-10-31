@@ -1,0 +1,53 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/objects/decor.gd" id="e1"]
+
+[sub_resource type="StandardMaterial3D" id="m_wood"]
+albedo_color = Color(0.45, 0.3, 0.18, 1)
+roughness = 0.6
+metallic = 0.0
+
+[sub_resource type="StandardMaterial3D" id="m_steel"]
+albedo_color = Color(0.55, 0.57, 0.58, 1)
+roughness = 0.4
+metallic = 0.6
+
+[sub_resource type="BoxMesh" id="r3"]
+material = SubResource("m_wood")
+size = Vector3(2.0, 0.07, 0.06)
+
+[sub_resource type="StandardMaterial3D" id="m_guard"]
+albedo_color = Color(0.62, 0.6, 0.54, 1)
+roughness = 0.8
+metallic = 0.0
+
+[sub_resource type="BoxMesh" id="r5"]
+material = SubResource("m_guard")
+size = Vector3(2.0, 0.14, 0.02)
+
+[sub_resource type="BoxMesh" id="r6"]
+material = SubResource("m_steel")
+size = Vector3(0.04, 0.04, 0.07)
+
+[sub_resource type="BoxMesh" id="r7"]
+material = SubResource("m_steel")
+size = Vector3(0.04, 0.04, 0.07)
+
+[node name="Handrail" type="Node3D"]
+script = ExtResource("e1")
+
+[node name="Rail" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.88, 0.07)
+mesh = SubResource("r3")
+
+[node name="Guard" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32, 0.01)
+mesh = SubResource("r5")
+
+[node name="Bracket0" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.6, 0.88, 0.035)
+mesh = SubResource("r6")
+
+[node name="Bracket1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6, 0.88, 0.035)
+mesh = SubResource("r7")

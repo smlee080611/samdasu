@@ -1,0 +1,44 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/objects/decor.gd" id="e1"]
+
+[sub_resource type="StandardMaterial3D" id="m_red"]
+albedo_color = Color(0.6, 0.08, 0.06, 1)
+roughness = 0.5
+metallic = 0.0
+
+[sub_resource type="StandardMaterial3D" id="m_black"]
+albedo_color = Color(0.1, 0.1, 0.1, 1)
+roughness = 0.7
+metallic = 0.0
+
+[sub_resource type="CylinderMesh" id="r3"]
+material = SubResource("m_red")
+top_radius = 0.08
+bottom_radius = 0.08
+height = 0.5
+radial_segments = 10
+rings = 1
+
+[sub_resource type="BoxMesh" id="r4"]
+material = SubResource("m_black")
+size = Vector3(0.06, 0.1, 0.06)
+
+[sub_resource type="BoxMesh" id="r5"]
+material = SubResource("m_black")
+size = Vector3(0.025, 0.35, 0.025)
+
+[node name="Extinguisher" type="Node3D"]
+script = ExtResource("e1")
+
+[node name="Body" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0.1)
+mesh = SubResource("r3")
+
+[node name="Head" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0.1)
+mesh = SubResource("r4")
+
+[node name="Hose" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.09, 0.42, 0.12)
+mesh = SubResource("r5")

@@ -9,14 +9,26 @@
 [ext_resource type="PackedScene" path="res://scenes/stairs.tscn" id="stairs"]
 [ext_resource type="Texture2D" path="res://textures/wall.png" id="t_wall"]
 [ext_resource type="Texture2D" path="res://textures/floor.png" id="t_floor"]
-[ext_resource type="Texture2D" path="res://textures/ceiling.png" id="t_ceil"]
-[ext_resource type="Texture2D" path="res://textures/sign_3f.png" id="t_sign"]
+[ext_resource type="Texture2D" path="res://textures/ceiling.png" id="t_ceiling"]
 [ext_resource type="PackedScene" path="res://scenes/props/bed.tscn" id="p_bed"]
+[ext_resource type="PackedScene" path="res://scenes/props/bed_curtain.tscn" id="p_bed_curtain"]
+[ext_resource type="PackedScene" path="res://scenes/props/bench.tscn" id="p_bench"]
 [ext_resource type="PackedScene" path="res://scenes/props/cart.tscn" id="p_cart"]
-[ext_resource type="PackedScene" path="res://scenes/props/divider.tscn" id="p_divider"]
-[ext_resource type="PackedScene" path="res://scenes/props/wheelchair.tscn" id="p_wheelchair"]
+[ext_resource type="PackedScene" path="res://scenes/props/chair.tscn" id="p_chair"]
+[ext_resource type="PackedScene" path="res://scenes/props/counter.tscn" id="p_counter"]
+[ext_resource type="PackedScene" path="res://scenes/props/desk.tscn" id="p_desk"]
+[ext_resource type="PackedScene" path="res://scenes/props/elevator.tscn" id="p_elevator"]
+[ext_resource type="PackedScene" path="res://scenes/props/extinguisher.tscn" id="p_extinguisher"]
+[ext_resource type="PackedScene" path="res://scenes/props/handrail.tscn" id="p_handrail"]
 [ext_resource type="PackedScene" path="res://scenes/props/iv_stand.tscn" id="p_iv_stand"]
+[ext_resource type="PackedScene" path="res://scenes/props/locker.tscn" id="p_locker"]
 [ext_resource type="PackedScene" path="res://scenes/props/note.tscn" id="p_note"]
+[ext_resource type="PackedScene" path="res://scenes/props/shelf.tscn" id="p_shelf"]
+[ext_resource type="PackedScene" path="res://scenes/props/sign.tscn" id="p_sign"]
+[ext_resource type="PackedScene" path="res://scenes/props/sink.tscn" id="p_sink"]
+[ext_resource type="PackedScene" path="res://scenes/props/stall.tscn" id="p_stall"]
+[ext_resource type="PackedScene" path="res://scenes/props/table.tscn" id="p_table"]
+[ext_resource type="PackedScene" path="res://scenes/props/wheelchair.tscn" id="p_wheelchair"]
 
 [sub_resource type="StandardMaterial3D" id="wall"]
 albedo_texture = ExtResource("t_wall")
@@ -31,41 +43,33 @@ cull_mode = 2
 texture_filter = 4
 
 [sub_resource type="StandardMaterial3D" id="ceil"]
-albedo_texture = ExtResource("t_ceil")
+albedo_texture = ExtResource("t_ceiling")
 roughness = 1.0
 cull_mode = 2
 texture_filter = 4
 
-[sub_resource type="StandardMaterial3D" id="sign"]
-albedo_texture = ExtResource("t_sign")
-texture_filter = 4
-
-[sub_resource type="QuadMesh" id="signq"]
-material = SubResource("sign")
-size = Vector2(0.9, 0.6)
-
 [node name="Level1F" type="Node3D"]
 script = ExtResource("level")
 wall_map = "################################
-#........#..........#..........#
-#.##.....#...##.....#....##....#
-#........#..........#..........#
-#.##.....#....##....#....##....#
-#........#..........#..........#
-#####.#########.##########.#####
+#...#...#...#...#...#...#...#..#
+#...#...#...#...#...#...#...#..#
+#...#...#...#...#...#...#...#..#
+#...#...#...#...#...#...#...#..#
+##.###.###.###.###.###.###.##..#
 #..............................#
-##.###############.#########.###
-#..#....#....#...#.............#
-#..#....#....#...#..####..####.#
-#...................#......#...#
-#.####.....####..#..#......#...#
-#................#..####..####.#
-#.......##.......#.............#
-#.......##.......#####....######
-#................#.............#
-#................#.............#
+#...##.#######.....###.######..#
+#...#...#...#.......#...#...#..#
+#...#...#...#.......#...#...#..#
+#...#...#...#.......#...#...#..#
+#...######.#####.#########.##..#
+#..............................#
+##.###.###.###.###.###.###.##.##
+#...#...#...#...#...#...#...#..#
+#...#...#...#...#...#...#...#..#
+#...#...#...#...#...#...#...#..#
+#...#...#...#...#...#...#...#..#
 ################################"
-entrance_tile = Vector2i(4, 16)
+entrance_tile = Vector2i(2, 9)
 wall_material = SubResource("wall")
 floor_material = SubResource("floor")
 ceiling_material = SubResource("ceil")
@@ -80,260 +84,1186 @@ ceiling_material = SubResource("ceil")
 
 [node name="Pickups" type="Node3D" parent="."]
 
-[node name="차광막_4_0" parent="Curtains" instance=ExtResource("curtain")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.0, 0, 1.0)
-
-[node name="차광막_14_0" parent="Curtains" instance=ExtResource("curtain")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.0, 0, 1.0)
-
-[node name="차광막_25_0" parent="Curtains" instance=ExtResource("curtain")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 51.0, 0, 1.0)
-
-[node name="배터리_27_1" parent="Pickups" instance=ExtResource("battery")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 55.0, 0, 3.0)
-
-[node name="환자_6_2" parent="People" instance=ExtResource("person")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.0, 0, 5.0)
-person_name = "환자 임채원"
-
-[node name="환자_11_2" parent="People" instance=ExtResource("person")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.0, 0, 5.0)
-person_name = "환자 이서연"
-
-[node name="환자_17_2" parent="People" instance=ExtResource("person")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35.0, 0, 5.0)
-person_name = "환자 배시온"
-
-[node name="환자_21_2" parent="People" instance=ExtResource("person")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 43.0, 0, 5.0)
-person_name = "환자 차은호"
-
-[node name="환자_29_2" parent="People" instance=ExtResource("person")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 59.0, 0, 5.0)
-person_name = "환자 최은서"
-
-[node name="환자_3_3" parent="People" instance=ExtResource("person")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.0, 0, 7.0)
-person_name = "환자 정하람"
-
-[node name="환자_14_3" parent="People" instance=ExtResource("person")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.0, 0, 7.0)
-person_name = "환자 남궁현"
-
-[node name="환자_24_3" parent="People" instance=ExtResource("person")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 49.0, 0, 7.0)
-person_name = "환자 김도윤"
-
-[node name="환자_12_4" parent="People" instance=ExtResource("person")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.0, 0, 9.0)
-person_name = "환자 조우현"
-
-[node name="환자_28_4" parent="People" instance=ExtResource("person")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 57.0, 0, 9.0)
-person_name = "환자 황보람"
-
-[node name="환자_5_5" parent="People" instance=ExtResource("person")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.0, 0, 11.0)
-person_name = "환자 탁윤슬"
-
-[node name="환자_23_5" parent="People" instance=ExtResource("person")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 47.0, 0, 11.0)
-person_name = "환자 백승아"
-
-[node name="환자_5_6" parent="People" instance=ExtResource("person")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.0, 0, 13.0)
-person_name = "환자 오민재"
-
-[node name="문_15_6" parent="Doors" instance=ExtResource("door")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 31.0, 0, 13.0)
-
-[node name="환자_26_6" parent="People" instance=ExtResource("person")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 53.0, 0, 13.0)
-person_name = "환자 노을"
-
-[node name="환자_12_7" parent="People" instance=ExtResource("person")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.0, 0, 15.0)
-person_name = "환자 길도하"
-
-[node name="환자_24_7" parent="People" instance=ExtResource("person")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 49.0, 0, 15.0)
-person_name = "환자 송지안"
-
-[node name="환자_18_8" parent="People" instance=ExtResource("person")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 37.0, 0, 17.0)
-person_name = "환자 류건"
-
-[node name="환자_22_9" parent="People" instance=ExtResource("person")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45.0, 0, 19.0)
-person_name = "환자 엄태린"
-
-[node name="환자_5_10" parent="People" instance=ExtResource("person")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.0, 0, 21.0)
-person_name = "환자 표하늘"
-
-[node name="환자_11_10" parent="People" instance=ExtResource("person")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.0, 0, 21.0)
-person_name = "환자 진소담"
-
-[node name="문_17_11" parent="Doors" instance=ExtResource("door")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35.0, 0, 23.0)
-sideways = true
-
-[node name="환자_23_11" parent="People" instance=ExtResource("person")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 47.0, 0, 23.0)
-person_name = "환자 문태오"
-
-[node name="환자_8_12" parent="People" instance=ExtResource("person")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.0, 0, 25.0)
-person_name = "환자 신예린"
-
-[node name="환자_24_13" parent="People" instance=ExtResource("person")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 49.0, 0, 27.0)
-person_name = "환자 박지후"
-
-[node name="환자_3_14" parent="People" instance=ExtResource("person")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.0, 0, 29.0)
-person_name = "환자 서다인"
-
-[node name="환자_14_14" parent="People" instance=ExtResource("person")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.0, 0, 29.0)
-person_name = "환자 구하윤"
-
-[node name="환자_23_15" parent="People" instance=ExtResource("person")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 47.0, 0, 31.0)
-person_name = "환자 강소율"
-
-[node name="배터리_10_16" parent="Pickups" instance=ExtResource("battery")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21.0, 0, 33.0)
-
-[node name="환자_24_16" parent="People" instance=ExtResource("person")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 49.0, 0, 33.0)
-person_name = "환자 방서후"
-
-[node name="유도등_8_7" parent="Lights" instance=ExtResource("elight")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17.0, 2.7, 15.0)
-
-[node name="유도등_12_15" parent="Lights" instance=ExtResource("elight")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.0, 2.7, 31.0)
-
-[node name="유도등_24_9" parent="Lights" instance=ExtResource("elight")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 49.0, 2.7, 19.0)
-
-[node name="Stairs" parent="." instance=ExtResource("stairs")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 58, 0, 34)
-
-[node name="Sign1F" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 2.1, 26.02)
-mesh = SubResource("signq")
-
 [node name="Props" type="Node3D" parent="."]
+
+[node name="Signs" type="Node3D" parent="."]
 
 [node name="Notes" type="Node3D" parent="."]
 
-[node name="bed_12_2" parent="Props" instance=ExtResource("p_bed")]
-transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 25, 0, 5)
+[node name="환자_임채원" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 13, 0, 3)
+person_name = "환자 임채원"
 
-[node name="bed_24_4" parent="Props" instance=ExtResource("p_bed")]
-transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 49, 0, 9)
+[node name="환자_오민재" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 11, 0, 9)
+person_name = "환자 오민재"
 
-[node name="bed_13_4" parent="Props" instance=ExtResource("p_bed")]
-transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 27, 0, 9)
+[node name="환자_탁윤슬" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 19, 0, 5)
+person_name = "환자 탁윤슬"
 
-[node name="bed_24_2" parent="Props" instance=ExtResource("p_bed")]
-transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 49, 0, 5)
+[node name="환자_박영호" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 23, 0, 5)
+person_name = "환자 박영호"
 
-[node name="bed_15_2" parent="Props" instance=ExtResource("p_bed")]
-transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 31, 0, 5)
+[node name="환자_이정숙" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 29, 0, 5)
+person_name = "환자 이정숙"
 
-[node name="bed_16_4" parent="Props" instance=ExtResource("p_bed")]
-transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 33, 0, 9)
+[node name="환자_최동길" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 27, 0, 9)
+person_name = "환자 최동길"
 
-[node name="cart_4_2" parent="Props" instance=ExtResource("p_cart")]
-transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 8.55, 0, 5.0)
+[node name="환자_한미경" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 39, 0, 5)
+person_name = "환자 한미경"
 
-[node name="cart_27_2" parent="Props" instance=ExtResource("p_cart")]
-transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 54.55, 0, 5.0)
+[node name="환자_정봉수" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 43, 0, 5)
+person_name = "환자 정봉수"
 
-[node name="bed_27_4" parent="Props" instance=ExtResource("p_bed")]
-transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 55, 0, 9)
+[node name="환자_윤말순" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 47, 0, 9)
+person_name = "환자 윤말순"
 
-[node name="bed_4_4" parent="Props" instance=ExtResource("p_bed")]
-transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 9, 0, 9)
+[node name="환자_강태식" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 53, 0, 7)
+person_name = "환자 강태식"
 
-[node name="bed_6_5" parent="Props" instance=ExtResource("p_bed")]
+[node name="환자_김순자" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 21, 0, 33)
+person_name = "환자 김순자"
+
+[node name="환자_서경자" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 11, 0, 33)
+person_name = "환자 서경자"
+
+[node name="환자_문병철" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 27, 0, 33)
+person_name = "환자 문병철"
+
+[node name="환자_신옥희" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 31, 0, 29)
+person_name = "환자 신옥희"
+
+[node name="환자_배진우" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 39, 0, 33)
+person_name = "환자 배진우"
+
+[node name="환자_류춘자" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 45, 0, 31)
+person_name = "환자 류춘자"
+
+[node name="환자_홍성만" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 51, 0, 33)
+person_name = "환자 홍성만"
+
+[node name="환자_권미숙" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 55, 0, 29)
+person_name = "환자 권미숙"
+
+[node name="보호자_남궁현" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 23, 0, 13)
+person_name = "보호자 남궁현"
+
+[node name="환자_고복순" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 49, 0, 25)
+person_name = "환자 고복순"
+
+[node name="보호자_유재석" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 41, 0, 13)
+person_name = "보호자 유재석"
+
+[node name="환자_송현아" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 57, 0, 25)
+person_name = "환자 송현아"
+
+[node name="간호사_황인철" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 35, 0, 21)
+person_name = "간호사 황인철"
+
+[node name="간호사_안금례" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 15, 0, 19)
+person_name = "간호사 안금례"
+
+[node name="보호자_노성호" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 45, 0, 21)
+person_name = "보호자 노성호"
+
+[node name="보호자_장미란" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 7, 0, 33)
+person_name = "보호자 장미란"
+
+[node name="의사_김덕배" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 5, 0, 5)
+person_name = "의사 김덕배"
+
+[node name="문_6_5" parent="Doors" instance=ExtResource("door")]
 transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 13, 0, 11)
+open = true
 
-[node name="bed_6_12" parent="Props" instance=ExtResource("p_bed")]
-transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 13, 0, 25)
+[node name="문_6_13" parent="Doors" instance=ExtResource("door")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 13, 0, 27)
 
-[node name="cart_16_12" parent="Props" instance=ExtResource("p_cart")]
-transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 33.45, 0, 25.0)
+[node name="문_10_5" parent="Doors" instance=ExtResource("door")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 21, 0, 11)
 
-[node name="divider_29_12" parent="Props" instance=ExtResource("p_divider")]
-transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 59.0, 0, 25.6)
+[node name="문_10_13" parent="Doors" instance=ExtResource("door")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 21, 0, 27)
+open = true
 
-[node name="divider_10_12" parent="Props" instance=ExtResource("p_divider")]
-transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 21.6, 0, 25.0)
+[node name="문_14_5" parent="Doors" instance=ExtResource("door")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 29, 0, 11)
+open = true
 
-[node name="divider_8_11" parent="Props" instance=ExtResource("p_divider")]
-transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 17.0, 0, 22.4)
+[node name="문_14_13" parent="Doors" instance=ExtResource("door")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 29, 0, 27)
 
-[node name="wheelchair_5_9" parent="Props" instance=ExtResource("p_wheelchair")]
-transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 11.125, 0, 18.45)
+[node name="문_18_5" parent="Doors" instance=ExtResource("door")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 37, 0, 11)
 
-[node name="wheelchair_28_1" parent="Props" instance=ExtResource("p_wheelchair")]
-transform = Transform3D(-0.17365, 0, -0.98481, 0, 1, 0, 0.98481, 0, -0.17365, 57.342, 0, 2.45)
+[node name="문_18_13" parent="Doors" instance=ExtResource("door")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 37, 0, 27)
+open = true
 
-[node name="wheelchair_16_13" parent="Props" instance=ExtResource("p_wheelchair")]
-transform = Transform3D(-0.17365, 0, -0.98481, 0, 1, 0, 0.98481, 0, -0.17365, 33.55, 0, 26.847)
+[node name="문_22_5" parent="Doors" instance=ExtResource("door")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 45, 0, 11)
 
-[node name="wheelchair_22_1" parent="Props" instance=ExtResource("p_wheelchair")]
-transform = Transform3D(-0.86603, 0, 0.5, 0, 1, 0, -0.5, 0, -0.86603, 45.175, 0, 2.45)
+[node name="문_22_13" parent="Doors" instance=ExtResource("door")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 45, 0, 27)
 
-[node name="wheelchair_10_14" parent="Props" instance=ExtResource("p_wheelchair")]
-transform = Transform3D(-0.93969, 0, -0.34202, 0, 1, 0, 0.34202, 0, -0.93969, 20.45, 0, 28.946)
+[node name="문_26_5" parent="Doors" instance=ExtResource("door")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 53, 0, 11)
+open = true
 
-[node name="wheelchair_14_13" parent="Props" instance=ExtResource("p_wheelchair")]
-transform = Transform3D(-0.93969, 0, -0.34202, 0, 1, 0, 0.34202, 0, -0.93969, 28.625, 0, 26.45)
+[node name="문_26_13" parent="Doors" instance=ExtResource("door")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 53, 0, 27)
+open = true
 
-[node name="iv_stand_7_10" parent="Props" instance=ExtResource("p_iv_stand")]
-transform = Transform3D(-0.93969, 0, -0.34202, 0, 1, 0, 0.34202, 0, -0.93969, 15.55, 0, 20.577)
+[node name="문_6_7" parent="Doors" instance=ExtResource("door")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 13, 0, 15)
 
-[node name="iv_stand_25_17" parent="Props" instance=ExtResource("p_iv_stand")]
-transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 50.629, 0, 35.55)
+[node name="문_10_11" parent="Doors" instance=ExtResource("door")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 21, 0, 23)
 
-[node name="iv_stand_26_16" parent="Props" instance=ExtResource("p_iv_stand")]
-transform = Transform3D(-0.17365, 0, -0.98481, 0, 1, 0, 0.98481, 0, -0.17365, 52.757, 0, 32.45)
+[node name="문_16_11" parent="Doors" instance=ExtResource("door")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 33, 0, 23)
 
-[node name="iv_stand_21_3" parent="Props" instance=ExtResource("p_iv_stand")]
-transform = Transform3D(-0.93969, 0, -0.34202, 0, 1, 0, 0.34202, 0, -0.93969, 42.45, 0, 6.652)
+[node name="문_22_7" parent="Doors" instance=ExtResource("door")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 45, 0, 15)
+open = true
 
-[node name="iv_stand_9_10" parent="Props" instance=ExtResource("p_iv_stand")]
-transform = Transform3D(-0.86603, 0, 0.5, 0, 1, 0, -0.5, 0, -0.86603, 18.45, 0, 21.144)
+[node name="문_26_11" parent="Doors" instance=ExtResource("door")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 53, 0, 23)
 
-[node name="iv_stand_22_17" parent="Props" instance=ExtResource("p_iv_stand")]
-transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 44.78, 0, 35.55)
+[node name="문_2_5" parent="Doors" instance=ExtResource("door")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 5, 0, 11)
+open = true
 
-[node name="iv_stand_12_3" parent="Props" instance=ExtResource("p_iv_stand")]
-transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 25.0, 0, 6.4)
+[node name="문_2_13" parent="Doors" instance=ExtResource("door")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 5, 0, 27)
 
-[node name="iv_stand_23_4" parent="Props" instance=ExtResource("p_iv_stand")]
-transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 47.6, 0, 9.0)
+[node name="문_29_13" parent="Doors" instance=ExtResource("door")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 59, 0, 27)
 
-[node name="iv_stand_17_4" parent="Props" instance=ExtResource("p_iv_stand")]
-transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 34.4, 0, 9.0)
+[node name="차광막_10_0" parent="Curtains" instance=ExtResource("curtain")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 21, 0, 1)
 
-[node name="iv_stand_5_4" parent="Props" instance=ExtResource("p_iv_stand")]
-transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 10.4, 0, 9.0)
+[node name="차광막_22_0" parent="Curtains" instance=ExtResource("curtain")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 45, 0, 1)
 
-[node name="iv_stand_7_5" parent="Props" instance=ExtResource("p_iv_stand")]
-transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 14.4, 0, 11.0)
+[node name="차광막_14_18" parent="Curtains" instance=ExtResource("curtain")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 29, 0, 37)
 
-[node name="iv_stand_7_12" parent="Props" instance=ExtResource("p_iv_stand")]
-transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 14.4, 0, 25.0)
+[node name="비상등_0" parent="Lights" instance=ExtResource("elight")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 5, 2.7, 15)
 
-[node name="note_5_7" parent="Notes" instance=ExtResource("p_note")]
-transform = Transform3D(0.53696, 0, -0.84361, 0, 1, 0, 0.84361, 0, 0.53696, 10.748, 0.01, 14.763)
+[node name="비상등_1" parent="Lights" instance=ExtResource("elight")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 33, 2.7, 13)
+
+[node name="비상등_2" parent="Lights" instance=ExtResource("elight")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 61, 2.7, 3)
+
+[node name="배터리_0" parent="Pickups" instance=ExtResource("battery")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 13, 0, 21)
+
+[node name="배터리_1" parent="Pickups" instance=ExtResource("battery")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 27, 0, 19)
+
+[node name="배터리_2" parent="Pickups" instance=ExtResource("battery")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 59, 0, 31)
+
+[node name="Stairs" parent="." instance=ExtResource("stairs")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 60, 0, 6)
+
+[node name="bed_1" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 10.945, 0.0, 3.0)
+
+[node name="locker_1" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 10.25, 0.0, 3.74)
+
+[node name="bed_curtain_1" parent="Props" instance=ExtResource("p_bed_curtain")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 11, 0.0, 4.0)
+
+[node name="bed_2" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 10.945, 0.0, 5.0)
+
+[node name="locker_2" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 10.25, 0.0, 5.74)
+
+[node name="bed_curtain_2" parent="Props" instance=ExtResource("p_bed_curtain")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 11, 0.0, 6.0)
+
+[node name="bed_3" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 10.945, 0.0, 7.0)
+
+[node name="locker_3" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 10.25, 0.0, 7.74)
+
+[node name="bed_4" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 15.055, 0.0, 3.0)
+
+[node name="locker_4" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 15.75, 0.0, 3.74)
+
+[node name="bed_curtain_3" parent="Props" instance=ExtResource("p_bed_curtain")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 15, 0.0, 4.0)
+
+[node name="bed_5" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 15.055, 0.0, 5.0)
+
+[node name="locker_5" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 15.75, 0.0, 5.74)
+
+[node name="iv_stand_1" parent="Props" instance=ExtResource("p_iv_stand")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 15.55, 0.0, 4.3)
+
+[node name="bed_curtain_4" parent="Props" instance=ExtResource("p_bed_curtain")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 15, 0.0, 6.0)
+
+[node name="bed_6" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 15.055, 0.0, 7.0)
+
+[node name="locker_6" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 15.75, 0.0, 7.74)
+
+[node name="bed_7" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 10.945, 0.0, 35.0)
+
+[node name="locker_7" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 10.25, 0.0, 34.26)
+
+[node name="bed_8" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 10.945, 0.0, 31.0)
+
+[node name="locker_8" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 10.25, 0.0, 30.26)
+
+[node name="bed_9" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 15.055, 0.0, 35.0)
+
+[node name="locker_9" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 15.75, 0.0, 34.26)
+
+[node name="bed_10" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 15.055, 0.0, 31.0)
+
+[node name="locker_10" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 15.75, 0.0, 30.26)
+
+[node name="bed_11" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 18.945, 0.0, 3.0)
+
+[node name="locker_11" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 18.25, 0.0, 3.74)
+
+[node name="iv_stand_2" parent="Props" instance=ExtResource("p_iv_stand")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 18.45, 0.0, 2.3)
+
+[node name="bed_12" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 18.945, 0.0, 7.0)
+
+[node name="locker_12" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 18.25, 0.0, 7.74)
+
+[node name="bed_13" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 23.055, 0.0, 3.0)
+
+[node name="locker_13" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 23.75, 0.0, 3.74)
+
+[node name="bed_14" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 23.055, 0.0, 7.0)
+
+[node name="locker_14" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 23.75, 0.0, 7.74)
+
+[node name="iv_stand_3" parent="Props" instance=ExtResource("p_iv_stand")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 23.55, 0.0, 6.3)
+
+[node name="bed_15" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 18.945, 0.0, 35.0)
+
+[node name="locker_15" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 18.25, 0.0, 34.26)
+
+[node name="bed_curtain_5" parent="Props" instance=ExtResource("p_bed_curtain")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 19, 0.0, 34.0)
+
+[node name="bed_16" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 18.945, 0.0, 33.0)
+
+[node name="locker_16" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 18.25, 0.0, 32.26)
+
+[node name="bed_curtain_6" parent="Props" instance=ExtResource("p_bed_curtain")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 19, 0.0, 32.0)
+
+[node name="bed_17" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 18.945, 0.0, 31.0)
+
+[node name="locker_17" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 18.25, 0.0, 30.26)
+
+[node name="iv_stand_4" parent="Props" instance=ExtResource("p_iv_stand")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 18.45, 0.0, 31.7)
+
+[node name="bed_18" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 23.055, 0.0, 35.0)
+
+[node name="locker_18" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 23.75, 0.0, 34.26)
+
+[node name="iv_stand_5" parent="Props" instance=ExtResource("p_iv_stand")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 23.55, 0.0, 35.7)
+
+[node name="bed_curtain_7" parent="Props" instance=ExtResource("p_bed_curtain")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 23, 0.0, 34.0)
+
+[node name="bed_19" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 23.055, 0.0, 33.0)
+
+[node name="locker_19" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 23.75, 0.0, 32.26)
+
+[node name="bed_curtain_8" parent="Props" instance=ExtResource("p_bed_curtain")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 23, 0.0, 32.0)
+
+[node name="bed_20" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 23.055, 0.0, 31.0)
+
+[node name="locker_20" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 23.75, 0.0, 30.26)
+
+[node name="bed_21" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 26.945, 0.0, 3.0)
+
+[node name="locker_21" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 26.25, 0.0, 3.74)
+
+[node name="bed_curtain_9" parent="Props" instance=ExtResource("p_bed_curtain")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 27, 0.0, 4.0)
+
+[node name="bed_22" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 26.945, 0.0, 5.0)
+
+[node name="locker_22" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 26.25, 0.0, 5.74)
+
+[node name="iv_stand_6" parent="Props" instance=ExtResource("p_iv_stand")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 26.45, 0.0, 4.3)
+
+[node name="bed_curtain_10" parent="Props" instance=ExtResource("p_bed_curtain")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 27, 0.0, 6.0)
+
+[node name="bed_23" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 26.945, 0.0, 7.0)
+
+[node name="locker_23" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 26.25, 0.0, 7.74)
+
+[node name="bed_24" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 31.055, 0.0, 3.0)
+
+[node name="locker_24" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 31.75, 0.0, 3.74)
+
+[node name="bed_curtain_11" parent="Props" instance=ExtResource("p_bed_curtain")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 31, 0.0, 4.0)
+
+[node name="bed_25" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 31.055, 0.0, 5.0)
+
+[node name="locker_25" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 31.75, 0.0, 5.74)
+
+[node name="bed_curtain_12" parent="Props" instance=ExtResource("p_bed_curtain")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 31, 0.0, 6.0)
+
+[node name="bed_26" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 31.055, 0.0, 7.0)
+
+[node name="locker_26" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 31.75, 0.0, 7.74)
+
+[node name="bed_27" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 26.945, 0.0, 35.0)
+
+[node name="locker_27" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 26.25, 0.0, 34.26)
+
+[node name="bed_28" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 26.945, 0.0, 31.0)
+
+[node name="locker_28" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 26.25, 0.0, 30.26)
+
+[node name="bed_29" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 31.055, 0.0, 35.0)
+
+[node name="locker_29" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 31.75, 0.0, 34.26)
+
+[node name="bed_30" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 31.055, 0.0, 31.0)
+
+[node name="locker_30" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 31.75, 0.0, 30.26)
+
+[node name="bed_31" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 34.945, 0.0, 3.0)
+
+[node name="locker_31" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 34.25, 0.0, 3.74)
+
+[node name="bed_32" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 34.945, 0.0, 7.0)
+
+[node name="locker_32" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 34.25, 0.0, 7.74)
+
+[node name="iv_stand_7" parent="Props" instance=ExtResource("p_iv_stand")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 34.45, 0.0, 6.3)
+
+[node name="bed_33" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 39.055, 0.0, 3.0)
+
+[node name="locker_33" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 39.75, 0.0, 3.74)
+
+[node name="iv_stand_8" parent="Props" instance=ExtResource("p_iv_stand")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 39.55, 0.0, 2.3)
+
+[node name="bed_34" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 39.055, 0.0, 7.0)
+
+[node name="locker_34" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 39.75, 0.0, 7.74)
+
+[node name="bed_35" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 34.945, 0.0, 35.0)
+
+[node name="locker_35" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 34.25, 0.0, 34.26)
+
+[node name="iv_stand_9" parent="Props" instance=ExtResource("p_iv_stand")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 34.45, 0.0, 35.7)
+
+[node name="bed_36" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 34.945, 0.0, 31.0)
+
+[node name="locker_36" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 34.25, 0.0, 30.26)
+
+[node name="bed_37" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 39.055, 0.0, 35.0)
+
+[node name="locker_37" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 39.75, 0.0, 34.26)
+
+[node name="bed_38" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 39.055, 0.0, 31.0)
+
+[node name="locker_38" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 39.75, 0.0, 30.26)
+
+[node name="iv_stand_10" parent="Props" instance=ExtResource("p_iv_stand")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 39.55, 0.0, 31.7)
+
+[node name="bed_39" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 42.945, 0.0, 3.0)
+
+[node name="locker_39" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 42.25, 0.0, 3.74)
+
+[node name="bed_40" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 42.945, 0.0, 7.0)
+
+[node name="locker_40" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 42.25, 0.0, 7.74)
+
+[node name="bed_41" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 47.055, 0.0, 3.0)
+
+[node name="locker_41" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 47.75, 0.0, 3.74)
+
+[node name="bed_42" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 47.055, 0.0, 7.0)
+
+[node name="locker_42" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 47.75, 0.0, 7.74)
+
+[node name="bed_43" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 42.945, 0.0, 35.0)
+
+[node name="locker_43" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 42.25, 0.0, 34.26)
+
+[node name="bed_curtain_13" parent="Props" instance=ExtResource("p_bed_curtain")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 43, 0.0, 34.0)
+
+[node name="bed_44" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 42.945, 0.0, 33.0)
+
+[node name="locker_44" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 42.25, 0.0, 32.26)
+
+[node name="bed_curtain_14" parent="Props" instance=ExtResource("p_bed_curtain")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 43, 0.0, 32.0)
+
+[node name="bed_45" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 42.945, 0.0, 31.0)
+
+[node name="locker_45" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 42.25, 0.0, 30.26)
+
+[node name="bed_46" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 47.055, 0.0, 35.0)
+
+[node name="locker_46" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 47.75, 0.0, 34.26)
+
+[node name="bed_curtain_15" parent="Props" instance=ExtResource("p_bed_curtain")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 47, 0.0, 34.0)
+
+[node name="bed_47" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 47.055, 0.0, 33.0)
+
+[node name="locker_47" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 47.75, 0.0, 32.26)
+
+[node name="iv_stand_11" parent="Props" instance=ExtResource("p_iv_stand")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 47.55, 0.0, 33.7)
+
+[node name="bed_curtain_16" parent="Props" instance=ExtResource("p_bed_curtain")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 47, 0.0, 32.0)
+
+[node name="bed_48" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 47.055, 0.0, 31.0)
+
+[node name="locker_48" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 47.75, 0.0, 30.26)
+
+[node name="bed_49" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 50.945, 0.0, 3.0)
+
+[node name="locker_49" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 50.25, 0.0, 3.74)
+
+[node name="iv_stand_12" parent="Props" instance=ExtResource("p_iv_stand")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 50.45, 0.0, 2.3)
+
+[node name="bed_curtain_17" parent="Props" instance=ExtResource("p_bed_curtain")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 51, 0.0, 4.0)
+
+[node name="bed_50" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 50.945, 0.0, 5.0)
+
+[node name="locker_50" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 50.25, 0.0, 5.74)
+
+[node name="bed_curtain_18" parent="Props" instance=ExtResource("p_bed_curtain")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 51, 0.0, 6.0)
+
+[node name="bed_51" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 50.945, 0.0, 7.0)
+
+[node name="locker_51" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 50.25, 0.0, 7.74)
+
+[node name="bed_52" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 55.055, 0.0, 3.0)
+
+[node name="locker_52" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 55.75, 0.0, 3.74)
+
+[node name="bed_curtain_19" parent="Props" instance=ExtResource("p_bed_curtain")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 55, 0.0, 4.0)
+
+[node name="bed_53" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 55.055, 0.0, 5.0)
+
+[node name="locker_53" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 55.75, 0.0, 5.74)
+
+[node name="bed_curtain_20" parent="Props" instance=ExtResource("p_bed_curtain")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 55, 0.0, 6.0)
+
+[node name="bed_54" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 55.055, 0.0, 7.0)
+
+[node name="locker_54" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 55.75, 0.0, 7.74)
+
+[node name="iv_stand_13" parent="Props" instance=ExtResource("p_iv_stand")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 55.55, 0.0, 6.3)
+
+[node name="bed_55" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 50.945, 0.0, 35.0)
+
+[node name="locker_55" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 50.25, 0.0, 34.26)
+
+[node name="bed_56" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 50.945, 0.0, 31.0)
+
+[node name="locker_56" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 50.25, 0.0, 30.26)
+
+[node name="iv_stand_14" parent="Props" instance=ExtResource("p_iv_stand")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 50.45, 0.0, 31.7)
+
+[node name="bed_57" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 55.055, 0.0, 35.0)
+
+[node name="locker_57" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 55.75, 0.0, 34.26)
+
+[node name="iv_stand_15" parent="Props" instance=ExtResource("p_iv_stand")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 55.55, 0.0, 35.7)
+
+[node name="bed_58" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 55.055, 0.0, 31.0)
+
+[node name="locker_58" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 55.75, 0.0, 30.26)
+
+[node name="sink_1" parent="Props" instance=ExtResource("p_sink")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 11.0, 0.0, 16.245)
+
+[node name="bed_59" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 10.945, 0.0, 21.0)
+
+[node name="cart_1" parent="Props" instance=ExtResource("p_cart")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 15.73, 0.0, 21.0)
+
+[node name="extinguisher_1" parent="Props" instance=ExtResource("p_extinguisher")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 15.88, 0.0, 17.0)
+
+[node name="shelf_1" parent="Props" instance=ExtResource("p_shelf")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 19.0, 0.0, 16.27)
+
+[node name="shelf_2" parent="Props" instance=ExtResource("p_shelf")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 23.0, 0.0, 16.27)
+
+[node name="shelf_3" parent="Props" instance=ExtResource("p_shelf")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 18.27, 0.0, 19.0)
+
+[node name="shelf_4" parent="Props" instance=ExtResource("p_shelf")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 23.73, 0.0, 19.0)
+
+[node name="cart_2" parent="Props" instance=ExtResource("p_cart")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 18.27, 0.0, 21.0)
+
+[node name="counter_1" parent="Props" instance=ExtResource("p_counter")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 29, 0.0, 16.45)
+
+[node name="counter_2" parent="Props" instance=ExtResource("p_counter")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 31, 0.0, 16.45)
+
+[node name="counter_3" parent="Props" instance=ExtResource("p_counter")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 35, 0.0, 16.45)
+
+[node name="counter_4" parent="Props" instance=ExtResource("p_counter")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 37, 0.0, 16.45)
+
+[node name="shelf_5" parent="Props" instance=ExtResource("p_shelf")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 26.27, 0.0, 17.0)
+
+[node name="desk_1" parent="Props" instance=ExtResource("p_desk")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 29.0, 0.0, 21.655)
+
+[node name="desk_2" parent="Props" instance=ExtResource("p_desk")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 37.0, 0.0, 21.655)
+
+[node name="chair_1" parent="Props" instance=ExtResource("p_chair")]
+transform = Transform3D(-0.93969, 0, -0.34202, 0, 1, 0, 0.34202, 0, -0.93969, 29.2, 0.0, 20.9)
+
+[node name="chair_2" parent="Props" instance=ExtResource("p_chair")]
+transform = Transform3D(-0.86603, 0, 0.5, 0, 1, 0, -0.5, 0, -0.86603, 36.7, 0.0, 20.8)
+
+[node name="cart_3" parent="Props" instance=ExtResource("p_cart")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 39.73, 0.0, 21.0)
+
+[node name="wheelchair_1" parent="Props" instance=ExtResource("p_wheelchair")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 27.0, 0.0, 21.63)
+
+[node name="sink_2" parent="Props" instance=ExtResource("p_sink")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 43.0, 0.0, 16.245)
+
+[node name="sink_3" parent="Props" instance=ExtResource("p_sink")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 47.0, 0.0, 16.245)
+
+[node name="stall_1" parent="Props" instance=ExtResource("p_stall")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 43.0, 0.0, 21.05)
+
+[node name="stall_2" parent="Props" instance=ExtResource("p_stall")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 47.0, 0.0, 21.05)
+
+[node name="shelf_6" parent="Props" instance=ExtResource("p_shelf")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 51.0, 0.0, 16.27)
+
+[node name="shelf_7" parent="Props" instance=ExtResource("p_shelf")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 55.0, 0.0, 16.27)
+
+[node name="shelf_8" parent="Props" instance=ExtResource("p_shelf")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 50.27, 0.0, 19.0)
+
+[node name="shelf_9" parent="Props" instance=ExtResource("p_shelf")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 55.73, 0.0, 19.0)
+
+[node name="cart_4" parent="Props" instance=ExtResource("p_cart")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 55.73, 0.0, 21.0)
+
+[node name="bed_60" parent="Props" instance=ExtResource("p_bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 2.945, 0.0, 5.0)
+
+[node name="locker_59" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 2.24, 0.0, 7.0)
+
+[node name="desk_3" parent="Props" instance=ExtResource("p_desk")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 7.0, 0.0, 2.345)
+
+[node name="chair_3" parent="Props" instance=ExtResource("p_chair")]
+transform = Transform3D(0.93969, 0, 0.34202, 0, 1, 0, -0.34202, 0, 0.93969, 7, 0.0, 3.1)
+
+[node name="bench_1" parent="Props" instance=ExtResource("p_bench")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 2.27, 0.0, 31.0)
+
+[node name="bench_2" parent="Props" instance=ExtResource("p_bench")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 2.27, 0.0, 33.0)
+
+[node name="table_1" parent="Props" instance=ExtResource("p_table")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 5.0, 0.0, 33.025)
+
+[node name="bench_3" parent="Props" instance=ExtResource("p_bench")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 7.0, 0.0, 35.73)
+
+[node name="bench_4" parent="Props" instance=ExtResource("p_bench")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 7.73, 0.0, 31.0)
+
+[node name="elevator_1" parent="Props" instance=ExtResource("p_elevator")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 2.0, 0.0, 17.0)
+
+[node name="elevator_2" parent="Props" instance=ExtResource("p_elevator")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 2.0, 0.0, 21.0)
+
+[node name="bench_5" parent="Props" instance=ExtResource("p_bench")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 7.73, 0.0, 17.0)
+
+[node name="bench_6" parent="Props" instance=ExtResource("p_bench")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 7.73, 0.0, 21.0)
+
+[node name="wheelchair_2" parent="Props" instance=ExtResource("p_wheelchair")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 2.7, 0.0, 25.63)
+
+[node name="wheelchair_3" parent="Props" instance=ExtResource("p_wheelchair")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 7.4, 0.0, 25.63)
+
+[node name="wheelchair_4" parent="Props" instance=ExtResource("p_wheelchair")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 61.63, 0.0, 17.0)
+
+[node name="iv_stand_16" parent="Props" instance=ExtResource("p_iv_stand")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 61.83, 0.0, 21.3)
+
+[node name="iv_stand_17" parent="Props" instance=ExtResource("p_iv_stand")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 61.83, 0.0, 20.8)
+
+[node name="extinguisher_2" parent="Props" instance=ExtResource("p_extinguisher")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 58.12, 0.0, 23.0)
+
+[node name="shelf_10" parent="Props" instance=ExtResource("p_shelf")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 61.73, 0.0, 31.0)
+
+[node name="cart_5" parent="Props" instance=ExtResource("p_cart")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 61.73, 0.0, 35.0)
+
+[node name="wheelchair_5" parent="Props" instance=ExtResource("p_wheelchair")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 59.0, 0.0, 35.63)
+
+[node name="handrail_1" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 9.0, 0.0, 12.0)
+
+[node name="handrail_2" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 9.0, 0.0, 14.0)
+
+[node name="handrail_3" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 11.0, 0.0, 12.0)
+
+[node name="handrail_4" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 11.0, 0.0, 14.0)
+
+[node name="handrail_5" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 15.0, 0.0, 12.0)
+
+[node name="handrail_6" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 15.0, 0.0, 14.0)
+
+[node name="handrail_7" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 17.0, 0.0, 12.0)
+
+[node name="handrail_8" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 17.0, 0.0, 14.0)
+
+[node name="handrail_9" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 19.0, 0.0, 12.0)
+
+[node name="handrail_10" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 19.0, 0.0, 14.0)
+
+[node name="handrail_11" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 21.0, 0.0, 14.0)
+
+[node name="handrail_12" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 23.0, 0.0, 12.0)
+
+[node name="handrail_13" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 23.0, 0.0, 14.0)
+
+[node name="handrail_14" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 25.0, 0.0, 12.0)
+
+[node name="handrail_15" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 25.0, 0.0, 14.0)
+
+[node name="handrail_16" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 27.0, 0.0, 12.0)
+
+[node name="handrail_17" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 27.0, 0.0, 14.0)
+
+[node name="handrail_18" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 31.0, 0.0, 12.0)
+
+[node name="handrail_19" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 33.0, 0.0, 12.0)
+
+[node name="handrail_20" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 35.0, 0.0, 12.0)
+
+[node name="handrail_21" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 39.0, 0.0, 12.0)
+
+[node name="handrail_22" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 39.0, 0.0, 14.0)
+
+[node name="handrail_23" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 41.0, 0.0, 12.0)
+
+[node name="handrail_24" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 41.0, 0.0, 14.0)
+
+[node name="handrail_25" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 43.0, 0.0, 12.0)
+
+[node name="handrail_26" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 43.0, 0.0, 14.0)
+
+[node name="handrail_27" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 47.0, 0.0, 12.0)
+
+[node name="handrail_28" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 47.0, 0.0, 14.0)
+
+[node name="handrail_29" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 49.0, 0.0, 12.0)
+
+[node name="handrail_30" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 49.0, 0.0, 14.0)
+
+[node name="handrail_31" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 51.0, 0.0, 12.0)
+
+[node name="handrail_32" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 51.0, 0.0, 14.0)
+
+[node name="handrail_33" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 53.0, 0.0, 14.0)
+
+[node name="handrail_34" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 55.0, 0.0, 12.0)
+
+[node name="handrail_35" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 55.0, 0.0, 14.0)
+
+[node name="handrail_36" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 57.0, 0.0, 12.0)
+
+[node name="handrail_37" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 57.0, 0.0, 14.0)
+
+[node name="handrail_38" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 9.0, 0.0, 24.0)
+
+[node name="handrail_39" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 9.0, 0.0, 26.0)
+
+[node name="handrail_40" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 11.0, 0.0, 24.0)
+
+[node name="handrail_41" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 11.0, 0.0, 26.0)
+
+[node name="handrail_42" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 13.0, 0.0, 24.0)
+
+[node name="handrail_43" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 15.0, 0.0, 24.0)
+
+[node name="handrail_44" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 15.0, 0.0, 26.0)
+
+[node name="handrail_45" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 17.0, 0.0, 24.0)
+
+[node name="handrail_46" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 17.0, 0.0, 26.0)
+
+[node name="handrail_47" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 19.0, 0.0, 24.0)
+
+[node name="handrail_48" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 19.0, 0.0, 26.0)
+
+[node name="handrail_49" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 23.0, 0.0, 24.0)
+
+[node name="handrail_50" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 23.0, 0.0, 26.0)
+
+[node name="handrail_51" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 25.0, 0.0, 24.0)
+
+[node name="handrail_52" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 25.0, 0.0, 26.0)
+
+[node name="handrail_53" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 27.0, 0.0, 24.0)
+
+[node name="handrail_54" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 27.0, 0.0, 26.0)
+
+[node name="handrail_55" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 29.0, 0.0, 24.0)
+
+[node name="handrail_56" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 31.0, 0.0, 24.0)
+
+[node name="handrail_57" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 31.0, 0.0, 26.0)
+
+[node name="handrail_58" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 33.0, 0.0, 26.0)
+
+[node name="handrail_59" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 35.0, 0.0, 24.0)
+
+[node name="handrail_60" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 35.0, 0.0, 26.0)
+
+[node name="handrail_61" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 37.0, 0.0, 24.0)
+
+[node name="handrail_62" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 39.0, 0.0, 24.0)
+
+[node name="handrail_63" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 39.0, 0.0, 26.0)
+
+[node name="handrail_64" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 41.0, 0.0, 24.0)
+
+[node name="handrail_65" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 41.0, 0.0, 26.0)
+
+[node name="handrail_66" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 43.0, 0.0, 24.0)
+
+[node name="handrail_67" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 43.0, 0.0, 26.0)
+
+[node name="handrail_68" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 45.0, 0.0, 24.0)
+
+[node name="handrail_69" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 47.0, 0.0, 24.0)
+
+[node name="handrail_70" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 47.0, 0.0, 26.0)
+
+[node name="handrail_71" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 49.0, 0.0, 24.0)
+
+[node name="handrail_72" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 49.0, 0.0, 26.0)
+
+[node name="handrail_73" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 51.0, 0.0, 24.0)
+
+[node name="handrail_74" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 51.0, 0.0, 26.0)
+
+[node name="handrail_75" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 55.0, 0.0, 24.0)
+
+[node name="handrail_76" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 55.0, 0.0, 26.0)
+
+[node name="handrail_77" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 57.0, 0.0, 24.0)
+
+[node name="handrail_78" parent="Props" instance=ExtResource("p_handrail")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 57.0, 0.0, 26.0)
+
+[node name="extinguisher_3" parent="Props" instance=ExtResource("p_extinguisher")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 25.0, 0.0, 13.88)
+
+[node name="extinguisher_4" parent="Props" instance=ExtResource("p_extinguisher")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 49.0, 0.0, 24.12)
+
+[node name="표지판_0" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 13.0, 2.55, 12.01)
+text = "101호"
+width = 0.5
+
+[node name="표지판_1" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 13.0, 2.55, 25.99)
+text = "107호"
+width = 0.5
+
+[node name="표지판_2" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 21.0, 2.55, 12.01)
+text = "102호"
+width = 0.5
+
+[node name="표지판_3" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 21.0, 2.55, 25.99)
+text = "108호"
+width = 0.5
+
+[node name="표지판_4" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 29.0, 2.55, 12.01)
+text = "103호"
+width = 0.5
+
+[node name="표지판_5" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 29.0, 2.55, 25.99)
+text = "109호"
+width = 0.5
+
+[node name="표지판_6" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 37.0, 2.55, 12.01)
+text = "104호"
+width = 0.5
+
+[node name="표지판_7" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 37.0, 2.55, 25.99)
+text = "110호"
+width = 0.5
+
+[node name="표지판_8" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 45.0, 2.55, 12.01)
+text = "105호"
+width = 0.5
+
+[node name="표지판_9" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 45.0, 2.55, 25.99)
+text = "111호"
+width = 0.5
+
+[node name="표지판_10" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 53.0, 2.55, 12.01)
+text = "106호"
+width = 0.5
+
+[node name="표지판_11" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 53.0, 2.55, 25.99)
+text = "112호"
+width = 0.5
+
+[node name="표지판_12" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 13.0, 2.5, 13.99)
+text = "처치실"
+width = 0.6
+
+[node name="표지판_13" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 21.0, 2.5, 24.01)
+text = "린넨실"
+width = 0.6
+
+[node name="표지판_14" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 45.0, 2.5, 13.99)
+text = "화장실"
+width = 0.6
+
+[node name="표지판_15" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 53.0, 2.5, 24.01)
+text = "약품실"
+width = 0.6
+
+[node name="표지판_16" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 33.0, 2.5, 24.01)
+text = "간호사실"
+width = 0.7
+
+[node name="표지판_17" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 5.0, 2.5, 12.01)
+text = "당직실"
+width = 0.6
+
+[node name="표지판_18" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 5.0, 2.5, 25.99)
+text = "휴게실"
+width = 0.6
+
+[node name="표지판_19" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 59.0, 2.5, 25.99)
+text = "오물실"
+width = 0.6
+
+[node name="표지판_20" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 33.0, 2.6, 14.3)
+text = "간 호 사 실"
+width = 1.3
+
+[node name="표지판_21" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 60.0, 2.6, 11.95)
+text = "비상계단  2F ↑"
+width = 1.2
+
+[node name="표지판_22" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 7.99, 1.9, 19.0)
+text = "1F 내과 병동\n101 – 112호"
+width = 1.0
+
+[node name="표지판_23" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 2.01, 2.0, 19.0)
+text = "엘리베이터 운행 중지"
+width = 1.1
+
+[node name="쪽지_0" parent="Notes" instance=ExtResource("p_note")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 29.3, 0.765, 21.6)
 title = "간호 일지 — 11월 2일 01:40"
 body = "108호 김순자 님, 손가락이 돌처럼 무겁다고 호소.
 불 꺼진 병동을 몹시 무서워함.
@@ -342,8 +1272,8 @@ body = "108호 김순자 님, 손가락이 돌처럼 무겁다고 호소.
 
 — 야간 근무 윤서"
 
-[node name="note_27_7" parent="Notes" instance=ExtResource("p_note")]
-transform = Transform3D(0.82621, 0, 0.56336, 0, 1, 0, -0.56336, 0, 0.82621, 55.392, 0.01, 15.342)
+[node name="쪽지_1" parent="Notes" instance=ExtResource("p_note")]
+transform = Transform3D(0.96593, 0, 0.25882, 0, 1, 0, -0.25882, 0, 0.96593, 15.68, 0.915, 21)
 title = "연구 메모 A-7"
 body = "광량 50lx 이하에 6시간 이상 노출되면 피부가 각질화되기 시작함.
 빛에 다시 노출하면 가역적.
@@ -353,8 +1283,8 @@ body = "광량 50lx 이하에 6시간 이상 노출되면 피부가 각질화되
 
 원장님께 즉시 보고할 것."
 
-[node name="note_23_2" parent="Notes" instance=ExtResource("p_note")]
-transform = Transform3D(-0.97174, 0, 0.23607, 0, 1, 0, -0.23607, 0, -0.97174, 46.65, 0.01, 5.361)
+[node name="쪽지_2" parent="Notes" instance=ExtResource("p_note")]
+transform = Transform3D(0.86603, 0, 0.5, 0, 1, 0, -0.5, 0, 0.86603, 23.2, 0.695, 33.3)
 title = "삐뚤빼뚤한 글씨"
 body = "불 끄지 마세요
 불 끄면 몸이 무거워요
@@ -364,8 +1294,8 @@ body = "불 끄지 마세요
 
 엄마 보고 싶어요"
 
-[node name="note_3_11" parent="Notes" instance=ExtResource("p_note")]
-transform = Transform3D(-0.97853, 0, 0.20611, 0, 1, 0, -0.20611, 0, -0.97853, 7.212, 0.01, 22.861)
+[node name="쪽지_3" parent="Notes" instance=ExtResource("p_note")]
+transform = Transform3D(0.70711, 0, 0.70711, 0, 1, 0, -0.70711, 0, 0.70711, 7.72, 0.475, 21.3)
 title = "경비 일지"
 body = "02:10 전관 정전. 비상발전기 기동 실패.
 02:25 지하 연구동 출입문 잠금 확인.
@@ -374,16 +1304,16 @@ body = "02:10 전관 정전. 비상발전기 기동 실패.
 
 손이 잘 안 움직인다. 랜턴을 입구에 두고"
 
-[node name="note_2_3" parent="Notes" instance=ExtResource("p_note")]
-transform = Transform3D(-0.80557, 0, -0.5925, 0, 1, 0, 0.5925, 0, -0.80557, 5.012, 0.01, 6.944)
+[node name="쪽지_4" parent="Notes" instance=ExtResource("p_note")]
+transform = Transform3D(0.5, 0, 0.86603, 0, 1, 0, -0.86603, 0, 0.5, 45.3, 0.01, 6.8)
 title = "연구 메모 A-9"
 body = "차광막은 실험 조건 유지를 위한 것. 절대 걷지 말 것.
 
 햇빛(자연광)에 노출되면 실험군 전원 '회복'됨.
 실험이 무효가 되므로 병실 차광은 반드시 유지."
 
-[node name="note_29_14" parent="Notes" instance=ExtResource("p_note")]
-transform = Transform3D(0.55825, 0, -0.82967, 0, 1, 0, 0.82967, 0, 0.55825, 58.611, 0.01, 29.161)
+[node name="쪽지_5" parent="Notes" instance=ExtResource("p_note")]
+transform = Transform3D(0.25882, 0, 0.96593, 0, 1, 0, -0.96593, 0, 0.25882, 5.2, 0.745, 33.15)
 title = "원무과 안내문"
 body = "야간 소등 안내
 22시 이후 병실 소등을 원칙으로 합니다.

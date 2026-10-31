@@ -34,7 +34,7 @@ func _run() -> void:
 	var c = get_node("/root/Main/Level1F/Curtains").get_child(0)
 	c.hold(2.0)
 	print("TEST curtain open=", c.open, " curtains_open=", GameState.curtains_open)
-	player.global_position = level.tile_center(Vector2i(4, 1))
+	player.global_position = level.tile_center(level.to_tile(c.global_position) + Vector2i(0, 1))
 	player.rotation.y = 0
 	player.head.rotation.x = 0
 	await _wait(3)

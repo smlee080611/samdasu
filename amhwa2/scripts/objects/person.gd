@@ -51,6 +51,8 @@ func _set_state(s: State) -> void:
 		add_to_group("blocker")
 	else:
 		remove_from_group("blocker")
+	# 정신이 돌아온 사람은 빛을 가리지 않고, 좁은 복도에서 플레이어와 엉키지 않게 통과된다
+	collision_layer = 0 if s == State.CURED else GameState.LAYER_PERSON
 	var tint := Color(0.72, 0.74, 0.77) if s == State.STATUE else (Color(1.0, 0.5, 0.45) if s == State.MAD else Color.WHITE)
 	for m in mats:
 		m.albedo_color = tint

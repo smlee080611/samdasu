@@ -1,0 +1,88 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/objects/prop.gd" id="e1"]
+
+[sub_resource type="StandardMaterial3D" id="m_cream"]
+albedo_color = Color(0.78, 0.75, 0.66, 1)
+roughness = 0.85
+metallic = 0.0
+
+[sub_resource type="StandardMaterial3D" id="m_dark"]
+albedo_color = Color(0.3, 0.3, 0.3, 1)
+roughness = 0.8
+metallic = 0.0
+
+[sub_resource type="StandardMaterial3D" id="m_cup"]
+albedo_color = Color(0.85, 0.85, 0.82, 1)
+roughness = 0.5
+metallic = 0.0
+
+[sub_resource type="BoxMesh" id="r4"]
+material = SubResource("m_cream")
+size = Vector3(0.45, 0.78, 0.42)
+
+[sub_resource type="BoxMesh" id="r5"]
+material = SubResource("m_cream")
+size = Vector3(0.4, 0.16, 0.01)
+
+[sub_resource type="BoxMesh" id="r6"]
+material = SubResource("m_cream")
+size = Vector3(0.4, 0.42, 0.01)
+
+[sub_resource type="BoxMesh" id="r7"]
+material = SubResource("m_dark")
+size = Vector3(0.08, 0.015, 0.02)
+
+[sub_resource type="CylinderMesh" id="r8"]
+material = SubResource("m_cup")
+top_radius = 0.035
+bottom_radius = 0.03
+height = 0.09
+radial_segments = 8
+rings = 1
+
+[sub_resource type="StandardMaterial3D" id="m_book"]
+albedo_color = Color(0.35, 0.18, 0.15, 1)
+roughness = 0.9
+metallic = 0.0
+
+[sub_resource type="BoxMesh" id="r10"]
+material = SubResource("m_book")
+size = Vector3(0.16, 0.03, 0.22)
+
+[sub_resource type="BoxShape3D" id="r11"]
+size = Vector3(0.46, 0.8, 0.44)
+
+[node name="Locker" type="StaticBody3D"]
+collision_layer = 1
+collision_mask = 0
+script = ExtResource("e1")
+blocks_path = false
+
+[node name="Body" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.39, 0)
+mesh = SubResource("r4")
+
+[node name="Drawer" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.66, 0.215)
+mesh = SubResource("r5")
+
+[node name="Door" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0.215)
+mesh = SubResource("r6")
+
+[node name="Knob" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.66, 0.23)
+mesh = SubResource("r7")
+
+[node name="Cup" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1, 0.825, 0.05)
+mesh = SubResource("r8")
+
+[node name="Book" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.97815, 0, 0.20791, 0, 1, 0, -0.20791, 0, 0.97815, -0.08, 0.795, -0.02)
+mesh = SubResource("r10")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
+shape = SubResource("r11")
