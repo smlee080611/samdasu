@@ -39,17 +39,19 @@ func say(text: String) -> void:
 	print(text)
 	message.emit(text)
 
+## 다른 사람이 하는 말. 플레이어 근처(약 6칸)에서만 들린다.
+func speak(from: Vector3, line: String) -> void:
+	var p := get_tree().get_first_node_in_group("player") as Node3D
+	if p and p.global_position.distance_to(from) < 12.0:
+		say("“%s”" % line)
+
 func add_rescued(person_name: String) -> void:
-	rescued += 1
-	say("%s이(가) 입구에 도착했다." % person_name)
+	rescued += 1   # 화면에 알리지 않는다. 엘리베이터 홀에 모여 있는 사람으로 보인다
 	state_changed.emit()
-	status_poke.emit()
 
 func curtain_opened() -> void:
 	curtains_open += 1
-	say("차광막을 걷었다. 달빛이 병실을 비춘다.")
 	state_changed.emit()
-	status_poke.emit()
 
 func can_leave() -> bool:
 	return rescued >= need_rescue and curtains_open >= curtains_total

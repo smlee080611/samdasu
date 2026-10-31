@@ -96,7 +96,6 @@ func grabbed(by_name: String) -> void:
 	grab_cooldown = 1.2
 	stiff += 25.0
 	Sfx.play("grab", 0.0, 0.0)
-	GameState.say("%s에게 붙잡혔다. 몸이 굳어 온다." % by_name)
 
 func _toggle_lantern() -> void:
 	for l in placed_lanterns:
@@ -105,11 +104,9 @@ func _toggle_lantern() -> void:
 			l.queue_free()
 			lanterns_held += 1
 			Sfx.play("lantern", -6.0)
-			GameState.status_poke.emit()
-			GameState.say("랜턴을 회수했다.")
 			return
 	if lanterns_held <= 0:
-		GameState.say("들고 있는 랜턴이 없다.")
+		GameState.say("랜턴이 없다.")
 		return
 	var l: Node3D = lantern_scene.instantiate()
 	get_parent().add_child(l)
@@ -117,8 +114,6 @@ func _toggle_lantern() -> void:
 	placed_lanterns.append(l)
 	lanterns_held -= 1
 	Sfx.play("lantern", -3.0)
-	GameState.status_poke.emit()
-	GameState.say("랜턴을 내려놓았다.")
 
 ## 어둠 속 광인이 가까울수록, 몸이 굳을수록 심장이 크고 빨리 뛴다
 func _update_heartbeat() -> void:

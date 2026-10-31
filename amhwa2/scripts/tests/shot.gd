@@ -1,6 +1,6 @@
 extends Node
 ## 스크린샷: godot --path . -- shot <파일명> <x> <y> <각도> [pitch] [freeze]
-## 추가 옵션(어디든): stiff=70 (굳음 고정), note (첫 쪽지 열기), intro (시작 연출 찍기), grab (붙잡힘)
+## 추가 옵션(어디든): battery=15, rescued=3, stiff=70 (굳음 고정), note (첫 쪽지 열기), intro (시작 연출 찍기), grab (붙잡힘)
 
 func _ready() -> void:
 	_run.call_deferred()
@@ -27,6 +27,28 @@ func _run() -> void:
 	if "lantern" in args:   # 앞에 랜턴을 놓고 한 걸음 물러서서 찍기
 		player._toggle_lantern()
 		player.global_position += player.global_transform.basis.z * 0.9
+	for a in args:
+		if a.begins_with("battery="):
+			player.headlamp.battery = float(a.substr(8))
+		if a.begins_with("rescued="):   # 구한 사람이 홀에 모인 모습
+			var ps := get_tree().get_nodes_in_group("person")
+			for k in int(a.substr(8)):
+				var pp = ps[k]
+				pp._set_state(2)
+				pp.waiting = true
+				pp.wait_pos = level.take_wait_spot()
+				pp.global_position = pp.wait_pos
+				pp.tile = Vector2i(-100, -100)
+				pp.set_process(true)
+	for a in args:
+		if a.begins_with("mad="):   # 가장 가까운 석상 하나를 광인으로 (값 = 풀린 정도 0~1)
+			var best = null
+			for pp in get_tree().get_nodes_in_group("person"):
+				if best == null or pp.global_position.distance_to(player.global_position) < best.global_position.distance_to(player.global_position):
+					best = pp
+			best._set_state(1)
+			best.sanity = float(a.substr(4))
+			best.sanity_speed = 0.0
 	var stiff := -1.0
 	for a in args:
 		if a.begins_with("stiff="):

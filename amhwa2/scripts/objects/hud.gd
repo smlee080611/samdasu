@@ -2,8 +2,10 @@ extends CanvasLayer
 ## 화면 UI. 숫자 대신 몸으로 보여준다.
 ##  - 굳음: 화면 가장자리가 돌로 변하고(Screen 셰이더) 금이 자란다(Cracks)
 ##  - 붙잡힘: 가장자리가 붉게 번진다
-##  - 배터리·랜턴: 바뀔 때, 배터리가 적을 때, Tab을 누를 때만 왼쪽 아래에 잠깐
-##  - 메시지: 아래쪽 자막 / 상호작용: 조준점 아래 작은 글씨
+##  - 배터리: 숫자 없음. 헤드램프 빛이 누레지고 짧아진다(headlamp.gd)
+##  - 구출 수·차광막 수: 숫자 없음. 구한 사람은 엘리베이터 홀에 모이고, 목표는 간호사실 현황판에
+##  - 메시지: 주인공의 생각과 들리는 말만 아래쪽 자막으로 / 상호작용: 조준점 아래 작은 글씨
+##  - 개발용: F1을 누르는 동안 왼쪽 아래에 배터리·랜턴·구출·차광막 (에디터 실행 때만)
 ##  - 쪽지 읽기 패널, 시작 연출
 ## 게임 로직은 모르고 GameState와 플레이어 값을 읽어서 보여주기만 한다.
 
@@ -15,8 +17,8 @@ const INTRO := [
 	"손끝이 조금씩 무거워진다.\n어둠 속에 오래 있으면 안 된다.",
 	"헤드램프 하나, 랜턴 둘.",
 ]
-const GOAL := "병실의 차광막을 걷고, 세 사람을 입구로 데려가자."
-const CONTROLS := "WASD 이동 · 클릭 후 마우스로 둘러보기 · F 헤드램프 · Q 랜턴 놓기/줍기 · E 상호작용 · Tab 상태 · R 다시"
+const GOAL := "사람들을 깨워 이 홀로 데려와야 한다. 먼저 간호사실로 가 보자."
+const CONTROLS := "WASD 이동 · 클릭 후 마우스로 둘러보기 · F 헤드램프 · Q 랜턴 놓기/줍기 · E 상호작용 · R 다시"
 
 @onready var screen_mat: ShaderMaterial = $Root/Screen.material
 @onready var cracks = $Root/Cracks
@@ -32,7 +34,6 @@ const CONTROLS := "WASD 이동 · 클릭 후 마우스로 둘러보기 · F 헤�
 @onready var intro_text: Label = $Root/Intro/Text
 
 var player: Node
-var status_t := 0.0        # 상태 표시 남은 시간
 var subtitle_tw: Tween
 var intro_tw: Tween
 var stiff_shown := 0.0
@@ -45,7 +46,6 @@ func _ready() -> void:
 	$Root.theme.default_font_size = 18
 	GameState.message.connect(_show_subtitle)
 	GameState.note_opened.connect(_open_note)
-	GameState.status_poke.connect(func(): status_t = 3.0)
 	note.visible = false
 	subtitle.modulate.a = 0.0
 	if GameState.intro_seen:
@@ -133,25 +133,16 @@ func _process(dt: float) -> void:
 	screen_mat.set_shader_parameter("aspect", get_viewport().get_visible_rect().size.aspect())
 	cracks.amount = stiff_shown
 
-	# 상태 표시
+	# 개발용 상태 표시 (F1, 에디터에서 실행할 때만). 플레이어에게는 숫자를 보여주지 않는다
 	var lamp = player.headlamp
-	status_t = maxf(0.0, status_t - dt)
-	var tab := Input.is_action_pressed("status")
-	var low: bool = lamp.battery < 25.0 and lamp.is_on()
-	var a := 0.0
-	if status_t > 0.0 or tab:
-		a = minf(1.0, status_t * 2.0) if not tab else 1.0
-	if low:
-		a = maxf(a, 0.55 + 0.45 * sin(Time.get_ticks_msec() / 180.0))
-	status.modulate.a = lerpf(status.modulate.a, a, minf(1.0, dt * 8.0))
+	var tab := OS.is_debug_build() and Input.is_action_pressed("status")
+	status.modulate.a = 1.0 if tab else 0.0
 	status.battery = lamp.battery
 	status.lamp_on = lamp.is_on()
 	status.lanterns = player.lanterns_held
 	status.lanterns_max = player.lanterns_held + player.placed_lanterns.size()
 	status.show_counts = tab
 	status.counts_text = "구출 %d/%d   차광막 %d/%d" % [GameState.rescued, GameState.need_rescue, GameState.curtains_open, GameState.curtains_total]
-	if tab and controls.modulate.a < 0.6:
-		controls.modulate.a = 0.6
 
 	var t: Node = player.looking_at()
 	hint.text = t.get_hint() if t and t.has_method("get_hint") and not GameState.ui_blocking else ""

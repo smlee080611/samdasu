@@ -87,6 +87,16 @@ func tile_center(t: Vector2i, y := 0.0) -> Vector3:
 func to_tile(p: Vector3) -> Vector2i:
 	return Vector2i(int(floor(p.x / TS)), int(floor(p.z / TS)))
 
+## 구출된 사람이 기다릴 자리: 레벨의 WaitSpots 노드 아래 Marker3D들 (먼저 온 사람이 먼저 차지)
+var _used_spots := 0
+func take_wait_spot() -> Vector3:
+	var spots := get_node_or_null("WaitSpots")
+	if spots and _used_spots < spots.get_child_count():
+		_used_spots += 1
+		return spots.get_child(_used_spots - 1).global_position
+	_used_spots += 1
+	return tile_center(entrance_tile) + Vector3(randf_range(-0.8, 0.8), 0, randf_range(-0.8, 0.8))
+
 ## 지나갈 수 있는 칸인가: 벽이 아니고, "blocker" 그룹(석상, 닫힌 문 등)이 서 있지 않은 칸
 func is_walkable(t: Vector2i) -> bool:
 	if t.x < 0 or t.y < 0 or t.x >= size.x or t.y >= size.y:

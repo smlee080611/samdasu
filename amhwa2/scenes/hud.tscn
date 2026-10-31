@@ -126,7 +126,7 @@ offset_top = -44.0
 offset_bottom = -18.0
 grow_horizontal = 2
 grow_vertical = 0
-text = "WASD 이동 · 클릭 후 마우스로 둘러보기 · F 헤드램프 · Q 랜턴 놓기/줍기 · E 상호작용 · Tab 상태 · R 다시"
+text = "WASD 이동 · 클릭 후 마우스로 둘러보기 · F 헤드램프 · Q 랜턴 놓기/줍기 · E 상호작용 · R 다시"
 label_settings = SubResource("small_ls")
 horizontal_alignment = 1
 

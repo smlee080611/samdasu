@@ -12,8 +12,14 @@ enum State { STATUE, MAD, CURED }
 @export var sanity_speed := 0.3      # 빛 속에서 정신이 돌아오는 속도
 @export var petrify_after := 6.5     # 어둠 속에서 이 시간이 지나면 다시 굳음
 @export var chase_range := 10        # 이 칸 수 안의 플레이어를 쫓아감
-@export var flee_speed := 1.1
-@export var chase_speed := 2.4
+## 광인의 속도는 몸이 얼마나 풀렸는지(sanity 0~1)에 따라 변한다.
+## 막 깨어난 광인은 뻣뻣하고 느리다. 빛을 받아 풀릴수록 매끄럽고 빨라진다(플레이어 3.2보다 빠름).
+## 그래서 반쯤 비추다 놓치면 오히려 가장 위험한 광인이 된다. 끝까지 비추면 정신이 돌아온다.
+@export var chase_speed_stiff := 1.6
+@export var chase_speed_loose := 4.6
+@export var flee_speed_stiff := 0.7
+@export var flee_speed_loose := 2.6
+@export var rush_range := 5          # 이 칸 수 안에 들어오면 달려들기(돌진·멈춤 반복)
 @export var walk_out_speed := 1.5
 
 @onready var model: Node3D = $Model
@@ -29,6 +35,21 @@ var sanity := 0.0
 var dark_t := 0.0
 var blocked_said := false
 var step_t := 0.0
+var move_mode := 0            # 0 멈춤, 1 걷기, 2 돌진 (움직임 연출용)
+var rush_t := 0.0
+var pause_t := 0.0
+var flinch_t := 0.0
+var was_lit := false
+# 1안 움직임: 뼈대 없이 모델 전체를 기울이고 흔들고 끊어서 보여준다
+var held := Transform3D.IDENTITY   # 지금 화면에 보이는 모델 자세 (스톱모션처럼 가끔만 갱신)
+var pose_t := 0.0
+var step_phase := 0.0
+var twitch := Vector3.ZERO          # 경련: (앞뒤, 좌우, 고개 돌림)
+var twitch_t := 0.0
+var waiting := false          # 구출되어 엘리베이터 홀에서 기다리는 중
+var wait_pos := Vector3.ZERO
+
+const CURED_LINES := ["...간호사님?", "여기가... 어디예요?", "몸이... 움직여요.", "불, 불 좀 켜 주세요...", "우리 애는요? 우리 애...", "추워요... 너무 추워요."]
 
 func _ready() -> void:
 	add_to_group("person")
@@ -71,6 +92,9 @@ func _set_state(s: State) -> void:
 func _process(dt: float) -> void:
 	if level == null or GameState.is_frozen():
 		return
+	if waiting:
+		_wait_in_hall(dt)
+		return
 	var ex: Array[RID] = [get_rid(), player.get_rid()]
 	match state:
 		State.STATUE:
@@ -79,6 +103,51 @@ func _process(dt: float) -> void:
 			_mad(dt, ex)
 		State.CURED:
 			_cured(dt)
+	_animate(dt)
+
+## 1안 움직임. 굳었다 풀린 몸이라 관절이 뻣뻣하다:
+## - 뻣뻣할수록 스톱모션처럼 초당 몇 장만 보인다 (풀릴수록 매끄러움)
+## - 걸을 때 앞으로 숙이고 걸음마다 덜컥 흔들림, 돌진할 땐 더 숙임
+## - 가끔 몸과 고개가 확 꺾이는 경련 (빛을 맞으면 크게)
+func _animate(dt: float) -> void:
+	var loose := 1.0
+	if state == State.STATUE:
+		model.transform = Transform3D.IDENTITY
+		held = model.global_transform
+		return
+	if state == State.MAD:
+		loose = clampf(sanity, 0.0, 1.0)
+	# 경련
+	twitch_t -= dt
+	if twitch_t <= 0.0:
+		var stiff_k := 1.0 - loose
+		if state == State.MAD and (flinch_t > 0.0 or randf() < 0.35):
+			var big := 1.6 if flinch_t > 0.0 else 1.0
+			twitch = Vector3(randf_range(-0.25, 0.15), randf_range(-0.3, 0.3), randf_range(-0.5, 0.5)) * (0.4 + stiff_k) * big
+		else:
+			twitch = Vector3.ZERO
+		twitch_t = randf_range(0.12, 0.25) if twitch != Vector3.ZERO else randf_range(0.6, 2.2) * (0.5 + loose)
+	# 걸음
+	var lean := 0.0
+	var bob := 0.0
+	var sway := 0.0
+	if state == State.MAD:
+		lean = 0.32 if move_mode == 2 else (0.12 if move_mode == 1 else 0.05)
+		bob = absf(sin(step_phase)) * (0.06 if move_mode == 2 else 0.035) if move_mode > 0 else 0.0
+		sway = sin(step_phase) * (0.12 + 0.1 * (1.0 - loose)) if move_mode > 0 else 0.0
+	elif state == State.CURED:
+		lean = 0.08
+		bob = absf(sin(step_phase)) * 0.025
+		sway = sin(step_phase) * 0.05
+	var b := Basis.from_euler(Vector3(-lean + twitch.x, twitch.z, sway + twitch.y))
+	var desired := global_transform * Transform3D(b, Vector3(0, -bob, 0))
+	# 스톱모션: 뻣뻣할수록 드문드문 갱신 (6fps → 30fps)
+	var fps := lerpf(6.0, 30.0, loose) if state == State.MAD else 30.0
+	pose_t -= dt
+	if pose_t <= 0.0:
+		pose_t = 1.0 / fps
+		held = desired
+	model.global_transform = held
 
 func _statue(dt: float, ex: Array[RID]) -> void:
 	var lv := LightSystem.light_at(global_position, ex)
@@ -93,7 +162,6 @@ func _statue(dt: float, ex: Array[RID]) -> void:
 		dark_t = 0.0
 		_set_state(State.MAD)
 		Sfx.play_at("stone_crack", global_position + Vector3.UP)
-		GameState.say("돌 깨지는 소리. %s의 몸이 풀렸다." % person_name)
 
 func _mad(dt: float, ex: Array[RID]) -> void:
 	var lv := LightSystem.light_at(global_position, ex)
@@ -101,35 +169,77 @@ func _mad(dt: float, ex: Array[RID]) -> void:
 	if lit:
 		dark_t = 0.0
 		sanity += dt * sanity_speed * min(1.0, lv * 1.6)
+		if not was_lit:
+			flinch_t = 0.45            # 빛을 맞는 순간 움찔하며 멈춤
+			twitch_t = 0.0
 	else:
 		dark_t += dt
 		sanity = max(0.0, sanity - dt * 0.03)
+	was_lit = lit
+	var loose := pow(clampf(sanity, 0.0, 1.0), 0.8)
 	var player_tile := level.to_tile(player.global_position)
+	var dist := tile.distance_to(player_tile)
+
+	# 어둠 속에서 가까우면 돌진했다 멈췄다를 반복. 뻣뻣할수록 오래 멈춘다
+	var rushing := not lit and dist <= rush_range
+	if rushing:
+		if rush_t > 0.0:
+			rush_t -= dt
+			if rush_t <= 0.0:
+				pause_t = lerpf(0.9, 0.25, loose) * randf_range(0.7, 1.3)
+		elif pause_t > 0.0:
+			pause_t -= dt
+		else:
+			rush_t = lerpf(0.5, 1.1, loose) * randf_range(0.8, 1.2)
+	flinch_t = maxf(0.0, flinch_t - dt)
+
+	var speed := 0.0
+	move_mode = 0
+	if flinch_t > 0.0:
+		speed = 0.0
+	elif lit:
+		speed = lerpf(flee_speed_stiff, flee_speed_loose, loose)
+		move_mode = 1
+	elif rushing:
+		if rush_t > 0.0:
+			speed = lerpf(chase_speed_stiff, chase_speed_loose, loose)
+			move_mode = 2
+	else:
+		speed = lerpf(chase_speed_stiff, chase_speed_loose, loose) * 0.45   # 멀리서는 슬금슬금
+		move_mode = 1
+
 	if _arrived():
 		var next: Variant = null
 		if lit:
 			next = _darkest_neighbor(lv, ex)
-		elif tile.distance_to(player_tile) < chase_range:
+		elif dist < chase_range:
 			next = level.next_step(tile, player_tile)
 		if next != null and not _taken(next):
 			target = next
-	else:
-		_move(flee_speed if lit else chase_speed, dt)
+	elif speed > 0.0:
+		_move(speed, dt)
 		step_t -= dt
 		if step_t <= 0.0:
-			step_t = 0.7 if lit else 0.32
-			Sfx.play_at("mad_step_%d" % (randi() % 2), global_position, -6.0 if lit else 0.0)
+			step_t = clampf(1.1 / speed, 0.18, 0.9)
+			Sfx.play_at("mad_step_%d" % (randi() % 2), global_position, -6.0 if lit else 0.0, 0.15)
 	if not lit and global_position.distance_to(player.global_position) < 0.95:
 		player.grabbed(person_name)
 	if sanity >= 1.0:
 		_set_state(State.CURED)
 		Sfx.play_at("cured", global_position + Vector3.UP, -4.0)
-		GameState.say("%s의 정신이 돌아왔다. 입구로 나간다." % person_name)
+		GameState.speak(global_position, CURED_LINES.pick_random())
 	elif dark_t > petrify_after and tile != player_tile and _arrived():
 		global_position = level.tile_center(tile)
+		_face(player.global_position)   # 다시 굳을 때는 플레이어 쪽을 보고 굳는다
 		body_t = 0.0
 		_set_state(State.STATUE)
 		Sfx.play_at("petrify", global_position + Vector3.UP, -3.0)
+
+func _face(p: Vector3) -> void:
+	var to := p - global_position
+	to.y = 0
+	if to.length() > 0.1:
+		look_at(global_position + to.normalized(), Vector3.UP)
 
 func _cured(dt: float) -> void:
 	if not _arrived():
@@ -137,16 +247,37 @@ func _cured(dt: float) -> void:
 		return
 	if tile == level.entrance_tile:
 		GameState.add_rescued(person_name)
-		queue_free()
+		waiting = true
+		wait_pos = level.take_wait_spot()
+		tile = Vector2i(-100, -100)   # 다른 사람 길을 막지 않게 칸에서 빠짐
+		target = tile
 		return
 	var next: Variant = level.next_step(tile, level.entrance_tile)
 	if next == null:
 		if not blocked_said:
 			blocked_said = true
-			GameState.say("%s이(가) 입구로 가는 길이 막혀 멈춰 섰다." % person_name)
+			GameState.speak(global_position, "지나갈 수가 없어요...")
 		return
 	blocked_said = false
 	target = next
+
+## 엘리베이터 홀의 빈자리로 걸어가서 홀 가운데를 보고 선다
+func _wait_in_hall(dt: float) -> void:
+	var to := wait_pos - global_position
+	to.y = 0
+	if to.length() > 0.05:
+		var step := minf(to.length(), walk_out_speed * dt)
+		global_position += to.normalized() * step
+		step_phase += step * 2.6
+		look_at(global_position + to.normalized(), Vector3.UP)
+		_animate(dt)
+	else:
+		model.transform = Transform3D.IDENTITY
+		var c := level.tile_center(level.entrance_tile)
+		c.y = global_position.y
+		if c.distance_to(global_position) > 0.1:
+			look_at(c, Vector3.UP)
+		set_process(false)
 
 func _arrived() -> bool:
 	var to := level.tile_center(target) - global_position
@@ -159,17 +290,21 @@ func _arrived() -> bool:
 func _move(speed: float, dt: float) -> void:
 	var to := level.tile_center(target) - global_position
 	to.y = 0
-	global_position += to.normalized() * min(to.length(), speed * dt)
-	look_at(global_position + to.normalized(), Vector3.UP)
+	var step := minf(to.length(), speed * dt)
+	global_position += to.normalized() * step
+	step_phase += step * 2.6
+	if to.length() > 0.01:
+		look_at(global_position + to.normalized(), Vector3.UP)
 
 func _darkest_neighbor(current: float, ex: Array[RID]) -> Variant:
 	var best := current - 0.02
 	var pick: Variant = null
 	var dirs := [Vector2i.RIGHT, Vector2i.LEFT, Vector2i.DOWN, Vector2i.UP]
 	dirs.shuffle()
+	var ptile := level.to_tile(player.global_position)
 	for d in dirs:
 		var n: Vector2i = tile + d
-		if not level.is_walkable(n) or _taken(n):
+		if not level.is_walkable(n) or _taken(n) or n == ptile:   # 플레이어 발밑으로는 도망치지 않음
 			continue
 		var v := LightSystem.light_at(level.tile_center(n), ex)
 		if v < best:

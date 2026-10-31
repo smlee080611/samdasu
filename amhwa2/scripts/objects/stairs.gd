@@ -12,4 +12,8 @@ func _on_body(b: Node) -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		GameState.state_changed.emit()
 	else:
-		GameState.say("계단: 구출 %d/%d, 차광막 %d/%d 필요" % [GameState.rescued, GameState.need_rescue, GameState.curtains_open, GameState.curtains_total])
+		# 주인공이 알 만한 것만 생각으로 말한다
+		if GameState.rescued < GameState.need_rescue:
+			GameState.say("혼자 올라갈 순 없다. 아직 이 층에 사람들이 있다.")
+		else:
+			GameState.say("현황판에 적힌 병실들... 아직 다 둘러보지 못했다.")
