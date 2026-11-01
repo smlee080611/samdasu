@@ -10,6 +10,11 @@
 [ext_resource type="Texture2D" path="res://textures/wall.png" id="t_wall"]
 [ext_resource type="Texture2D" path="res://textures/floor.png" id="t_floor"]
 [ext_resource type="Texture2D" path="res://textures/ceiling.png" id="t_ceiling"]
+[ext_resource type="Texture2D" path="res://textures/facade.png" id="t_facade"]
+[ext_resource type="Texture2D" path="res://textures/ground.png" id="t_ground"]
+[ext_resource type="Texture2D" path="res://textures/facade_upper.png" id="t_facade_upper"]
+[ext_resource type="Texture2D" path="res://textures/trees.png" id="t_trees"]
+[ext_resource type="Texture2D" path="res://textures/skyline.png" id="t_skyline"]
 [ext_resource type="PackedScene" path="res://scenes/props/bed.tscn" id="p_bed"]
 [ext_resource type="PackedScene" path="res://scenes/props/bed_curtain.tscn" id="p_bed_curtain"]
 [ext_resource type="PackedScene" path="res://scenes/props/bench.tscn" id="p_bench"]
@@ -20,6 +25,7 @@
 [ext_resource type="PackedScene" path="res://scenes/props/desk.tscn" id="p_desk"]
 [ext_resource type="PackedScene" path="res://scenes/props/elevator.tscn" id="p_elevator"]
 [ext_resource type="PackedScene" path="res://scenes/props/extinguisher.tscn" id="p_extinguisher"]
+[ext_resource type="PackedScene" path="res://scenes/props/glass_door.tscn" id="p_glass_door"]
 [ext_resource type="PackedScene" path="res://scenes/props/handrail.tscn" id="p_handrail"]
 [ext_resource type="PackedScene" path="res://scenes/props/iv_stand.tscn" id="p_iv_stand"]
 [ext_resource type="PackedScene" path="res://scenes/props/locker.tscn" id="p_locker"]
@@ -28,7 +34,6 @@
 [ext_resource type="PackedScene" path="res://scenes/props/sign.tscn" id="p_sign"]
 [ext_resource type="PackedScene" path="res://scenes/props/sink.tscn" id="p_sink"]
 [ext_resource type="PackedScene" path="res://scenes/props/stall.tscn" id="p_stall"]
-[ext_resource type="PackedScene" path="res://scenes/props/table.tscn" id="p_table"]
 [ext_resource type="PackedScene" path="res://scenes/props/wheelchair.tscn" id="p_wheelchair"]
 
 [sub_resource type="StandardMaterial3D" id="wall"]
@@ -48,6 +53,53 @@ albedo_texture = ExtResource("t_ceiling")
 roughness = 1.0
 cull_mode = 2
 texture_filter = 4
+
+[sub_resource type="StandardMaterial3D" id="facade"]
+albedo_texture = ExtResource("t_facade")
+roughness = 1.0
+cull_mode = 2
+texture_filter = 4
+
+[sub_resource type="StandardMaterial3D" id="ground"]
+albedo_texture = ExtResource("t_ground")
+roughness = 0.9
+cull_mode = 2
+texture_filter = 4
+
+[sub_resource type="StandardMaterial3D" id="m_upper"]
+albedo_texture = ExtResource("t_facade_upper")
+roughness = 1.0
+texture_filter = 4
+
+[sub_resource type="QuadMesh" id="q_upper"]
+material = SubResource("m_upper")
+size = Vector2(64, 11)
+
+[sub_resource type="StandardMaterial3D" id="m_trees"]
+transparency = 2
+alpha_scissor_threshold = 0.5
+shading_mode = 0
+albedo_texture = ExtResource("t_trees")
+texture_filter = 4
+uv1_scale = Vector3(3, 1, 1)
+texture_repeat = true
+
+[sub_resource type="QuadMesh" id="q_trees"]
+material = SubResource("m_trees")
+size = Vector2(90, 16)
+
+[sub_resource type="StandardMaterial3D" id="m_skyline"]
+transparency = 2
+alpha_scissor_threshold = 0.5
+shading_mode = 0
+albedo_texture = ExtResource("t_skyline")
+texture_filter = 4
+uv1_scale = Vector3(1, 1, 1)
+texture_repeat = true
+
+[sub_resource type="QuadMesh" id="q_skyline"]
+material = SubResource("m_skyline")
+size = Vector2(300, 34)
 
 [node name="Level1F" type="Node3D"]
 script = ExtResource("level")
@@ -69,11 +121,22 @@ wall_map = "################################
 #...#...#...#...#...#...#...#..#
 #...#...#...#...#...#...#...#..#
 #...#...#...#...#...#...#...#..#
+##.###W#######W#######W#########
+#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#
+#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#
+#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#
+#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#
+#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#
+#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#
+#,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,#
 ################################"
 entrance_tile = Vector2i(2, 9)
+exit_tile = Vector2i(2, 20)
 wall_material = SubResource("wall")
 floor_material = SubResource("floor")
 ceiling_material = SubResource("ceil")
+facade_material = SubResource("facade")
+outdoor_material = SubResource("ground")
 
 [node name="People" type="Node3D" parent="."]
 
@@ -263,20 +326,17 @@ transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 53, 0, 23)
 transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 5, 0, 11)
 open = true
 
-[node name="문_2_13" parent="Doors" instance=ExtResource("door")]
-transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 5, 0, 27)
-
 [node name="문_29_13" parent="Doors" instance=ExtResource("door")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 59, 0, 27)
 
-[node name="차광막_10_0" parent="Curtains" instance=ExtResource("curtain")]
-transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 21, 0, 1)
-
-[node name="차광막_22_0" parent="Curtains" instance=ExtResource("curtain")]
-transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 45, 0, 1)
+[node name="차광막_6_18" parent="Curtains" instance=ExtResource("curtain")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 13, 0, 37)
 
 [node name="차광막_14_18" parent="Curtains" instance=ExtResource("curtain")]
 transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 29, 0, 37)
+
+[node name="차광막_22_18" parent="Curtains" instance=ExtResource("curtain")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 45, 0, 37)
 
 [node name="비상등_0" parent="Lights" instance=ExtResource("elight")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 5, 2.7, 15)
@@ -298,6 +358,47 @@ transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 59, 0, 31)
 
 [node name="Stairs" parent="." instance=ExtResource("stairs")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 60, 0, 6)
+
+[node name="Exterior" type="Node3D" parent="."]
+
+[node name="UpperFacade" type="MeshInstance3D" parent="Exterior"]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 32, 8.5, 38.0)
+mesh = SubResource("q_upper")
+
+[node name="Trees" type="MeshInstance3D" parent="Exterior"]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 32, 7.0, 62.0)
+mesh = SubResource("q_trees")
+
+[node name="Skyline" type="MeshInstance3D" parent="Exterior"]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 32, 13.0, 120.0)
+mesh = SubResource("q_skyline")
+
+[node name="현관유리문" parent="Exterior" instance=ExtResource("p_glass_door")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 5, 0, 37.9)
+
+[node name="달빛_0" type="OmniLight3D" parent="Exterior"]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 10, 7.5, 47)
+light_color = Color(0.55, 0.65, 0.9, 1)
+light_energy = 1.4
+shadow_enabled = true
+omni_range = 20.0
+omni_attenuation = 0.8
+
+[node name="달빛_1" type="OmniLight3D" parent="Exterior"]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 32, 7.5, 47)
+light_color = Color(0.55, 0.65, 0.9, 1)
+light_energy = 1.4
+shadow_enabled = true
+omni_range = 20.0
+omni_attenuation = 0.8
+
+[node name="달빛_2" type="OmniLight3D" parent="Exterior"]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 54, 7.5, 47)
+light_color = Color(0.55, 0.65, 0.9, 1)
+light_energy = 1.4
+shadow_enabled = true
+omni_range = 20.0
+omni_attenuation = 0.8
 
 [node name="bed_1" parent="Props" instance=ExtResource("p_bed")]
 transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 10.945, 0.0, 3.0)
@@ -857,9 +958,6 @@ transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 2.27, 0.0, 31.0)
 [node name="bench_2" parent="Props" instance=ExtResource("p_bench")]
 transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 2.27, 0.0, 33.0)
 
-[node name="table_1" parent="Props" instance=ExtResource("p_table")]
-transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 5.0, 0.0, 33.025)
-
 [node name="bench_3" parent="Props" instance=ExtResource("p_bench")]
 transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 7.0, 0.0, 35.73)
 
@@ -1237,8 +1335,8 @@ width = 0.6
 
 [node name="표지판_18" parent="Signs" instance=ExtResource("p_sign")]
 transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 5.0, 2.5, 25.99)
-text = "휴게실"
-width = 0.6
+text = "현관 · 출입구"
+width = 0.9
 
 [node name="표지판_19" parent="Signs" instance=ExtResource("p_sign")]
 transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 59.0, 2.5, 25.99)
@@ -1269,35 +1367,35 @@ width = 1.1
 transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 31.0, 1.55, 21.99)
 text = "11/2 (화) 야간 병실 현황
 
-102 · 105 · 109호  차광 유지
+107 · 109 · 111호  차광 유지
    (원장님 지시, 절대 걷지 말 것)
 108호 김순자 님 — 손 경직 호소
 
-정전 시 환자분들은 엘리베이터 홀로!"
+정전 시 환자분들은 현관 밖으로!"
 
 [node name="자리_0" type="Marker3D" parent="WaitSpots"]
-transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 6.6, 0, 16.5)
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 3.2, 0, 41.6)
 
 [node name="자리_1" type="Marker3D" parent="WaitSpots"]
-transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 6.6, 0, 17.6)
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 5.4, 0, 42.6)
 
 [node name="자리_2" type="Marker3D" parent="WaitSpots"]
-transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 6.6, 0, 20.4)
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 7.6, 0, 41.3)
 
 [node name="자리_3" type="Marker3D" parent="WaitSpots"]
-transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 6.6, 0, 21.5)
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 4.2, 0, 44.6)
 
 [node name="자리_4" type="Marker3D" parent="WaitSpots"]
-transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 3.3, 0, 19.0)
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 8.8, 0, 43.6)
 
 [node name="자리_5" type="Marker3D" parent="WaitSpots"]
-transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 3.2, 0, 15.4)
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 6.4, 0, 45.8)
 
 [node name="자리_6" type="Marker3D" parent="WaitSpots"]
-transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 3.2, 0, 22.6)
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 2.6, 0, 46.6)
 
 [node name="자리_7" type="Marker3D" parent="WaitSpots"]
-transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 4.6, 0, 14.2)
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 10.2, 0, 45.2)
 
 [node name="쪽지_0" parent="Notes" instance=ExtResource("p_note")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 29.3, 0.765, 21.6)
@@ -1350,7 +1448,7 @@ body = "차광막은 실험 조건 유지를 위한 것. 절대 걷지 말 것.
 실험이 무효가 되므로 병실 차광은 반드시 유지."
 
 [node name="쪽지_5" parent="Notes" instance=ExtResource("p_note")]
-transform = Transform3D(0.25882, 0, 0.96593, 0, 1, 0, -0.96593, 0, 0.25882, 5.2, 0.745, 33.15)
+transform = Transform3D(0.25882, 0, 0.96593, 0, 1, 0, -0.96593, 0, 0.25882, 2.6, 0.475, 31.2)
 title = "원무과 안내문"
 body = "야간 소등 안내
 22시 이후 병실 소등을 원칙으로 합니다.

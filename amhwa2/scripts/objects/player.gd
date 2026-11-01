@@ -137,7 +137,7 @@ func _relay(heir: Node) -> void:
 	lanterns_held = 0
 	GameState.rescued -= 1
 	global_position = heir.global_position
-	rotation = Vector3(0, -PI * 0.5, 0)   # 홀에서 복도 쪽(동쪽)을 보고 시작
+	rotation = Vector3.ZERO   # 마당에서 건물(북쪽)을 보고 시작
 	head.rotation.x = 0.0
 	heir.queue_free()
 	stiff = 0.0

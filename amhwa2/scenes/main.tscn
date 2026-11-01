@@ -6,10 +6,19 @@
 [ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="4"]
 [ext_resource type="AudioStream" path="res://sounds/ambience.wav" id="5"]
 [ext_resource type="Script" path="res://scripts/objects/events.gd" id="6"]
+[ext_resource type="Texture2D" path="res://textures/sky.png" id="7"]
+
+[sub_resource type="PanoramaSkyMaterial" id="skymat"]
+panorama = ExtResource("7")
+
+[sub_resource type="Sky" id="sky"]
+sky_material = SubResource("skymat")
 
 [sub_resource type="Environment" id="env"]
-background_mode = 1
+background_mode = 2
 background_color = Color(0, 0, 0, 1)
+sky = SubResource("sky")
+reflected_light_source = 1
 ambient_light_source = 2
 ambient_light_color = Color(0.35, 0.4, 0.45, 1)
 ambient_light_energy = 0.05
@@ -17,6 +26,7 @@ tonemap_mode = 2
 fog_enabled = true
 fog_light_color = Color(0, 0, 0, 1)
 fog_density = 0.02
+fog_sky_affect = 0.0
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1")

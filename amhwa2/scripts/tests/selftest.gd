@@ -20,10 +20,10 @@ func _run() -> void:
 	player.look_at(level.tile_center(p.tile), Vector3.UP)
 	player.head.rotation.x = -0.15
 	print("TEST person=", p.person_name, " tile=", p.tile, " player=", stand, " persons=", get_tree().get_nodes_in_group("person").size(), " curtains=", GameState.curtains_total)
+	# 바른 순서: 석상이 아직 돌일 때 랜턴부터 놓고(무릎 꿇는 동안 안전), 헤드램프로 깨운다
+	player._toggle_lantern()
 	await _wait(240)
 	print("TEST after light: state=", p.state, " body_t=", p.body_t, " sanity=", p.sanity)
-	player._toggle_lantern()
-	await _wait(240)              # 랜턴은 놓는 데 0.8초, 다 밝아지는 데 2.5초
 	player.headlamp.on = false
 	await _wait(400)
 	print("TEST after lantern: state=", p.state, " stiff=", player.stiff)
@@ -35,8 +35,9 @@ func _run() -> void:
 	var c = get_node("/root/Main/Level1F/Curtains").get_child(0)
 	c.hold(2.0)
 	print("TEST curtain open=", c.open, " curtains_open=", GameState.curtains_open)
-	player.global_position = level.tile_center(level.to_tile(c.global_position) + Vector2i(0, 1))
-	player.rotation.y = 0
+	var front := level.to_tile(c.global_position + c.global_transform.basis.z * 2.0)
+	player.global_position = level.tile_center(front)
+	player.look_at(Vector3(c.global_position.x, 0, c.global_position.z), Vector3.UP)
 	player.head.rotation.x = 0
 	await _wait(3)
 	print("TEST ray sees curtain=", player.looking_at() == c)
@@ -104,4 +105,15 @@ func _run() -> void:
 	print("TEST npc grab held_t=", snapped(walker.held_t, 0.1), " held=", walker.held_by == mad, " victim=", mad.victim == walker)
 	await _wait(300)
 	print("TEST npc after 9s state=", walker.state)
+	# 회복한 사람이 현관 밖 마당으로 나가 기다림
+	var ps2 = get_tree().get_nodes_in_group("person").filter(func(q): return q.state == 0)
+	var w2 = ps2[0]
+	var before := GameState.rescued
+	player.global_position = level.tile_center(Vector2i(28, 6))
+	player.headlamp.on = true
+	w2.global_position = level.tile_center(Vector2i(2, 12)); w2.tile = Vector2i(2, 12); w2.target = w2.tile
+	w2._set_state(2)
+	w2.confusion = 0.0
+	await _wait(900)
+	print("TEST exit: waiting=", w2.waiting, " rescued ", before, "->", GameState.rescued, " pos=", w2.global_position.snapped(Vector3(0.1, 0.1, 0.1)), " outdoor=", level.is_outdoor(level.to_tile(w2.global_position)))
 	get_tree().quit()

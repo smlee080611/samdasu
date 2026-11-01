@@ -54,7 +54,9 @@ func light_value(target: Vector3, exclude: Array[RID]) -> float:
 		return 0.0
 	var to := target - global_position
 	var d := to.length()
-	if d >= spot_range or rad_to_deg((-global_transform.basis.z).angle_to(to)) >= spot_angle * 0.65:
+	# 가까이 있는 사람은 빛 원뿔 가장자리에 걸쳐도 몸이 비친다 (바로 앞 1~2m는 넓게)
+	var lim := spot_angle * 0.65 + clampf((3.0 - d) * 12.0, 0.0, 28.0)
+	if d >= spot_range or rad_to_deg((-global_transform.basis.z).angle_to(to)) >= lim:
 		return 0.0
 	if not LightSystem.ray_clear(global_position, target, exclude):
 		return 0.0

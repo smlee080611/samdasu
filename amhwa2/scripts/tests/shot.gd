@@ -24,6 +24,9 @@ func _run() -> void:
 			if "unshaded" in args:
 				for m in p.mats:
 					m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	if "opencurtains" in args:
+		for c in get_tree().get_nodes_in_group("level")[0].get_node("Curtains").get_children():
+			c.hold(10.0)
 	if "lampoff" in args:
 		player.headlamp.on = false
 	if "lantern" in args:   # 앞에 랜턴을 놓고 한 걸음 물러서서 찍기

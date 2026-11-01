@@ -1,49 +1,123 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://scripts/objects/curtain.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/objects/point_light_source.gd" id="2"]
-[ext_resource type="Texture2D" path="res://textures/curtain.png" id="t_cloth"]
-[ext_resource type="Texture2D" path="res://textures/window.png" id="t_window"]
+[ext_resource type="Script" path="res://scripts/objects/curtain.gd" id="e1"]
+[ext_resource type="Script" path="res://scripts/objects/point_light_source.gd" id="e2"]
+[ext_resource type="Texture2D" path="res://textures/curtain.png" id="e3"]
 
-[sub_resource type="BoxShape3D" id="shape"]
-size = Vector3(1.8, 2.6, 0.12)
-
-[sub_resource type="StandardMaterial3D" id="cloth"]
-albedo_texture = ExtResource("t_cloth")
+[sub_resource type="StandardMaterial3D" id="m_cloth"]
+albedo_texture = ExtResource("e3")
 cull_mode = 2
 texture_filter = 4
 
-[sub_resource type="StandardMaterial3D" id="window"]
-albedo_texture = ExtResource("t_window")
-emission_enabled = true
-emission = Color(1, 1, 1, 1)
-emission_texture = ExtResource("t_window")
-emission_energy_multiplier = 0.9
-cull_mode = 2
-texture_filter = 4
+[sub_resource type="StandardMaterial3D" id="m_glass"]
+transparency = 1
+albedo_color = Color(0.55, 0.65, 0.75, 0.12)
+roughness = 0.05
+metallic = 0.3
 
-[sub_resource type="QuadMesh" id="box"]
-material = SubResource("cloth")
-size = Vector2(1.8, 2.6)
+[sub_resource type="StandardMaterial3D" id="m_frame"]
+albedo_color = Color(0.3, 0.32, 0.33, 1)
+roughness = 0.5
+metallic = 0.5
+
+[sub_resource type="BoxShape3D" id="r4"]
+size = Vector3(2.0, 2.8, 0.12)
+
+[sub_resource type="QuadMesh" id="r5"]
+material = SubResource("m_cloth")
+size = Vector2(2.0, 2.8)
+
+[sub_resource type="BoxMesh" id="r6"]
+material = SubResource("m_cloth")
+size = Vector3(0.32, 2.8, 0.14)
+
+[sub_resource type="BoxMesh" id="r7"]
+material = SubResource("m_cloth")
+size = Vector3(0.32, 2.8, 0.14)
+
+[sub_resource type="BoxMesh" id="r8"]
+material = SubResource("m_glass")
+size = Vector3(1.6, 1.5, 0.01)
+
+[sub_resource type="BoxMesh" id="r9"]
+material = SubResource("m_frame")
+size = Vector3(1.64, 0.06, 0.08)
+
+[sub_resource type="BoxMesh" id="r10"]
+material = SubResource("m_frame")
+size = Vector3(1.64, 0.06, 0.08)
+
+[sub_resource type="BoxMesh" id="r11"]
+material = SubResource("m_frame")
+size = Vector3(0.06, 1.5, 0.08)
+
+[sub_resource type="BoxMesh" id="r12"]
+material = SubResource("m_frame")
+size = Vector3(0.06, 1.5, 0.08)
+
+[sub_resource type="BoxMesh" id="r13"]
+material = SubResource("m_frame")
+size = Vector3(0.05, 1.5, 0.07)
+
+[sub_resource type="BoxMesh" id="r14"]
+material = SubResource("m_frame")
+size = Vector3(1.6, 0.04, 0.07)
 
 [node name="Curtain" type="StaticBody3D"]
 collision_layer = 5
 collision_mask = 0
-script = ExtResource("1")
-open_material = SubResource("window")
+script = ExtResource("e1")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 1.06)
-shape = SubResource("shape")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.42, 1.07)
+shape = SubResource("r4")
 
-[node name="Mesh" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 1.06)
-mesh = SubResource("box")
+[node name="Cloth" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.42, 1.05)
+mesh = SubResource("r5")
+
+[node name="DrapeL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.86, 1.42, 1.09)
+mesh = SubResource("r6")
+
+[node name="DrapeR" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.86, 1.42, 1.09)
+mesh = SubResource("r7")
+
+[node name="Glass" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.65, 0.62)
+mesh = SubResource("r8")
+
+[node name="Frame" type="Node3D" parent="."]
+
+[node name="Top" type="MeshInstance3D" parent="Frame"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.38, 0.62)
+mesh = SubResource("r9")
+
+[node name="Bottom" type="MeshInstance3D" parent="Frame"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.92, 0.62)
+mesh = SubResource("r10")
+
+[node name="Left" type="MeshInstance3D" parent="Frame"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.78, 1.65, 0.62)
+mesh = SubResource("r11")
+
+[node name="Right" type="MeshInstance3D" parent="Frame"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.78, 1.65, 0.62)
+mesh = SubResource("r12")
+
+[node name="Mid" type="MeshInstance3D" parent="Frame"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.65, 0.62)
+mesh = SubResource("r13")
+
+[node name="Bar" type="MeshInstance3D" parent="Frame"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.9, 0.62)
+mesh = SubResource("r14")
 
 [node name="Moonlight" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6, 6)
 light_color = Color(0.6, 0.7, 0.95, 1)
 light_energy = 0.9
 omni_range = 9.0
-script = ExtResource("2")
+script = ExtResource("e2")
 power = 0.4

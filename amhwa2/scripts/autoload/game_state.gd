@@ -55,7 +55,7 @@ func curtain_opened() -> void:
 	state_changed.emit()
 
 func relay_happened() -> void:
-	relay.emit("몸이 완전히 굳었다.\n\n\n...홀에서 기다리던 사람이\n떨어진 헤드램프를 집어 들었다.")
+	relay.emit("몸이 완전히 굳었다.\n\n\n...밖에서 기다리던 사람이\n떨어진 헤드램프를 집어 들었다.")
 
 func can_leave() -> bool:
 	return rescued >= need_rescue and curtains_open >= curtains_total

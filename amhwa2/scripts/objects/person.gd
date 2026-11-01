@@ -23,7 +23,7 @@ enum State { STATUE, MAD, CURED }
 @export var rush_range := 5          # 이 칸 수 안에 들어오면 달려들기(돌진·멈춤 반복)
 @export var escape_search := 90       # 숨을 곳을 찾을 때 살펴볼 칸 수
 @export var lunge_speed := 4.8        # 빛에 갇혔을 때 돌발적으로 달려드는 속도
-@export var lunge_cooldown := 3.5
+@export var lunge_cooldown := 5.0
 @export var walk_out_speed := 1.5
 @export var skin: StandardMaterial3D   ## 사람 피부·옷 재질 (models/patient_skin.tres). 사람마다 복제해서 색을 바꾼다
 
@@ -57,12 +57,22 @@ var lurk_t := 0.0                     # 숨은 뒤 잠시 가만히 엿보는 �
 var stuck_t := 0.0                    # 빛 속에서 도망칠 곳이 없던 시간
 var lunge_t := 0.0                    # 돌발 돌진 중
 var lunge_cd := 0.0
+var retreat_t := 0.0                  # 붙잡은 뒤 뒷걸음질
 var held_by: Node = null              # (회복한 사람) 나를 붙잡은 광인
 var held_t := 0.0                     # 붙잡혀 굳어 가는 정도(초). hold_petrify가 되면 석상
 var victim: Node = null               # (광인) 내가 붙잡고 있는 사람
 @export var hold_petrify := 5.0
 const HELP_LINES := ["살려주세요...!", "누가 좀...!", "놔, 놔요...!", "간호사님...!"]
 var loose_now := 0.0                # 지금 몸이 풀린 정도 (움직임 연출용)
+# 부드러운 이동: 칸 중앙에 딱 멈추지 않고, 사람마다 걷는 줄(lane)이 조금씩 다르고, 천천히 방향을 튼다
+var lane := Vector3.ZERO
+var vel := Vector3.ZERO
+var moved := false
+var last_tile := Vector2i(-1, -1)
+var idle_t := 0.0                   # (회복한 사람) 멈춰서 두리번거리는 시간
+@export var turn_speed := 7.0
+@export var confusion := 0.28       ## 회복한 사람이 갈림길에서 엉뚱한 쪽으로 갈 확률
+const LOST_LINES := ["여기가... 어디지...", "출구가... 어느 쪽이에요...?", "누구 없어요...?"]
 const MAD_TINT := Color(0.92, 0.64, 0.6)
 const STONE_TINT := Color(0.72, 0.74, 0.77)
 var parts := {}                     # 부위 이름 -> 노드
@@ -80,6 +90,17 @@ func _ready() -> void:
 	sync_to_physics = false
 	_collect_materials(model)
 	rotation.y = randf() * TAU
+	lane = Vector3(randf_range(-0.3, 0.3), 0, randf_range(-0.3, 0.3))
+	# 사람마다 조금씩 다르게: 속도 ±15%, 돌진 거리, 다시 굳는 시간
+	var m := randf_range(0.85, 1.15)
+	chase_speed_stiff *= m
+	chase_speed_loose *= m
+	flee_speed_stiff *= m
+	flee_speed_loose *= m
+	lunge_speed *= m
+	walk_out_speed *= randf_range(0.85, 1.15)
+	rush_range += randi_range(-1, 1)
+	petrify_after *= randf_range(0.85, 1.2)
 	_random_statue_pose()
 	_set_state(state)
 	_late_ready.call_deferred()
@@ -89,7 +110,7 @@ func _late_ready() -> void:
 	player = get_tree().get_first_node_in_group("player")
 	tile = level.to_tile(global_position)
 	target = tile
-	global_position = level.tile_center(tile)
+	global_position = _point(tile)
 
 func _set_state(s: State) -> void:
 	state = s
@@ -128,6 +149,10 @@ func _process(dt: float) -> void:
 			_mad(dt, ex)
 		State.CURED:
 			_cured(dt)
+	if state != State.STATUE:
+		_coast(dt)
+	else:
+		vel = Vector3.ZERO
 	_animate(dt)
 
 ## 1안 움직임. 굳었다 풀린 몸이라 관절이 뻣뻣하다:
@@ -244,6 +269,7 @@ func _mad(dt: float, ex: Array[RID]) -> void:
 	lurk_t = maxf(0.0, lurk_t - dt)
 	lunge_t = maxf(0.0, lunge_t - dt)
 	lunge_cd = maxf(0.0, lunge_cd - dt)
+	retreat_t = maxf(0.0, retreat_t - dt)
 	# 어둠 속에 있을수록 다시 굳어 간다: 느려지고, 뚝뚝 끊기고, 회색으로 변하다가 돌이 된다
 	var harden := clampf(dark_t / petrify_after, 0.0, 1.0)
 	var loose := pow(clampf(sanity, 0.0, 1.0), 0.8) * (1.0 - 0.75 * harden)
@@ -291,6 +317,9 @@ func _mad(dt: float, ex: Array[RID]) -> void:
 	if lunge_t > 0.0:
 		speed = lunge_speed
 		move_mode = 2
+	elif retreat_t > 0.0:
+		speed = maxf(1.4, lerpf(flee_speed_stiff, flee_speed_loose, loose))
+		move_mode = 1
 	elif flinch_t > 0.0:
 		speed = 0.0
 	elif lit:
@@ -324,6 +353,8 @@ func _mad(dt: float, ex: Array[RID]) -> void:
 		var next: Variant = null
 		if lunge_t > 0.0:
 			next = level.next_step(tile, player_tile)
+		elif retreat_t > 0.0:
+			next = _away_from_player()
 		elif lit:
 			if _plan_escape(ex):
 				next = flee_path[0]
@@ -347,19 +378,19 @@ func _mad(dt: float, ex: Array[RID]) -> void:
 				victim = q
 				q.grabbed_by(self)
 				break
-	if (not lit or lunge_t > 0.0) and global_position.distance_to(player.global_position) < 0.95:
+	if (not lit or lunge_t > 0.0) and retreat_t <= 0.0 and global_position.distance_to(player.global_position) < 0.95:
 		if player.grab_cooldown <= 0.0:
 			player.grabbed(person_name)
 			lunge_t = 0.0
-			flinch_t = 1.6     # 붙잡은 뒤에는 잠깐 물러서서 플레이어에게 틈을 준다
+			retreat_t = 1.4    # 붙잡은 뒤에는 뒷걸음질쳐 물러서서 플레이어에게 틈을 준다
 			rush_t = 0.0
-			pause_t = 1.6
+			pause_t = 1.8
+			target = tile
 	if sanity >= 1.0:
 		_set_state(State.CURED)
 		Sfx.play_at("cured", global_position + Vector3.UP, -4.0)
 		GameState.speak(global_position, CURED_LINES.pick_random())
 	elif dark_t > petrify_after and tile != player_tile and _arrived():
-		global_position = level.tile_center(tile)
 		_face(player.global_position)   # 다시 굳을 때는 플레이어 쪽을 보고 굳는다
 		body_t = 0.0
 		_set_state(State.STATUE)
@@ -402,6 +433,21 @@ func _plan_escape(ex: Array[RID]) -> bool:
 			queue.append(n)
 	return false
 
+## 플레이어에게서 멀어지는 이웃 칸 (붙잡은 뒤 물러설 때)
+func _away_from_player() -> Variant:
+	var best := -1.0
+	var pick: Variant = null
+	var pp := player.global_position
+	for d in DIRS4:
+		var n: Vector2i = tile + d
+		if not level.is_walkable(n) or _taken(n):
+			continue
+		var dd := level.tile_center(n).distance_to(pp)
+		if dd > best:
+			best = dd
+			pick = n
+	return pick
+
 ## 석상마다 다른 자세로 굳어 있다: 고개 숙임·꺾임, 한쪽 팔을 앞으로 뻗음 등
 func _random_statue_pose() -> void:
 	var r := randf()
@@ -429,6 +475,10 @@ func _cured(dt: float) -> void:
 	if held_by != null or held_t > 0.0:
 		_held(dt)
 		return
+	if idle_t > 0.0:                 # 멈춰서 두리번거리는 중
+		idle_t -= dt
+		twitch = Vector3(0, 0, sin(Time.get_ticks_msec() / 400.0) * 0.5)
+		return
 	if not _arrived():
 		_move(walk_out_speed, dt)
 		return
@@ -443,20 +493,45 @@ func _cured(dt: float) -> void:
 		if nx != null:
 			target = nx
 		return
-	if tile == level.entrance_tile:
+	var goal := level.rescue_tile()
+	if tile == goal:
 		GameState.add_rescued(person_name)
 		waiting = true
 		wait_pos = level.take_wait_spot()
 		tile = Vector2i(-100, -100)   # 다른 사람 길을 막지 않게 칸에서 빠짐
 		target = tile
 		return
-	var next: Variant = level.next_step(tile, level.entrance_tile)
+	# 정신이 막 돌아온 사람은 길을 잘 모른다:
+	#  - 플레이어가 가까이(5칸 안) 있으면 플레이어를 따라온다 (2칸 안이면 그 자리에서 기다림)
+	#  - 혼자일 때는 가끔 엉뚱한 길로 빠지거나 멈춰서 두리번거린다
+	var ptile := level.to_tile(player.global_position)
+	var pd := tile.distance_to(ptile)
+	if pd < 2.0 and not level.is_outdoor(tile):
+		return
+	if pd <= 5.0 and not level.is_outdoor(tile):
+		goal = ptile
+	elif randf() < 0.07:
+		idle_t = randf_range(1.5, 3.0)
+		GameState.speak(global_position, LOST_LINES.pick_random())
+		return
+	elif randf() < confusion:
+		var opts: Array[Vector2i] = []
+		for d in DIRS4:
+			var n: Vector2i = tile + d
+			if n != last_tile and level.is_walkable(n) and not _taken(n):
+				opts.append(n)
+		if opts.size() > 0:
+			last_tile = tile
+			target = opts.pick_random()
+			return
+	var next: Variant = level.next_step(tile, goal)
 	if next == null:
 		if not blocked_said:
 			blocked_said = true
 			GameState.speak(global_position, "지나갈 수가 없어요...")
 		return
 	blocked_said = false
+	last_tile = tile
 	target = next
 
 ## 광인이 어둠 속에서 홀로 걸어가던 사람을 붙잡는다. 붙잡힌 사람은 주저앉아 소리치고,
@@ -481,7 +556,6 @@ func _held(dt: float) -> void:
 		if held_by:
 			held_by.victim = null
 		held_by = null
-		global_position = level.tile_center(tile)
 		target = tile
 		body_t = 0.0
 		_set_state(State.STATUE)
@@ -496,8 +570,7 @@ func wander_off(to: Vector2i) -> void:
 	waiting = false
 	wander = true
 	wander_target = to
-	global_position = level.tile_center(level.entrance_tile)
-	tile = level.entrance_tile
+	tile = level.to_tile(global_position)
 	target = tile
 	set_process(true)
 	GameState.rescued -= 1
@@ -514,28 +587,54 @@ func _wait_in_hall(dt: float) -> void:
 		_animate(dt)
 	else:
 		model.transform = Transform3D.IDENTITY
-		var c := level.tile_center(level.entrance_tile)
+		var c := level.tile_center(level.rescue_tile()) + Vector3(0, 0, 2)
 		c.y = global_position.y
 		if c.distance_to(global_position) > 0.1:
 			look_at(c, Vector3.UP)
 		set_process(false)
 
+## 칸 안에서 내가 서는 자리: 칸 중앙 + 내 줄(lane)
+func _point(t: Vector2i) -> Vector3:
+	return level.tile_center(t) + lane
+
+## 목표 칸에 거의 다 왔으면(0.45m) 미리 다음 칸을 정한다 → 칸 중앙에서 멈추지 않고 모퉁이를 둥글게 돈다
 func _arrived() -> bool:
-	var to := level.tile_center(target) - global_position
+	if target == tile:
+		return true
+	var to := _point(target) - global_position
 	to.y = 0
-	if to.length() < 0.05:
+	if to.length() < 0.45:
 		tile = target
+		lane = (lane + Vector3(randf_range(-0.1, 0.1), 0, randf_range(-0.1, 0.1))).clamp(Vector3(-0.32, 0, -0.32), Vector3(0.32, 0, 0.32))
 		return true
 	return false
 
+## 속도를 서서히 바꾸고, 몸은 가는 방향으로 천천히 돌린다
 func _move(speed: float, dt: float) -> void:
-	var to := level.tile_center(target) - global_position
+	var to := _point(target) - global_position
 	to.y = 0
-	var step := minf(to.length(), speed * dt)
-	global_position += to.normalized() * step
-	step_phase += step * 2.6
-	if to.length() > 0.01:
-		look_at(global_position + to.normalized(), Vector3.UP)
+	var want := to.normalized() * speed if to.length() > 0.02 else Vector3.ZERO
+	vel = vel.lerp(want, minf(1.0, dt * 7.0))
+	var step := vel * dt
+	if step.length() > to.length():
+		step = to
+	global_position += step
+	step_phase += step.length() * 2.6
+	moved = true
+	if vel.length() > 0.08:
+		var yaw := atan2(-vel.x, -vel.z)
+		rotation.y = lerp_angle(rotation.y, yaw, minf(1.0, dt * turn_speed))
+
+## 이번 프레임에 움직이지 않았으면 남은 속도로 조금 미끄러지다 멈춤 (칸마다 뚝뚝 서지 않게)
+func _coast(dt: float) -> void:
+	if moved:
+		moved = false
+		return
+	if vel.length() < 0.05:
+		vel = Vector3.ZERO
+		return
+	vel *= maxf(0.0, 1.0 - dt * 6.0)
+	global_position += vel * dt
 
 func _darkest_neighbor(current: float, ex: Array[RID]) -> Variant:
 	var best := current - 0.02
