@@ -124,5 +124,10 @@ func _run() -> void:
 	await _wait(240)
 	print("TEST sprint after 6s stamina=", snapped(player.stamina, 1), " winded=", player.winded, " sprinting=", player.sprinting)
 	Input.action_release("sprint"); Input.action_release("move_forward")
+	var all_out := true
+	for k in 20:
+		if not level.is_outdoor(level.to_tile(level.take_wait_spot())):
+			all_out = false
+	print("TEST 20 more wait spots all outdoors=", all_out)
 	print("TEST exit: waiting=", w2.waiting, " rescued ", before, "->", GameState.rescued, " pos=", w2.global_position.snapped(Vector3(0.1, 0.1, 0.1)), " outdoor=", level.is_outdoor(level.to_tile(w2.global_position)))
 	get_tree().quit()

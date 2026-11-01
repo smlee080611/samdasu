@@ -119,8 +119,11 @@ func take_wait_spot() -> Vector3:
 	if spots and _used_spots < spots.get_child_count():
 		_used_spots += 1
 		return spots.get_child(_used_spots - 1).global_position
+	# 자리가 다 찼으면 출구 바깥 마당에 줄지어 선다 (예전엔 엘리베이터 홀로 돌아가는 버그가 있었음)
+	var extra := _used_spots - (spots.get_child_count() if spots else 0)
 	_used_spots += 1
-	return tile_center(entrance_tile) + Vector3(randf_range(-0.8, 0.8), 0, randf_range(-0.8, 0.8))
+	var base := tile_center(rescue_tile())
+	return base + Vector3(3.0 + (extra % 6) * 1.3 + randf_range(-0.2, 0.2), 0, 3.0 + (extra / 6) * 1.3 + randf_range(-0.2, 0.2))
 
 ## 지나갈 수 있는 칸인가: 벽이 아니고, "blocker" 그룹(석상, 닫힌 문 등)이 서 있지 않은 칸
 func is_walkable(t: Vector2i) -> bool:
