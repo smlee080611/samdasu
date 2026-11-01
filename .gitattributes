@@ -1,0 +1,8 @@
+# Godot 파일은 운영체제와 상관없이 줄바꿈을 LF(\n)로 둔다.
+# Windows git이 \r\n으로 바꾸면 지도(wall_map) 같은 여러 줄 글자가 깨질 수 있다.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.wav binary
+*.glb binary
+*.ttf binary

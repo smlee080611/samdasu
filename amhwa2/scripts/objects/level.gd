@@ -22,7 +22,8 @@ var astar := AStarGrid2D.new()
 
 func _ready() -> void:
 	add_to_group("level")
-	rows = wall_map.strip_edges().split("\n")
+	# Windows에서 git으로 받으면 줄바꿈이 \r\n이 되므로 \r을 지우고 나눈다 (안 지우면 줄 길이가 1 늘어나 범위 밖 오류)
+	rows = wall_map.replace("\r", "").strip_edges().split("\n")
 	size = Vector2i(rows[0].length(), rows.size())
 	_build_walls()
 	refresh_nav.call_deferred()
