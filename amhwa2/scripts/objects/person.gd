@@ -57,6 +57,11 @@ var lurk_t := 0.0                     # 숨은 뒤 잠시 가만히 엿보는 �
 var stuck_t := 0.0                    # 빛 속에서 도망칠 곳이 없던 시간
 var lunge_t := 0.0                    # 돌발 돌진 중
 var lunge_cd := 0.0
+var held_by: Node = null              # (회복한 사람) 나를 붙잡은 광인
+var held_t := 0.0                     # 붙잡혀 굳어 가는 정도(초). hold_petrify가 되면 석상
+var victim: Node = null               # (광인) 내가 붙잡고 있는 사람
+@export var hold_petrify := 5.0
+const HELP_LINES := ["살려주세요...!", "누가 좀...!", "놔, 놔요...!", "간호사님...!"]
 var loose_now := 0.0                # 지금 몸이 풀린 정도 (움직임 연출용)
 const MAD_TINT := Color(0.92, 0.64, 0.6)
 const STONE_TINT := Color(0.72, 0.74, 0.77)
@@ -155,6 +160,9 @@ func _animate(dt: float) -> void:
 		lean = 0.32 if move_mode == 2 else (0.12 if move_mode == 1 else 0.05)
 		bob = absf(sin(step_phase)) * (0.06 if move_mode == 2 else 0.035) if move_mode > 0 else 0.0
 		sway = sin(step_phase) * (0.12 + 0.1 * (1.0 - loose)) if move_mode > 0 else 0.0
+	elif state == State.CURED and held_t > 0.0:
+		lean = 0.5                     # 붙잡혀 주저앉음
+		bob = 0.35
 	elif state == State.CURED:
 		lean = 0.08
 		bob = absf(sin(step_phase)) * 0.025
@@ -242,7 +250,28 @@ func _mad(dt: float, ex: Array[RID]) -> void:
 	loose_now = loose
 	mats[0].albedo_color = MAD_TINT.lerp(STONE_TINT, harden * harden)
 	var player_tile := level.to_tile(player.global_position)
+	# 쫓을 대상: 플레이어, 또는 어둠 속을 홀로 걸어가는 회복한 사람 (플레이어를 조금 더 우선)
+	var prey_tile := player_tile
 	var dist := tile.distance_to(player_tile)
+	if not lit:
+		for q in get_tree().get_nodes_in_group("person"):
+			if q.state == State.CURED and not q.waiting and q.held_by == null:
+				var dq := tile.distance_to(q.tile)
+				if dq + 2.0 < dist and dq < chase_range:
+					dist = dq
+					prey_tile = q.tile
+	# 사람을 붙잡고 있는 동안은 그 자리에 머문다 (빛을 받으면 놓고 도망)
+	if victim != null:
+		if lit or not is_instance_valid(victim) or victim.state != State.CURED or victim.held_by != self:
+			if is_instance_valid(victim) and victim.held_by == self:
+				victim.held_by = null
+			victim = null
+		else:
+			_face(victim.global_position)
+			move_mode = 0
+			if player.global_position.distance_to(global_position) < 0.95 and player.grab_cooldown <= 0.0:
+				player.grabbed(person_name)
+			return
 
 	# 어둠 속에서 가까우면 돌진했다 멈췄다를 반복. 뻣뻣할수록 오래 멈춘다
 	var rushing := not lit and dist <= rush_range and lurk_t <= 0.0
@@ -302,8 +331,8 @@ func _mad(dt: float, ex: Array[RID]) -> void:
 			else:
 				next = _darkest_neighbor(lv, ex)
 		elif dist < chase_range and (lurk_t <= 0.0 or dist <= 2):
-			next = level.next_step(tile, player_tile)
-		if next != null and (not _taken(next) or lunge_t > 0.0):
+			next = level.next_step(tile, prey_tile)
+		if next != null and (not _taken(next) or lunge_t > 0.0 or next == prey_tile):
 			target = next
 	elif speed > 0.0:
 		_move(speed, dt)
@@ -311,6 +340,13 @@ func _mad(dt: float, ex: Array[RID]) -> void:
 		if step_t <= 0.0:
 			step_t = clampf(1.1 / speed, 0.18, 0.9)
 			Sfx.play_at("mad_step_%d" % (randi() % 2), global_position, -6.0 if lit else 0.0, 0.15)
+	if not lit and lunge_t <= 0.0 and victim == null:
+		for q in get_tree().get_nodes_in_group("person"):
+			if q.state == State.CURED and not q.waiting and q.held_by == null \
+					and q.global_position.distance_to(global_position) < 0.95:
+				victim = q
+				q.grabbed_by(self)
+				break
 	if (not lit or lunge_t > 0.0) and global_position.distance_to(player.global_position) < 0.95:
 		if player.grab_cooldown <= 0.0:
 			player.grabbed(person_name)
@@ -390,6 +426,9 @@ func _face(p: Vector3) -> void:
 		look_at(global_position + to.normalized(), Vector3.UP)
 
 func _cured(dt: float) -> void:
+	if held_by != null or held_t > 0.0:
+		_held(dt)
+		return
 	if not _arrived():
 		_move(walk_out_speed, dt)
 		return
@@ -419,6 +458,38 @@ func _cured(dt: float) -> void:
 		return
 	blocked_said = false
 	target = next
+
+## 광인이 어둠 속에서 홀로 걸어가던 사람을 붙잡는다. 붙잡힌 사람은 주저앉아 소리치고,
+## hold_petrify초 동안 굳어 간다. 그 안에 빛이 닿으면 다시 일어나 걷고, 못 오면 석상이 된다.
+func grabbed_by(mad: Node) -> void:
+	held_by = mad
+	Sfx.play_at("grab", global_position + Vector3.UP, 0.0, 0.1)
+	GameState.speak(global_position, HELP_LINES.pick_random(), 30.0)   # 멀리서도 들림
+
+func _held(dt: float) -> void:
+	if held_by != null and (not is_instance_valid(held_by) or held_by.state != State.MAD \
+			or held_by.global_position.distance_to(global_position) > 1.6):
+		held_by = null
+	var lit := LightSystem.is_lit(global_position, [get_rid()])
+	if lit or held_by == null:
+		held_t -= dt * 1.5
+	else:
+		held_t += dt
+	mats[0].albedo_color = Color.WHITE.lerp(STONE_TINT, clampf(held_t / hold_petrify, 0.0, 1.0))
+	if held_t >= hold_petrify:
+		held_t = 0.0
+		if held_by:
+			held_by.victim = null
+		held_by = null
+		global_position = level.tile_center(tile)
+		target = tile
+		body_t = 0.0
+		_set_state(State.STATUE)
+		Sfx.play_at("petrify", global_position + Vector3.UP, -3.0)
+	elif held_t <= 0.0:
+		held_t = 0.0
+		if held_by == null:
+			mats[0].albedo_color = Color.WHITE   # 다시 일어나 입구로
 
 ## 사건: 홀에서 기다리던 사람이 누군가를 찾으러 어둠 속으로 걸어간다
 func wander_off(to: Vector2i) -> void:

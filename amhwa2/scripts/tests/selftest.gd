@@ -23,8 +23,9 @@ func _run() -> void:
 	await _wait(240)
 	print("TEST after light: state=", p.state, " body_t=", p.body_t, " sanity=", p.sanity)
 	player._toggle_lantern()
+	await _wait(240)              # 랜턴은 놓는 데 0.8초, 다 밝아지는 데 2.5초
 	player.headlamp.on = false
-	await _wait(600)
+	await _wait(400)
 	print("TEST after lantern: state=", p.state, " stiff=", player.stiff)
 	var door = get_tree().get_nodes_in_group("blocker").filter(func(b): return b.has_method("interact"))[0]
 	door.interact(player)
@@ -76,4 +77,31 @@ func _run() -> void:
 	player.global_position = level.tile_center(Vector2i(2, 9))
 	await _wait(5)
 	print("TEST elevator event=", ev.elevator_done)
+	# 랜턴: 놓는 데 시간이 걸리고 천천히 밝아짐
+	player.global_position = level.tile_center(Vector2i(16, 12))
+	GameState.game_over = false
+	player.stiff = 0.0
+	player.lanterns_held = 1
+	player._toggle_lantern()
+	await _wait(20)
+	print("TEST kneel placing lanterns_held=", player.lanterns_held, " kneel=", snapped(player.kneel_t, 0.01))
+	await _wait(40)
+	var lt = player.placed_lanterns[-1]
+	print("TEST lantern placed lit_k=", snapped(lt.lit_k, 0.01), " power=", snapped(lt.light.power, 0.01))
+	await _wait(160)
+	print("TEST lantern later lit_k=", snapped(lt.lit_k, 0.01))
+	# 광인이 걸어가는 사람을 붙잡음
+	player.global_position = level.tile_center(Vector2i(2, 9))
+	player.headlamp.on = false
+	var ps = get_tree().get_nodes_in_group("person").filter(func(q): return q.state == 0)
+	var walker = ps[0]
+	var mad = ps[1]
+	walker.global_position = level.tile_center(Vector2i(20, 12)); walker.tile = Vector2i(20, 12); walker.target = walker.tile
+	walker._set_state(2)
+	mad.global_position = level.tile_center(Vector2i(18, 12)); mad.tile = Vector2i(18, 12); mad.target = mad.tile
+	mad._set_state(1); mad.sanity = 0.3; mad.sanity_speed = 0.0
+	await _wait(240)
+	print("TEST npc grab held_t=", snapped(walker.held_t, 0.1), " held=", walker.held_by == mad, " victim=", mad.victim == walker)
+	await _wait(300)
+	print("TEST npc after 9s state=", walker.state)
 	get_tree().quit()

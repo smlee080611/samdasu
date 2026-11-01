@@ -41,9 +41,9 @@ func say(text: String) -> void:
 	message.emit(text)
 
 ## 다른 사람이 하는 말. 플레이어 근처(약 6칸)에서만 들린다.
-func speak(from: Vector3, line: String) -> void:
+func speak(from: Vector3, line: String, hear_range := 12.0) -> void:
 	var p := get_tree().get_first_node_in_group("player") as Node3D
-	if p and p.global_position.distance_to(from) < 12.0:
+	if p and p.global_position.distance_to(from) < hear_range:
 		say("“%s”" % line)
 
 func add_rescued(person_name: String) -> void:

@@ -18,6 +18,10 @@ var hold_time := 0.0
 var placed_lanterns: Array[Node3D] = []
 var step_t := 0.0
 var shake := 0.0          # 화면 흔들림 세기
+var kneel_t := 0.0        # 랜턴을 놓거나 줍는 중 (움직일 수 없음)
+var kneel_total := 0.0
+var kneel_action := Callable()
+const HEAD_Y := 1.6
 const PERSON_SCENE := preload("res://scenes/person.tscn")
 
 func _ready() -> void:
@@ -43,7 +47,7 @@ func _unhandled_input(e: InputEvent) -> void:
 			t.interact(self)
 
 func _physics_process(dt: float) -> void:
-	if GameState.is_frozen():
+	if GameState.is_frozen() or kneel_t > 0.0:
 		velocity = Vector3.ZERO
 		return
 	var input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
@@ -65,6 +69,18 @@ func _process(dt: float) -> void:
 	shake = maxf(0.0, shake - dt * 2.2)
 	head.h_offset = randf_range(-1, 1) * 0.06 * shake * shake
 	head.v_offset = randf_range(-1, 1) * 0.06 * shake * shake
+	# 무릎 꿇기: 시선이 내려갔다가 동작이 끝나면 일어남
+	var kneel_k := 0.0
+	if kneel_t > 0.0 and not GameState.is_frozen():
+		kneel_t -= dt
+		if kneel_t <= 0.0:
+			kneel_t = 0.0
+			if kneel_action.is_valid():
+				kneel_action.call()
+			kneel_action = Callable()
+		else:
+			kneel_k = sin(PI * (1.0 - kneel_t / kneel_total))
+	head.position.y = lerpf(head.position.y, HEAD_Y - 0.55 * kneel_k, minf(1.0, dt * 12.0))
 	if GameState.is_frozen():
 		return
 	grab_cooldown -= dt
@@ -104,6 +120,8 @@ func _find_heir() -> Node:
 	return null
 
 func _relay(heir: Node) -> void:
+	kneel_t = 0.0
+	kneel_action = Callable()
 	var level := get_tree().get_first_node_in_group("level") as Level
 	var t := level.to_tile(global_position)
 	var me := PERSON_SCENE.instantiate()
@@ -140,25 +158,45 @@ func grabbed(by_name: String) -> void:
 	stiff += 25.0
 	Sfx.play("grab", 0.0, 0.0)
 	shake = 1.0
+	if kneel_t > 0.0:            # 랜턴을 놓거나 줍다가 붙잡히면 취소
+		kneel_t = 0.0
+		kneel_action = Callable()
 	headlamp.blackout_t = 0.9   # 붙잡히면 헤드램프가 잠깐 꺼진다. 1초 동안의 완전한 어둠
 
+## 랜턴 놓기·줍기는 무릎을 꿇어야 해서 시간이 걸린다(놓기 0.8초, 줍기 0.6초). 그동안 움직일 수 없다.
 func _toggle_lantern() -> void:
+	if kneel_t > 0.0:
+		return
 	for l in placed_lanterns:
 		if l.global_position.distance_to(global_position) < 1.6:
-			placed_lanterns.erase(l)
-			l.queue_free()
-			lanterns_held += 1
-			Sfx.play("lantern", -6.0)
+			_kneel(0.6, _pick_up.bind(l))
 			return
 	if lanterns_held <= 0:
 		GameState.say("랜턴이 없다.")
 		return
+	_kneel(0.8, _place)
+
+func _kneel(seconds: float, action: Callable) -> void:
+	kneel_t = seconds
+	kneel_total = seconds
+	kneel_action = action
+	Sfx.play("step_%d" % (randi() % 3), -8.0)
+
+func _place() -> void:
 	var l: Node3D = lantern_scene.instantiate()
 	get_parent().add_child(l)
 	l.global_position = global_position - global_transform.basis.z * 0.8
 	placed_lanterns.append(l)
 	lanterns_held -= 1
 	Sfx.play("lantern", -3.0)
+
+func _pick_up(l: Node3D) -> void:
+	if not is_instance_valid(l):
+		return
+	placed_lanterns.erase(l)
+	l.put_out()
+	lanterns_held += 1
+	Sfx.play("lantern", -6.0)
 
 ## 어둠 속 광인이 가까울수록, 몸이 굳을수록 심장이 크고 빨리 뛴다
 func _update_heartbeat() -> void:
