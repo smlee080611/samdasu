@@ -4,6 +4,7 @@ extends SpotLight3D
 @export var battery := 100.0
 @export var drain_per_sec := 0.8
 var on := true
+var blackout_t := 0.0   # 붙잡혔을 때 잠깐 꺼짐
 var protects_body := false   # 헤드램프 빛은 내 몸이 굳는 걸 막아주지는 않는다
 
 var base_energy := 2.6
@@ -19,7 +20,7 @@ func _ready() -> void:
 	base_angle = spot_angle
 
 func is_on() -> bool:
-	return on and battery > 0.0
+	return on and battery > 0.0 and blackout_t <= 0.0
 
 func toggle() -> void:
 	if battery <= 0.0:
@@ -32,6 +33,7 @@ func recharge(amount: float) -> void:
 	battery = min(100.0, battery + amount)
 
 func _process(dt: float) -> void:
+	blackout_t = maxf(0.0, blackout_t - dt)
 	if is_on() and not GameState.is_frozen():
 		battery -= drain_per_sec * dt
 		if battery <= 0.0:

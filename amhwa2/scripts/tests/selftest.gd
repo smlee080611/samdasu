@@ -39,4 +39,41 @@ func _run() -> void:
 	player.head.rotation.x = 0
 	await _wait(3)
 	print("TEST ray sees curtain=", player.looking_at() == c)
+	# 붙잡힘: 헤드램프가 잠깐 꺼지고 화면이 흔들림
+	player.grab_cooldown = 0.0
+	player.grabbed("x")
+	print("TEST grab lamp_off=", not player.headlamp.is_on(), " shake=", player.shake)
+	# 교대: 홀에서 기다리는 사람이 있으면 이어받기
+	var heir = null
+	for q in get_tree().get_nodes_in_group("person"):
+		if q.state == 0:
+			heir = q
+			break
+	heir._set_state(2)
+	heir.waiting = true
+	heir.tile = Vector2i(-100, -100)
+	heir.global_position = Vector3(6.6, 0, 16.5)
+	GameState.rescued = 1
+	var n_before := get_tree().get_nodes_in_group("person").size()
+	player.global_position = level.tile_center(Vector2i(16, 6))
+	player.stiff = 100.0
+	await _wait(10)
+	print("TEST relay: game_over=", GameState.game_over, " stiff=", player.stiff, " player=", level.to_tile(player.global_position), " rescued=", GameState.rescued, " persons ", n_before, "->", get_tree().get_nodes_in_group("person").size())
+	var me = get_tree().get_nodes_in_group("person").filter(func(q): return q.person_name == "간호사 (나)")
+	print("TEST relay statue at=", me[0].tile if me.size() > 0 else "none", " state=", me[0].state if me.size() > 0 else -1)
+	await _wait(400)
+	print("TEST after relay ui_blocking=", GameState.ui_blocking)
+	var ev = get_node("/root/Main/Events")
+	ev.door_t = 0.0
+	player.global_position = level.tile_center(Vector2i(2, 9))
+	player.rotation.y = PI * 0.5
+	await _wait(5)
+	print("TEST door event closed=", ev.doors_done)
+	player.global_position = level.tile_center(Vector2i(16, 9))
+	await _wait(200)
+	print("TEST station event=", ev.station_done)
+	GameState.rescued = 1
+	player.global_position = level.tile_center(Vector2i(2, 9))
+	await _wait(5)
+	print("TEST elevator event=", ev.elevator_done)
 	get_tree().quit()

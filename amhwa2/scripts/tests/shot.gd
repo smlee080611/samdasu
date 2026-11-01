@@ -24,6 +24,8 @@ func _run() -> void:
 			if "unshaded" in args:
 				for m in p.mats:
 					m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	if "lampoff" in args:
+		player.headlamp.on = false
 	if "lantern" in args:   # 앞에 랜턴을 놓고 한 걸음 물러서서 찍기
 		player._toggle_lantern()
 		player.global_position += player.global_transform.basis.z * 0.9

@@ -46,6 +46,7 @@ func _ready() -> void:
 	$Root.theme.default_font_size = 18
 	GameState.message.connect(_show_subtitle)
 	GameState.note_opened.connect(_open_note)
+	GameState.relay.connect(_play_relay)
 	note.visible = false
 	subtitle.modulate.a = 0.0
 	if GameState.intro_seen:
@@ -82,6 +83,24 @@ func _end_intro() -> void:
 	c.tween_property(controls, "modulate:a", 0.85, 1.0)
 	c.tween_interval(12.0)
 	c.tween_property(controls, "modulate:a", 0.0, 2.0)
+
+# ---------- 교대 ----------
+func _play_relay(text: String) -> void:
+	GameState.ui_blocking = true
+	intro.visible = true
+	intro.modulate.a = 0.0
+	$Root/Intro/Skip.visible = false
+	intro_text.text = text
+	intro_text.modulate.a = 0.0
+	var t := create_tween()
+	t.tween_property(intro, "modulate:a", 1.0, 0.6)
+	t.tween_property(intro_text, "modulate:a", 1.0, 0.8)
+	t.tween_interval(2.6)
+	t.tween_callback(Sfx.play.bind("inhale", -4.0, 0.0))
+	t.tween_property(intro_text, "modulate:a", 0.0, 0.6)
+	t.tween_callback(func(): GameState.ui_blocking = false)
+	t.tween_property(intro, "modulate:a", 0.0, 1.2)
+	t.tween_callback(intro.hide)
 
 # ---------- 쪽지 ----------
 func _open_note(title: String, body: String) -> void:

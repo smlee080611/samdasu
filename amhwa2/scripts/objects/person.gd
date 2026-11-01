@@ -1,7 +1,8 @@
 extends AnimatableBody3D
 ## 병원 사람 한 명. 상태: STATUE(석상) → MAD(광인) → CURED(정신 회복, 입구로 걸어감)
 ##                        MAD → (어둠 속 오래) → STATUE
-## 자식 노드: CollisionShape3D, Model(사람 3D 모델, models/patient.glb), Breath(숨소리)
+## 자식 노드: CollisionShape3D, Model(models/patient_parts.glb: Head, Torso, ArmXp/ArmXn, LegXp/LegXn), Breath(숨소리)
+## 모델은 부위별로 나뉘어 있고 각 부위의 원점이 관절이다. _animate()가 부위를 돌려 걸음과 경련을 만든다.
 ## 상태는 모델 재질의 색으로 구분한다: 석상=회색, 광인=붉은빛, 회복=원래 색
 
 enum State { STATUE, MAD, CURED }
@@ -20,7 +21,11 @@ enum State { STATUE, MAD, CURED }
 @export var flee_speed_stiff := 0.7
 @export var flee_speed_loose := 2.6
 @export var rush_range := 5          # 이 칸 수 안에 들어오면 달려들기(돌진·멈춤 반복)
+@export var escape_search := 90       # 숨을 곳을 찾을 때 살펴볼 칸 수
+@export var lunge_speed := 4.8        # 빛에 갇혔을 때 돌발적으로 달려드는 속도
+@export var lunge_cooldown := 3.5
 @export var walk_out_speed := 1.5
+@export var skin: StandardMaterial3D   ## 사람 피부·옷 재질 (models/patient_skin.tres). 사람마다 복제해서 색을 바꾼다
 
 @onready var model: Node3D = $Model
 @onready var breath: AudioStreamPlayer3D = $Breath
@@ -46,6 +51,20 @@ var pose_t := 0.0
 var step_phase := 0.0
 var twitch := Vector3.ZERO          # 경련: (앞뒤, 좌우, 고개 돌림)
 var twitch_t := 0.0
+var flee_path: Array[Vector2i] = []   # 플레이어 시야 밖 어두운 곳까지의 길
+var fled := false                     # 방금 빛에서 도망쳐 숨었음
+var lurk_t := 0.0                     # 숨은 뒤 잠시 가만히 엿보는 시간
+var stuck_t := 0.0                    # 빛 속에서 도망칠 곳이 없던 시간
+var lunge_t := 0.0                    # 돌발 돌진 중
+var lunge_cd := 0.0
+var loose_now := 0.0                # 지금 몸이 풀린 정도 (움직임 연출용)
+const MAD_TINT := Color(0.92, 0.64, 0.6)
+const STONE_TINT := Color(0.72, 0.74, 0.77)
+var parts := {}                     # 부위 이름 -> 노드
+var pose := {}                      # 부위 이름 -> 지금 각도(Vector3)
+var statue_pose := {}               # 석상일 때 굳은 자세
+var wander := false                 # 홀에서 기다리다 어둠 속으로 걸어 나감 (사건)
+var wander_target := Vector2i.ZERO
 var waiting := false          # 구출되어 엘리베이터 홀에서 기다리는 중
 var wait_pos := Vector3.ZERO
 
@@ -56,6 +75,7 @@ func _ready() -> void:
 	sync_to_physics = false
 	_collect_materials(model)
 	rotation.y = randf() * TAU
+	_random_statue_pose()
 	_set_state(state)
 	_late_ready.call_deferred()
 
@@ -74,7 +94,7 @@ func _set_state(s: State) -> void:
 		remove_from_group("blocker")
 	# 정신이 돌아온 사람은 빛을 가리지 않고, 좁은 복도에서 플레이어와 엉키지 않게 통과된다
 	collision_layer = 0 if s == State.CURED else GameState.LAYER_PERSON
-	var tint := Color(0.72, 0.74, 0.77) if s == State.STATUE else (Color(1.0, 0.5, 0.45) if s == State.MAD else Color.WHITE)
+	var tint := Color(0.72, 0.74, 0.77) if s == State.STATUE else (MAD_TINT if s == State.MAD else Color.WHITE)
 	for m in mats:
 		m.albedo_color = tint
 		m.emission_enabled = s == State.STATUE
@@ -112,11 +132,11 @@ func _process(dt: float) -> void:
 func _animate(dt: float) -> void:
 	var loose := 1.0
 	if state == State.STATUE:
-		model.transform = Transform3D.IDENTITY
+		model.transform = Transform3D.IDENTITY   # 굳은 순간의 부위 자세(pose)는 그대로 둔다
 		held = model.global_transform
 		return
 	if state == State.MAD:
-		loose = clampf(sanity, 0.0, 1.0)
+		loose = loose_now
 	# 경련
 	twitch_t -= dt
 	if twitch_t <= 0.0:
@@ -139,7 +159,7 @@ func _animate(dt: float) -> void:
 		lean = 0.08
 		bob = absf(sin(step_phase)) * 0.025
 		sway = sin(step_phase) * 0.05
-	var b := Basis.from_euler(Vector3(-lean + twitch.x, twitch.z, sway + twitch.y))
+	var b := Basis.from_euler(Vector3(-lean + twitch.x * 0.4, twitch.z * 0.3, sway * 0.5 + twitch.y * 0.4))
 	var desired := global_transform * Transform3D(b, Vector3(0, -bob, 0))
 	# 스톱모션: 뻣뻣할수록 드문드문 갱신 (6fps → 30fps)
 	var fps := lerpf(6.0, 30.0, loose) if state == State.MAD else 30.0
@@ -147,7 +167,36 @@ func _animate(dt: float) -> void:
 	if pose_t <= 0.0:
 		pose_t = 1.0 / fps
 		held = desired
+		_limb_pose(loose)
 	model.global_transform = held
+
+## 팔다리: 걸음에 맞춰 다리를 엇갈려 휘두르고, 광인은 팔을 앞으로 뻗는다.
+## 뻣뻣할수록 관절이 덜 움직이고(보폭이 작고) 팔이 들린 채 굳어 있다.
+func _limb_pose(loose: float) -> void:
+	var moving := move_mode > 0 or (state == State.CURED and not waiting) or waiting
+	var sw := sin(step_phase)
+	var leg_amp := 0.0
+	if moving:
+		leg_amp = (0.55 if move_mode == 2 else 0.35) * (0.45 + 0.55 * loose)
+	var reach := 0.0
+	var arm_amp := 0.0
+	if state == State.MAD:
+		reach = 1.25 if move_mode == 2 else (0.7 if move_mode == 1 else 0.35)
+		reach *= 1.0 - 0.4 * loose
+		arm_amp = 0.12
+	else:
+		arm_amp = 0.25 * (1.0 if moving else 0.0)
+	var target_pose := {
+		"LegXp": Vector3(sw * leg_amp, 0, 0),
+		"LegXn": Vector3(-sw * leg_amp, 0, 0),
+		"ArmXp": Vector3(reach - sw * arm_amp + twitch.x * 0.8, 0, -0.08 + twitch.y * 0.5),
+		"ArmXn": Vector3(reach * 0.85 + sw * arm_amp - twitch.x * 0.6, 0, 0.08 - twitch.y * 0.4),
+		"Head": Vector3(0.15 + twitch.x * 1.5, twitch.z * 1.4, twitch.y * 1.6) if state == State.MAD else Vector3(0.1, 0, 0),
+	}
+	for k in target_pose:
+		# 풀렸을수록 부드럽게 따라가고, 뻣뻣하면 뚝 끊겨서 바뀐다
+		pose[k] = pose.get(k, Vector3.ZERO).lerp(target_pose[k], lerpf(1.0, 0.6, loose))
+	_apply_pose()
 
 func _statue(dt: float, ex: Array[RID]) -> void:
 	var lv := LightSystem.light_at(global_position, ex)
@@ -163,25 +212,40 @@ func _statue(dt: float, ex: Array[RID]) -> void:
 		_set_state(State.MAD)
 		Sfx.play_at("stone_crack", global_position + Vector3.UP)
 
+## 광인의 행동
+##  빛 속: 플레이어 시야 밖의 어두운 곳을 찾아 그곳까지 도망친다(벽 뒤, 모퉁이 너머, 문 안쪽).
+##        도망칠 곳이 없으면(구석에 몰리면) 잠깐 버티다가 비명과 함께 플레이어에게 돌발적으로 달려든다.
+##  숨은 뒤: 잠시 가만히 엿보다가 다시 다가온다.
+##  어둠 속: 멀리서는 슬금슬금, 가까우면 돌진·멈춤 반복. 오래 있으면 점점 굳어 돌이 된다.
 func _mad(dt: float, ex: Array[RID]) -> void:
 	var lv := LightSystem.light_at(global_position, ex)
 	var lit := lv > LightSystem.LIT_THRESHOLD
 	if lit:
 		dark_t = 0.0
 		sanity += dt * sanity_speed * min(1.0, lv * 1.6)
-		if not was_lit:
+		if not was_lit and lunge_t <= 0.0:
 			flinch_t = 0.45            # 빛을 맞는 순간 움찔하며 멈춤
 			twitch_t = 0.0
 	else:
 		dark_t += dt
 		sanity = max(0.0, sanity - dt * 0.03)
+		if fled:                       # 숨는 데 성공: 잠시 엿본다
+			fled = false
+			lurk_t = randf_range(1.5, 3.5)
 	was_lit = lit
-	var loose := pow(clampf(sanity, 0.0, 1.0), 0.8)
+	lurk_t = maxf(0.0, lurk_t - dt)
+	lunge_t = maxf(0.0, lunge_t - dt)
+	lunge_cd = maxf(0.0, lunge_cd - dt)
+	# 어둠 속에 있을수록 다시 굳어 간다: 느려지고, 뚝뚝 끊기고, 회색으로 변하다가 돌이 된다
+	var harden := clampf(dark_t / petrify_after, 0.0, 1.0)
+	var loose := pow(clampf(sanity, 0.0, 1.0), 0.8) * (1.0 - 0.75 * harden)
+	loose_now = loose
+	mats[0].albedo_color = MAD_TINT.lerp(STONE_TINT, harden * harden)
 	var player_tile := level.to_tile(player.global_position)
 	var dist := tile.distance_to(player_tile)
 
 	# 어둠 속에서 가까우면 돌진했다 멈췄다를 반복. 뻣뻣할수록 오래 멈춘다
-	var rushing := not lit and dist <= rush_range
+	var rushing := not lit and dist <= rush_range and lurk_t <= 0.0
 	if rushing:
 		if rush_t > 0.0:
 			rush_t -= dt
@@ -195,11 +259,16 @@ func _mad(dt: float, ex: Array[RID]) -> void:
 
 	var speed := 0.0
 	move_mode = 0
-	if flinch_t > 0.0:
+	if lunge_t > 0.0:
+		speed = lunge_speed
+		move_mode = 2
+	elif flinch_t > 0.0:
 		speed = 0.0
 	elif lit:
 		speed = lerpf(flee_speed_stiff, flee_speed_loose, loose)
 		move_mode = 1
+	elif lurk_t > 0.0 and dist > 2:
+		speed = 0.0                    # 숨어서 엿보는 중
 	elif rushing:
 		if rush_t > 0.0:
 			speed = lerpf(chase_speed_stiff, chase_speed_loose, loose)
@@ -207,14 +276,34 @@ func _mad(dt: float, ex: Array[RID]) -> void:
 	else:
 		speed = lerpf(chase_speed_stiff, chase_speed_loose, loose) * 0.45   # 멀리서는 슬금슬금
 		move_mode = 1
+	if lunge_t <= 0.0:
+		speed *= 1.0 - 0.6 * harden
+
+	# 빛에 갇혀 도망칠 곳이 없으면 돌발 돌진
+	if lit and lunge_t <= 0.0:
+		stuck_t = stuck_t + dt if flee_path.is_empty() else 0.0
+		if stuck_t > 0.9 and lunge_cd <= 0.0 and dist <= 6:
+			stuck_t = 0.0
+			lunge_t = 0.85
+			lunge_cd = lunge_cooldown
+			flinch_t = 0.0
+			Sfx.play_at("shriek", global_position + Vector3.UP * 1.5, 0.0, 0.1)
+	else:
+		stuck_t = 0.0
 
 	if _arrived():
 		var next: Variant = null
-		if lit:
-			next = _darkest_neighbor(lv, ex)
-		elif dist < chase_range:
+		if lunge_t > 0.0:
 			next = level.next_step(tile, player_tile)
-		if next != null and not _taken(next):
+		elif lit:
+			if _plan_escape(ex):
+				next = flee_path[0]
+				fled = true
+			else:
+				next = _darkest_neighbor(lv, ex)
+		elif dist < chase_range and (lurk_t <= 0.0 or dist <= 2):
+			next = level.next_step(tile, player_tile)
+		if next != null and (not _taken(next) or lunge_t > 0.0):
 			target = next
 	elif speed > 0.0:
 		_move(speed, dt)
@@ -222,8 +311,13 @@ func _mad(dt: float, ex: Array[RID]) -> void:
 		if step_t <= 0.0:
 			step_t = clampf(1.1 / speed, 0.18, 0.9)
 			Sfx.play_at("mad_step_%d" % (randi() % 2), global_position, -6.0 if lit else 0.0, 0.15)
-	if not lit and global_position.distance_to(player.global_position) < 0.95:
-		player.grabbed(person_name)
+	if (not lit or lunge_t > 0.0) and global_position.distance_to(player.global_position) < 0.95:
+		if player.grab_cooldown <= 0.0:
+			player.grabbed(person_name)
+			lunge_t = 0.0
+			flinch_t = 1.6     # 붙잡은 뒤에는 잠깐 물러서서 플레이어에게 틈을 준다
+			rush_t = 0.0
+			pause_t = 1.6
 	if sanity >= 1.0:
 		_set_state(State.CURED)
 		Sfx.play_at("cured", global_position + Vector3.UP, -4.0)
@@ -235,6 +329,60 @@ func _mad(dt: float, ex: Array[RID]) -> void:
 		_set_state(State.STATUE)
 		Sfx.play_at("petrify", global_position + Vector3.UP, -3.0)
 
+## 플레이어 눈에 보이지 않고(벽에 가림) 어두운 가장 가까운 칸을 찾아 flee_path에 길을 넣는다.
+## 플레이어 칸과 그 바로 옆은 지나가지 않는다(플레이어를 스치며 도망치지 않게).
+const DIRS4 := [Vector2i.RIGHT, Vector2i.LEFT, Vector2i.DOWN, Vector2i.UP]
+func _plan_escape(ex: Array[RID]) -> bool:
+	flee_path.clear()
+	var ptile := level.to_tile(player.global_position)
+	var eye: Vector3 = player.head.global_position
+	var see_ex: Array[RID] = [get_rid(), player.get_rid()]
+	var prev := {tile: tile}
+	var queue: Array[Vector2i] = [tile]
+	var i := 0
+	while i < queue.size() and i < escape_search:
+		var cur: Vector2i = queue[i]
+		i += 1
+		if cur != tile:
+			var c := level.tile_center(cur)
+			var hidden := not LightSystem.ray_clear(eye, c + Vector3(0, 1.2, 0), see_ex)
+			if hidden and LightSystem.light_at(c, ex) < LightSystem.LIT_THRESHOLD:
+				var path: Array[Vector2i] = []
+				var k := cur
+				while k != tile:
+					path.push_front(k)
+					k = prev[k]
+				flee_path = path
+				return true
+		var dirs := DIRS4.duplicate()
+		dirs.shuffle()
+		for d in dirs:
+			var n: Vector2i = cur + d
+			if prev.has(n) or n == ptile or not level.is_walkable(n) or _taken(n):
+				continue
+			if n.distance_to(ptile) < 1.5 and tile.distance_to(ptile) >= 1.5:
+				continue
+			prev[n] = cur
+			queue.append(n)
+	return false
+
+## 석상마다 다른 자세로 굳어 있다: 고개 숙임·꺾임, 한쪽 팔을 앞으로 뻗음 등
+func _random_statue_pose() -> void:
+	var r := randf()
+	pose = {
+		"Head": Vector3(randf_range(-0.1, 0.45), randf_range(-0.5, 0.5), randf_range(-0.35, 0.35)),
+		"ArmXp": Vector3(randf_range(0.0, 1.4) if r < 0.4 else randf_range(-0.1, 0.3), 0, randf_range(-0.15, 0.05)),
+		"ArmXn": Vector3(randf_range(0.0, 1.4) if r > 0.7 else randf_range(-0.1, 0.3), 0, randf_range(-0.05, 0.15)),
+		"LegXp": Vector3(randf_range(-0.25, 0.25), 0, 0),
+		"LegXn": Vector3(randf_range(-0.25, 0.25), 0, 0),
+	}
+	_apply_pose()
+
+func _apply_pose() -> void:
+	for k in pose:
+		if parts.has(k):
+			parts[k].rotation = pose[k]
+
 func _face(p: Vector3) -> void:
 	var to := p - global_position
 	to.y = 0
@@ -244,6 +392,17 @@ func _face(p: Vector3) -> void:
 func _cured(dt: float) -> void:
 	if not _arrived():
 		_move(walk_out_speed, dt)
+		return
+	if wander:
+		if tile == wander_target:
+			wander = false
+			body_t = 0.0
+			_set_state(State.STATUE)   # 어둠 속에서 다시 굳는다
+			Sfx.play_at("petrify", global_position + Vector3.UP, -3.0)
+			return
+		var nx: Variant = level.next_step(tile, wander_target)
+		if nx != null:
+			target = nx
 		return
 	if tile == level.entrance_tile:
 		GameState.add_rescued(person_name)
@@ -260,6 +419,17 @@ func _cured(dt: float) -> void:
 		return
 	blocked_said = false
 	target = next
+
+## 사건: 홀에서 기다리던 사람이 누군가를 찾으러 어둠 속으로 걸어간다
+func wander_off(to: Vector2i) -> void:
+	waiting = false
+	wander = true
+	wander_target = to
+	global_position = level.tile_center(level.entrance_tile)
+	tile = level.entrance_tile
+	target = tile
+	set_process(true)
+	GameState.rescued -= 1
 
 ## 엘리베이터 홀의 빈자리로 걸어가서 홀 가운데를 보고 선다
 func _wait_in_hall(dt: float) -> void:
@@ -320,17 +490,17 @@ func _taken(t: Vector2i) -> bool:
 
 ## 모델 안의 모든 메시 면에 이 사람 전용 재질 사본을 붙인다 (석상마다 따로 빛나도록)
 func _collect_materials(n: Node) -> void:
+	# 사람 한 명당 재질 하나(모든 부위가 공유). 상태 색은 이 재질만 바꾸면 된다
+	if mats.is_empty():
+		var m: StandardMaterial3D = skin.duplicate() if skin else StandardMaterial3D.new()
+		m.metallic = 0.0
+		m.roughness = 1.0
+		mats.append(m)
 	if n is MeshInstance3D:
 		var mi := n as MeshInstance3D
-		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF   # 자기 그림자로 검게 얼룩지는 것 방지
-		for i in mi.mesh.get_surface_count():
-			var src := mi.get_active_material(i)
-			var m: BaseMaterial3D = src.duplicate() if src is BaseMaterial3D else StandardMaterial3D.new()
-			m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST_WITH_MIPMAPS
-			m.metallic = 0.0
-			m.roughness = 1.0
-			m.cull_mode = BaseMaterial3D.CULL_DISABLED   # 얇은 옷자락 뒷면도 보이게
-			mi.set_surface_override_material(i, m)
-			mats.append(m)
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mi.material_override = mats[0]
+		mi.visibility_range_end = 34.0
+		parts[mi.name] = mi if mi.get_parent() == model else mi.get_parent()
 	for c in n.get_children():
 		_collect_materials(c)

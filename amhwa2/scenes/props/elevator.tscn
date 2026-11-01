@@ -62,3 +62,9 @@ mesh = SubResource("r7")
 [node name="Button" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.95, 1.2, 0.03)
 mesh = SubResource("r8")
+
+[node name="Glow" type="OmniLight3D" parent="." groups=["elevator_glow"]]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.45, 0.35)
+light_color = Color(1, 0.15, 0.08, 1)
+light_energy = 0.0
+omni_range = 4.0

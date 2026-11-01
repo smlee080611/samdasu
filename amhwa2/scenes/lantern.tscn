@@ -137,9 +137,19 @@ transform = Transform3D(1, 0, 0, 0, 0.0, -1.0, 0, 1.0, 0.0, 0, 0.31, 0)
 mesh = SubResource("r14")
 
 [node name="Light" type="OmniLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.35, 0)
 light_color = Color(1, 0.8, 0.55, 1)
-light_energy = 1.6
+light_energy = 1.5
 shadow_enabled = true
-omni_range = 6.0
+shadow_blur = 2.5
+omni_range = 9.0
+omni_attenuation = 1.4
 script = ExtResource("e2")
+judge_range = 6.0
+
+[node name="Fill" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
+light_color = Color(1, 0.75, 0.5, 1)
+light_energy = 0.22
+omni_range = 13.0
+omni_attenuation = 0.6

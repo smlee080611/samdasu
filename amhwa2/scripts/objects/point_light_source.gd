@@ -5,6 +5,7 @@ extends OmniLight3D
 @export var power := 1.0
 @export var protects_body := true
 @export var active := true
+@export var judge_range := 0.0   ## 게임 판정 거리. 0이면 보이는 빛 범위(omni_range)와 같음. 보이는 빛을 더 넓게 퍼뜨려도 밸런스는 유지
 
 func _ready() -> void:
 	add_to_group("light_source")
@@ -17,9 +18,10 @@ func set_active(v: bool) -> void:
 func light_value(target: Vector3, exclude: Array[RID]) -> float:
 	if not active:
 		return 0.0
+	var r := judge_range if judge_range > 0.0 else omni_range
 	var d := global_position.distance_to(target)
-	if d >= omni_range:
+	if d >= r:
 		return 0.0
 	if not LightSystem.ray_clear(global_position, target, exclude):
 		return 0.0
-	return power * (1.0 - d / omni_range)
+	return power * (1.0 - d / r)

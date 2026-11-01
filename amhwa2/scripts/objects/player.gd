@@ -17,6 +17,8 @@ var grab_cooldown := 0.0
 var hold_time := 0.0
 var placed_lanterns: Array[Node3D] = []
 var step_t := 0.0
+var shake := 0.0          # 화면 흔들림 세기
+const PERSON_SCENE := preload("res://scenes/person.tscn")
 
 func _ready() -> void:
 	add_to_group("player")
@@ -59,6 +61,10 @@ func _physics_process(dt: float) -> void:
 		step_t = 0.0
 
 func _process(dt: float) -> void:
+	# 화면 흔들림
+	shake = maxf(0.0, shake - dt * 2.2)
+	head.h_offset = randf_range(-1, 1) * 0.06 * shake * shake
+	head.v_offset = randf_range(-1, 1) * 0.06 * shake * shake
 	if GameState.is_frozen():
 		return
 	grab_cooldown -= dt
@@ -81,9 +87,46 @@ func _process(dt: float) -> void:
 		stiff += (0.6 if headlamp.is_on() else 2.0) * dt
 	_update_heartbeat()
 	if stiff >= 100.0:
-		GameState.game_over = true
-		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-		GameState.state_changed.emit()
+		var heir := _find_heir()
+		if heir:
+			_relay(heir)
+		else:
+			GameState.game_over = true
+			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+			GameState.state_changed.emit()
+
+## 교대: 엘리베이터 홀에서 기다리던 사람이 있으면, 내 몸은 그 자리에서 석상이 되고 그 사람이 이어받는다.
+## 굳은 내 몸은 다른 석상처럼 나중에 다시 깨워 구할 수 있다. 들고 있던 랜턴은 그 자리에 떨어진다.
+func _find_heir() -> Node:
+	for p in get_tree().get_nodes_in_group("person"):
+		if p.waiting:
+			return p
+	return null
+
+func _relay(heir: Node) -> void:
+	var level := get_tree().get_first_node_in_group("level") as Level
+	var t := level.to_tile(global_position)
+	var me := PERSON_SCENE.instantiate()
+	me.person_name = "간호사 (나)"
+	level.get_node("People").add_child(me)
+	me.global_position = level.tile_center(t)
+	me.rotation.y = rotation.y
+	for i in lanterns_held:
+		var l: Node3D = lantern_scene.instantiate()
+		get_parent().add_child(l)
+		l.global_position = global_position + Vector3(randf_range(-0.5, 0.5), 0, randf_range(-0.5, 0.5))
+		placed_lanterns.append(l)
+	lanterns_held = 0
+	GameState.rescued -= 1
+	global_position = heir.global_position
+	rotation = Vector3(0, -PI * 0.5, 0)   # 홀에서 복도 쪽(동쪽)을 보고 시작
+	head.rotation.x = 0.0
+	heir.queue_free()
+	stiff = 0.0
+	grab_cooldown = 2.0
+	level.refresh_nav()
+	Sfx.play("petrify", -2.0, 0.0)
+	GameState.relay_happened()
 
 func looking_at() -> Node:
 	if ray.is_colliding():
@@ -96,6 +139,8 @@ func grabbed(by_name: String) -> void:
 	grab_cooldown = 1.2
 	stiff += 25.0
 	Sfx.play("grab", 0.0, 0.0)
+	shake = 1.0
+	headlamp.blackout_t = 0.9   # 붙잡히면 헤드램프가 잠깐 꺼진다. 1초 동안의 완전한 어둠
 
 func _toggle_lantern() -> void:
 	for l in placed_lanterns:

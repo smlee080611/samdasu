@@ -5,6 +5,7 @@ signal message(text: String)
 signal state_changed
 signal note_opened(title: String, body: String)
 signal status_poke   # 상태(구출 수, 랜턴, 배터리)를 잠깐 보여줄 때
+signal relay(text: String)   # 교대: 굳은 나 대신 기다리던 사람이 이어받음
 
 const LAYER_WALL := 1
 const LAYER_PERSON := 2
@@ -52,6 +53,9 @@ func add_rescued(person_name: String) -> void:
 func curtain_opened() -> void:
 	curtains_open += 1
 	state_changed.emit()
+
+func relay_happened() -> void:
+	relay.emit("몸이 완전히 굳었다.\n\n\n...홀에서 기다리던 사람이\n떨어진 헤드램프를 집어 들었다.")
 
 func can_leave() -> bool:
 	return rescued >= need_rescue and curtains_open >= curtains_total

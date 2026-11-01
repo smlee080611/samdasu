@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="3"]
 [ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="4"]
 [ext_resource type="AudioStream" path="res://sounds/ambience.wav" id="5"]
+[ext_resource type="Script" path="res://scripts/objects/events.gd" id="6"]
 
 [sub_resource type="Environment" id="env"]
 background_mode = 1
@@ -34,3 +35,6 @@ transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 5, 0, 19)
 stream = ExtResource("5")
 volume_db = -14.0
 autoplay = true
+
+[node name="Events" type="Node" parent="."]
+script = ExtResource("6")
