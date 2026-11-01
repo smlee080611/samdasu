@@ -67,15 +67,15 @@ func _run() -> void:
 	print("TEST after relay ui_blocking=", GameState.ui_blocking)
 	var ev = get_node("/root/Main/Events")
 	ev.door_t = 0.0
-	player.global_position = level.tile_center(Vector2i(2, 9))
-	player.rotation.y = PI * 0.5
+	player.global_position = level.tile_center(Vector2i(18, 3))
+	player.rotation.y = 0.0
 	await _wait(5)
 	print("TEST door event closed=", ev.doors_done)
-	player.global_position = level.tile_center(Vector2i(16, 9))
+	player.global_position = level.tile_center(Vector2i(19, 9))
 	await _wait(200)
 	print("TEST station event=", ev.station_done)
 	GameState.rescued = 1
-	player.global_position = level.tile_center(Vector2i(2, 9))
+	player.global_position = level.tile_center(Vector2i(18, 3))
 	await _wait(5)
 	print("TEST elevator event=", ev.elevator_done)
 	# 랜턴: 놓는 데 시간이 걸리고 천천히 밝아짐
@@ -92,14 +92,14 @@ func _run() -> void:
 	await _wait(160)
 	print("TEST lantern later lit_k=", snapped(lt.lit_k, 0.01))
 	# 광인이 걸어가는 사람을 붙잡음
-	player.global_position = level.tile_center(Vector2i(2, 9))
+	player.global_position = level.tile_center(Vector2i(18, 3))
 	player.headlamp.on = false
 	var ps = get_tree().get_nodes_in_group("person").filter(func(q): return q.state == 0)
 	var walker = ps[0]
 	var mad = ps[1]
-	walker.global_position = level.tile_center(Vector2i(20, 12)); walker.tile = Vector2i(20, 12); walker.target = walker.tile
+	walker.global_position = level.tile_center(Vector2i(28, 12)); walker.tile = Vector2i(28, 12); walker.target = walker.tile
 	walker._set_state(2)
-	mad.global_position = level.tile_center(Vector2i(18, 12)); mad.tile = Vector2i(18, 12); mad.target = mad.tile
+	mad.global_position = level.tile_center(Vector2i(26, 12)); mad.tile = Vector2i(26, 12); mad.target = mad.tile
 	mad._set_state(1); mad.sanity = 0.3; mad.sanity_speed = 0.0
 	await _wait(240)
 	print("TEST npc grab held_t=", snapped(walker.held_t, 0.1), " held=", walker.held_by == mad, " victim=", mad.victim == walker)
@@ -114,7 +114,7 @@ func _run() -> void:
 	w2.global_position = level.tile_center(Vector2i(2, 12)); w2.tile = Vector2i(2, 12); w2.target = w2.tile
 	w2._set_state(2)
 	w2.confusion = 0.0
-	await _wait(900)
+	await _wait(2400)
 	# 달리기: 스태미나가 닳고, 다 떨어지면 못 달림
 	player.global_position = level.tile_center(Vector2i(5, 12))
 	player.rotation.y = -PI * 0.5

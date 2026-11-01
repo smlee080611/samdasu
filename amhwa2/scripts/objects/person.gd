@@ -120,10 +120,8 @@ func _late_ready() -> void:
 
 func _set_state(s: State) -> void:
 	state = s
-	if s == State.STATUE:
-		add_to_group("blocker")
-	else:
-		remove_from_group("blocker")
+	# 석상은 길을 완전히 막지 않는다 (복도 폭 2m에 사람 하나 서 있는 정도라 옆으로 비켜 지나감).
+	# 예전엔 석상이 칸을 통째로 막아서, 복도에 석상 하나만 있어도 구한 사람이 밖으로 못 나갔다.
 	# 정신이 돌아온 사람은 빛을 가리지 않고, 좁은 복도에서 플레이어와 엉키지 않게 통과된다
 	collision_layer = 0 if s == State.CURED else GameState.LAYER_PERSON
 	var tint := Color(0.72, 0.74, 0.77) if s == State.STATUE else (MAD_TINT if s == State.MAD else Color.WHITE)
@@ -611,9 +609,22 @@ func _wait_in_hall(dt: float) -> void:
 			look_at(c, Vector3.UP)
 		set_process(false)
 
-## 칸 안에서 내가 서는 자리: 칸 중앙 + 내 줄(lane)
+## 칸 안에서 내가 서는 자리: 칸 중앙 + 내 줄(lane). 그 칸에 석상이 서 있으면 옆으로 비켜 선다
 func _point(t: Vector2i) -> Vector3:
-	return level.tile_center(t) + lane
+	var p := level.tile_center(t) + lane
+	for q in get_tree().get_nodes_in_group("person"):
+		if q == self or q.state != State.STATUE or level.to_tile(q.global_position) != t:
+			continue
+		var away: Vector3 = p - q.global_position
+		away.y = 0
+		if away.length() < 0.85:
+			if away.length() < 0.05:
+				away = Vector3(lane.z, 0, -lane.x) if lane.length() > 0.05 else Vector3.RIGHT
+			p = q.global_position + away.normalized() * 0.85
+			var c := level.tile_center(t)
+			p.x = clampf(p.x, c.x - 0.72, c.x + 0.72)
+			p.z = clampf(p.z, c.z - 0.72, c.z + 0.72)
+	return p
 
 ## 목표 칸에 거의 다 왔으면(0.45m) 미리 다음 칸을 정한다 → 칸 중앙에서 멈추지 않고 모퉁이를 둥글게 돈다
 func _arrived() -> bool:

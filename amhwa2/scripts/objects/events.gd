@@ -10,6 +10,8 @@ extends Node
 @export var max_door_events := 3
 @export var vanish_after := 25.0                # 홀을 떠나 있는 시간이 이만큼 지나면 사건 4
 @export var vanish_target := Vector2i(10, 14)   # 108호 (아이 쪽지가 있는 방)
+@export var hall_rect := Rect2i(17, 1, 5, 4)      # 엘리베이터 홀 (칸)
+@export var station_rect := Rect2i(17, 8, 5, 3)   # 간호사실 (칸)
 
 var player: Node3D
 var level: Level
@@ -39,7 +41,7 @@ func _process(dt: float) -> void:
 	_vanish_event(dt, pt)
 
 func _in_hall(t: Vector2i) -> bool:
-	return t.x >= 1 and t.x <= 3 and t.y >= 6 and t.y <= 12
+	return hall_rect.has_point(t)
 
 func _unseen(pos: Vector3) -> bool:
 	var cam := get_viewport().get_camera_3d()
@@ -66,7 +68,7 @@ func _door_event(dt: float) -> void:
 func _station_event(dt: float, pt: Vector2i) -> void:
 	if station_done:
 		return
-	if station_t < 0.0 and pt.x >= 13 and pt.x <= 19 and pt.y >= 8 and pt.y <= 10:
+	if station_t < 0.0 and station_rect.has_point(pt):
 		station_t = 2.5
 	if station_t >= 0.0:
 		station_t -= dt

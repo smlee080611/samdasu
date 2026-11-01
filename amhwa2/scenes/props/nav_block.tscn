@@ -1,0 +1,13 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/objects/prop.gd" id="e1"]
+
+
+
+[node name="NavBlock" type="StaticBody3D"]
+collision_layer = 1
+collision_mask = 0
+script = ExtResource("e1")
+blocks_path = true
+
+
