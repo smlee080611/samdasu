@@ -1,0 +1,415 @@
+<title>암화병동 Godot 구조 설명서</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@700;800&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* layout: a single reading column with a sticky step index on wide screens; node trees as monospace panels */
+:root{
+  --bg:#f4f3ef; --paper:#fbfaf7; --fg:#1d1f22; --muted:#686a6f; --line:#dcdad3; --accent:#9a6a1c; --code:#eceae4; --ok:#2f6f62;
+  --display:"Nanum Myeongjo","AppleMyungjo","Batang",serif;
+  --body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#121315;--paper:#17191c;--fg:#e2dfd7;--muted:#9a978f;--line:#2b2e33;--accent:#e2ad55;--code:#1f2226;--ok:#7cc1b0;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121315;--paper:#17191c;--fg:#e2dfd7;--muted:#9a978f;--line:#2b2e33;--accent:#e2ad55;--code:#1f2226;--ok:#7cc1b0;color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.7;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:36px 72px;margin:0}
+.wrap{max-width:1060px;margin:0 auto;display:grid;grid-template-columns:200px minmax(0,1fr);gap:40px}
+@media (max-width:860px){.wrap{grid-template-columns:minmax(0,1fr)} nav.toc{display:none}}
+nav.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);align-self:start;font-size:13px;display:flex;flex-direction:column;gap:4px}
+nav.toc a{color:var(--muted);text-decoration:none;padding:2px 0}
+nav.toc a:hover{color:var(--fg)}
+nav.toc .h{font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--muted);margin-bottom:6px}
+main{min-width:0;max-width:72ch}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(30px,5vw,42px);line-height:1.15;margin:6px 0 12px;text-wrap:balance}
+h2{font-family:var(--display);font-weight:800;font-size:24px;margin:52px 0 10px;line-height:1.25;text-wrap:balance;padding-top:8px;border-top:1px solid var(--line)}
+h3{font-size:16px;font-weight:600;margin:28px 0 6px}
+p{margin:0 0 12px}
+.lead{font-size:16.5px;color:var(--fg)}
+code{font-family:var(--mono);font-size:.88em;background:var(--code);padding:1px 5px;border-radius:3px}
+pre{font-family:var(--mono);font-size:13px;line-height:1.6;background:var(--code);border:1px solid var(--line);padding:14px 16px;overflow-x:auto;margin:10px 0 16px;border-radius:4px}
+pre .c{color:var(--muted)}
+pre .k{color:var(--accent)}
+table{border-collapse:collapse;width:100%;font-size:14px;margin:8px 0 18px}
+.tw{overflow-x:auto}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;font-size:12.5px;color:var(--muted)}
+td code{white-space:nowrap}
+ol.steps,ul{padding-left:1.3em;margin:6px 0 14px}
+ol.steps li,ul li{margin-bottom:6px}
+.why{border-left:3px solid var(--accent);padding:2px 0 2px 14px;margin:14px 0;color:var(--fg)}
+.why b{color:var(--accent)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:10px 0 18px}
+.card{background:var(--paper);border:1px solid var(--line);padding:12px 14px;border-radius:4px;min-width:0}
+.card .t{font-weight:600;margin-bottom:4px}
+.card p{font-size:14px;margin:0;color:var(--muted)}
+.ok{color:var(--ok);font-weight:600}
+</style>
+
+<div class="wrap">
+  <nav class="toc" aria-label="목차">
+    <span class="h">목차</span>
+    <a href="#why">왜 나눴나</a>
+    <a href="#tree">전체 구조</a>
+    <a href="#setup">0. 프로젝트 설정</a>
+    <a href="#autoload">1. Autoload</a>
+    <a href="#level">2. Level</a>
+    <a href="#player">3. Player</a>
+    <a href="#person">4. Person</a>
+    <a href="#lights">5. 빛 오브젝트</a>
+    <a href="#door">6. Door · Curtain</a>
+    <a href="#misc">7. 배터리 · 계단</a>
+    <a href="#props">7-1. 병동 · 소품 · 쪽지</a>
+    <a href="#hud">7-2. 화면 UI · 시작 연출</a>
+    <a href="#events">7-3. 공포 사건</a>
+    <a href="#main">8. Main</a>
+    <a href="#extend">확장하는 법</a>
+    <a href="#roles">역할 분담</a>
+    <a href="#run">실행과 점검</a>
+  </nav>
+
+  <main>
+    <div class="eyebrow">게임 개발 실습 · Godot 4.3 · 프로그래머용</div>
+    <h1>암화병동 Godot 구조 설명서</h1>
+    <p class="lead">1인칭 프로토타입을 씬과 노드 단위로 나눈 버전입니다. 각 씬을 어떤 노드로 만들고 어떤 스크립트를 붙이는지, 순서대로 따라 만들 수 있게 정리했습니다. 완성본 프로젝트도 함께 드립니다.</p>
+
+    <h2 id="why">왜 나눴나</h2>
+    <p>처음 프로토타입은 <code>main.gd</code> 하나가 벽, 사람, 문, UI를 전부 코드로 만들었습니다. 빨리 규칙을 확인하기엔 좋았지만 팀 작업에는 맞지 않습니다.</p>
+    <div class="grid2">
+      <div class="card"><div class="t">에디터에서 보인다</div><p>석상, 문, 차광막이 씬 트리에 노드로 있어서 끌어다 놓고, 인스펙터에서 값을 바꿀 수 있습니다.</p></div>
+      <div class="card"><div class="t">맡은 파일만 고친다</div><p>광인 행동은 <code>person.gd</code>, 문은 <code>door.gd</code>. 서로 다른 파일이라 Git 충돌이 줄어듭니다.</p></div>
+      <div class="card"><div class="t">그래픽 교체가 쉽다</div><p>모델을 바꾸려면 <code>person.tscn</code>의 메시만 교체하면 됩니다. 코드는 안 건드립니다.</p></div>
+      <div class="card"><div class="t">빛 종류를 늘리기 쉽다</div><p>빛은 전부 같은 약속(<code>light_value</code> 함수 + 그룹)을 따르므로, 새 빛을 추가해도 기존 코드를 고치지 않습니다.</p></div>
+    </div>
+
+    <h3>렌더러와 그래픽</h3>
+    <p>렌더러는 <b>Compatibility(OpenGL)</b>입니다. 학교 PC나 노트북에서도 잘 돌고, 웹으로 내보낼 수 있습니다. 벽·바닥·천장·문·차광막은 <code>textures/</code> 폴더의 픽셀 텍스처(벽 한 면 64 × 96px = 2m × 3m)를 씁니다. 머티리얼의 Texture Filter를 Nearest로 둬서 픽셀이 또렷하게 보입니다. 그래픽 담당은 이 PNG만 다시 그려 덮어쓰면 됩니다.</p>
+
+    <h3>소리</h3>
+    <p><code>sounds/</code>의 WAV는 코드로 합성한 임시 효과음입니다. 같은 이름의 파일로 덮어쓰면 그대로 바뀝니다. 위치가 있는 소리(석상 깨짐, 광인 발소리, 문)는 <code>Sfx.play_at()</code>, 내 몸의 소리(발소리, 붙잡힘)는 <code>Sfx.play()</code>로 냅니다. 광인 숨소리는 <code>person.tscn</code>의 Breath 노드, 심장 박동은 <code>player.tscn</code>의 Heartbeat 노드, 배경 웅웅거림은 <code>main.tscn</code>의 Ambience 노드입니다. 심장 박동은 어둠 속 광인과의 거리, 굳음 수치에 따라 커지고 빨라집니다.</p>
+
+    <h2 id="tree">전체 구조</h2>
+    <pre><span class="c">res://</span>
+├ project.godot            <span class="c">입력 키, 충돌 레이어 이름, Autoload 등록</span>
+├ models/patient_parts.glb <span class="c">사람 모델 원본 화질(25만 면). 머리·몸통·팔 둘·다리 둘로 나뉨, 각 부위 원점 = 관절</span>
+├ models/patient_skin.tres <span class="c">사람 재질: 4K 색 텍스처 + 노멀맵</span>
+├ sounds/                  <span class="c">효과음 WAV (직접 합성, 저작권 없음)</span>
+├ shaders/stone_screen.gdshader  <span class="c">굳음·붙잡힘을 화면 가장자리로 표시</span>
+├ textures/                <span class="c">벽·바닥·천장·문·차광막·창문·표지판 픽셀 텍스처</span>
+├ scenes/
+│  ├ main.tscn             <span class="c">시작 씬: 환경 + 레벨 + 플레이어 + HUD</span>
+│  ├ level_1f.tscn         <span class="c">1층: 벽 지도 + 배치된 오브젝트</span>
+│  ├ player.tscn
+│  ├ person.tscn           <span class="c">석상 / 광인 / 회복한 사람 (한 씬이 상태를 바꿈)</span>
+│  ├ lantern.tscn          <span class="c">로우폴리 랜턴(받침·유리·창살·손잡이·불꽃)</span>
+│  ├ props/                <span class="c">침대·휠체어·링거대·칸막이·카트·쪽지</span>
+│  ├ emergency_light.tscn
+│  ├ door.tscn
+│  ├ curtain.tscn
+│  ├ battery.tscn
+│  ├ stairs.tscn
+│  └ hud.tscn
+└ scripts/
+   ├ autoload/
+   │  ├ game_state.gd      <span class="c">구출 수, 차광막 수, 메시지</span>
+   │  ├ light_system.gd    <span class="c">"여기 빛이 닿나?" 판정</span>
+   │  └ sfx.gd             <span class="c">효과음 재생 (Sfx.play / Sfx.play_at)</span>
+   ├ objects/              <span class="c">각 씬에 붙는 스크립트</span>
+   ├ ui/                   <span class="c">crack_overlay.gd(금), status_icons.gd(배터리·랜턴 아이콘)</span>
+   └ tests/selftest.gd     <span class="c">자동 점검</span></pre>
+
+    <p>실행하면 <code>main.tscn</code>의 트리는 이렇게 됩니다.</p>
+    <pre>Main (Node3D) <span class="k">main.gd</span>
+├ WorldEnvironment
+├ Level1F (level_1f.tscn) <span class="k">level.gd</span>
+│  ├ People   <span class="c">← person.tscn 27개</span>
+│  ├ Doors    <span class="c">← door.tscn</span>
+│  ├ Curtains <span class="c">← curtain.tscn</span>
+│  ├ Lights   <span class="c">← emergency_light.tscn</span>
+│  ├ Pickups  <span class="c">← battery.tscn</span>
+│  ├ Props    <span class="c">← props/*.tscn 소품 (침대 60, 손잡이 78 …)</span>
+│  ├ Signs    <span class="c">← props/sign.tscn 호실·안내 표지판</span>
+│  ├ Notes    <span class="c">← props/note.tscn 쪽지 6장</span>
+│  └ Stairs   <span class="c">← stairs.tscn</span>
+├ Player (player.tscn) <span class="k">player.gd</span>
+└ HUD (hud.tscn) <span class="k">hud.gd</span></pre>
+
+    <h3>스크립트끼리 대화하는 방법</h3>
+    <ul>
+      <li><b>그룹</b>으로 서로를 찾습니다. <code>"player"</code>, <code>"level"</code>, <code>"person"</code>, <code>"light_source"</code>(빛), <code>"blocker"</code>(길을 막는 것: 석상, 닫힌 문, 침대·카트·칸막이), <code>"note"</code>(쪽지).</li>
+      <li><b>Autoload</b> 세 개(GameState, LightSystem, Sfx)는 어디서나 이름으로 부릅니다. <code>GameState.say("...")</code>, <code>LightSystem.light_at(위치)</code>.</li>
+      <li><b>함수 이름 약속(덕 타이핑)</b>: 상호작용 대상은 <code>interact()</code>, 길게 누르는 대상은 <code>hold()</code>, 화면 안내는 <code>get_hint()</code>를 가지면 플레이어가 알아서 씁니다.</li>
+    </ul>
+
+    <h2 id="setup">0. 프로젝트 설정</h2>
+    <h3>입력 키 (프로젝트 설정 → 입력 맵)</h3>
+    <div class="tw"><table>
+      <thead><tr><th>액션 이름</th><th>키</th><th>쓰는 곳</th></tr></thead>
+      <tbody>
+        <tr><td><code>move_forward</code> · <code>move_back</code> · <code>move_left</code> · <code>move_right</code></td><td>W S A D</td><td>player.gd</td></tr>
+        <tr><td><code>toggle_lamp</code></td><td>F</td><td>헤드램프 켜고 끄기</td></tr>
+        <tr><td><code>lantern</code></td><td>Q</td><td>랜턴 놓기·줍기</td></tr>
+        <tr><td><code>interact</code></td><td>E</td><td>문, 차광막(길게)</td></tr>
+        <tr><td><code>status</code></td><td>F1</td><td>개발용. 에디터에서 실행할 때만, 누르는 동안 배터리·랜턴·구출·차광막 표시</td></tr>
+        <tr><td><code>sprint</code></td><td>Shift</td><td>달리기 (player.gd)</td></tr>
+        <tr><td><code>restart</code></td><td>R</td><td>main.gd</td></tr>
+      </tbody>
+    </table></div>
+    <h3>충돌 레이어 (프로젝트 설정 → 레이어 이름 → 3D 물리)</h3>
+    <div class="tw"><table>
+      <thead><tr><th>레이어</th><th>이름</th><th>누가 이 레이어에 있나</th><th>값(비트)</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>wall</td><td>벽, 닫힌 문, 차광막. 빛과 사람을 막음</td><td>1</td></tr>
+        <tr><td>2</td><td>person</td><td>석상·광인. 빛을 가리고 플레이어를 막음</td><td>2</td></tr>
+        <tr><td>3</td><td>interact</td><td>E로 쓸 수 있는 것(문, 차광막, 쪽지). 열린 문은 여기에만 남음</td><td>4</td></tr>
+        <tr><td>4</td><td>player</td><td>플레이어. 배터리·계단이 감지</td><td>8</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="autoload">1. Autoload 두 개</h2>
+    <ol class="steps">
+      <li><code>scripts/autoload/game_state.gd</code>, <code>light_system.gd</code>를 만듭니다. 둘 다 <code>extends Node</code>.</li>
+      <li>프로젝트 설정 → Autoload 탭에서 각각 이름 <code>GameState</code>, <code>LightSystem</code>으로 추가합니다.</li>
+    </ol>
+    <div class="tw"><table>
+      <thead><tr><th>스크립트</th><th>하는 일</th><th>주요 함수</th></tr></thead>
+      <tbody>
+        <tr><td><code>GameState</code></td><td>구출 수, 차광막 수, 게임오버·클리어 여부. 메시지·쪽지·상태 표시를 신호로 HUD에 보냄. <code>ui_blocking</code>이 켜지면(시작 연출, 쪽지 읽는 중) 플레이어·광인·배터리가 멈춤</td><td><code>say()</code>, <code>open_note()</code>, <code>is_frozen()</code>, <code>add_rescued()</code>, <code>curtain_opened()</code>, <code>can_leave()</code></td></tr>
+        <tr><td><code>LightSystem</code></td><td><code>"light_source"</code> 그룹의 모든 빛에게 "이 위치에 얼마나 밝냐"를 물어 가장 큰 값을 돌려줌</td><td><code>light_at(pos, exclude, safety_only)</code>, <code>is_lit()</code>, <code>ray_clear()</code></td></tr>
+      </tbody>
+    </table></div>
+    <p class="why"><b>핵심 설계.</b> LightSystem은 빛의 종류를 모릅니다. 각 빛이 <code>light_value(target, exclude)</code>를 스스로 계산합니다. 그래서 석상은 "누가 비췄는지" 몰라도 되고, 빛을 새로 만들어도 석상 코드는 그대로입니다.</p>
+
+    <h2 id="level">2. Level (level_1f.tscn)</h2>
+    <pre>Level1F (Node3D) <span class="k">scripts/objects/level.gd</span>
+├ People   (Node3D)  <span class="c">정리용 빈 노드</span>
+├ Doors    (Node3D)
+├ Curtains (Node3D)
+├ Lights   (Node3D)
+├ Pickups  (Node3D)
+└ Stairs   (stairs.tscn 인스턴스)</pre>
+    <ol class="steps">
+      <li>Node3D를 루트로 만들고 <code>level.gd</code>를 붙입니다.</li>
+      <li>인스펙터의 <b>Wall Map</b>에 벽 지도를 글자로 입력합니다. <code>#</code>은 벽, <code>.</code>은 바닥. 한 칸 = 2m.</li>
+      <li><b>Entrance Tile</b>(입구 칸), <b>Wall / Floor / Ceiling Material</b>을 지정합니다. 텍스처는 벽 한 면, 바닥 한 칸마다 한 장씩 정확히 붙습니다.</li>
+      <li>정리용 빈 Node3D들 아래에 석상·문·차광막 씬을 끌어다 놓습니다. 칸 중심 좌표는 <code>(x × 2 + 1, 0, y × 2 + 1)</code>.</li>
+    </ol>
+    <p><code>level.gd</code>가 하는 일: 지도대로 벽 충돌 상자를 만들고, 그래픽은 바닥 쪽으로 드러난 벽 면만 사각형으로 이어 붙여 하나의 메시로 만듭니다(SurfaceTool). 바닥·천장도 칸마다 사각형입니다. 그리고 <code>AStarGrid2D</code>로 칸 단위 길찾기를 제공합니다. 석상이 생기거나 문이 바뀌면 <code>refresh_nav()</code>로 갱신합니다.</p>
+    <p class="why"><b>나중에 바꿀 수 있는 부분.</b> 벽을 글자 지도로 만든 건 속도 때문입니다. 레벨 디자이너가 익숙해지면 GridMap + MeshLibrary로 바꿔도 <code>is_walkable()</code>만 고치면 나머지는 그대로 동작합니다.</p>
+
+    <h2 id="player">3. Player (player.tscn)</h2>
+    <pre>Player (CharacterBody3D) <span class="k">player.gd</span>      <span class="c">layer: player(8) / mask: wall+person(3)</span>
+├ CollisionShape3D            <span class="c">CapsuleShape3D r 0.3, h 1.7, y 0.85</span>
+└ Head (Camera3D)             <span class="c">y 1.6, current 체크</span>
+   ├ Headlamp (SpotLight3D) <span class="k">headlamp.gd</span>  <span class="c">range 14, angle 24, 그림자 켜기</span>
+   └ InteractRay (RayCast3D)  <span class="c">target (0,0,-3), mask: wall+interact(5)</span></pre>
+    <ol class="steps">
+      <li>인스펙터에서 <b>Lantern Scene</b>에 <code>lantern.tscn</code>을 넣습니다.</li>
+      <li><code>player.gd</code>는 노드 이름(<code>$Head</code>, <code>$Head/Headlamp</code>, <code>$Head/InteractRay</code>)으로 자식을 찾으니 이름을 똑같이 맞춥니다.</li>
+    </ol>
+    <div class="tw"><table>
+      <thead><tr><th>기능</th><th>어디서</th></tr></thead>
+      <tbody>
+        <tr><td>이동, 마우스 시점</td><td><code>player.gd</code> · <code>_physics_process</code>, <code>_unhandled_input</code></td></tr>
+        <tr><td>E 상호작용</td><td>InteractRay가 맞은 노드에 <code>interact()</code>가 있으면 호출. 길게 누르면 <code>hold()</code></td></tr>
+        <tr><td>몸이 굳는 수치 <code>stiff</code></td><td>입구나 "몸을 지켜주는 빛"(랜턴·달빛) 곁이면 감소, 아니면 증가. 100이면 게임오버</td></tr>
+        <tr><td>헤드램프 배터리, 깜빡임</td><td><code>headlamp.gd</code></td></tr>
+        <tr><td>달리기·스태미나</td><td>Shift로 달림(5.6m/s). 스태미나는 약 4.5초 만에 닳고, 다 떨어지면 40까지 찰 때까지 못 달림. 숫자 대신 거친 숨소리와 시선 흔들림으로 느낌. 달리는 발소리를 들은 광인(16칸 안)이 몰려옴</td></tr>
+        <tr><td>광인에게 붙잡힘</td><td>광인이 <code>player.grabbed()</code>를 호출. 굳음 +25, 화면 흔들림, 헤드램프 0.9초 꺼짐</td></tr>
+        <tr><td>교대</td><td>굳음 100이 되면 엘리베이터 홀에서 기다리던 사람이 이어받음(<code>_relay()</code>). 내 몸은 그 자리에서 석상("간호사 (나)")이 되어 나중에 다시 구할 수 있고, 들고 있던 랜턴은 그 자리에 떨어짐. 기다리는 사람이 없으면 게임오버</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="person">4. Person (person.tscn)</h2>
+    <pre>Person (AnimatableBody3D) <span class="k">person.gd</span>   <span class="c">layer: person(2), Sync To Physics 끄기</span>
+├ CollisionShape3D   <span class="c">CapsuleShape3D r 0.35, h 1.7, y 0.85</span>
+├ Model              <span class="c">models/patient_parts.glb (키 1.75m, 정면 -Z) › Head, Torso, ArmXp, ArmXn, LegXp, LegXn</span>
+└ Breath (AudioStreamPlayer3D)  <span class="c">광인일 때 숨소리</span></pre>
+    <p>모델을 바꾸려면 Model 노드를 다른 .glb로 교체합니다. 팔다리가 움직이려면 같은 부위 이름(Head, Torso, ArmXp/ArmXn, LegXp/LegXn)과 관절 원점을 지켜야 합니다. <code>person.gd</code>는 인스펙터의 <b>Skin</b> 재질을 사람마다 하나 복제해서 모든 부위에 씌우고, 상태 색(석상 회색, 광인 붉은빛, 회복 원래 색)을 바꿉니다. 석상은 처음에 사람마다 다른 자세(고개 꺾임, 팔을 뻗음)로 굳어 있습니다.</p>
+    <p>석상, 광인, 회복한 사람은 <b>같은 씬 하나</b>입니다. <code>state</code> 값만 바뀝니다.</p>
+    <pre><span class="k">STATUE</span> ──빛을 받음──▶ <span class="k">MAD</span> ──빛을 계속 받음──▶ <span class="k">CURED</span> ──입구 도착──▶ 구출
+   ▲                        │
+   └──어둠 속 6.5초──────────┘</pre>
+    <div class="tw"><table>
+      <thead><tr><th>상태</th><th>행동</th><th>그룹</th></tr></thead>
+      <tbody>
+        <tr><td>STATUE</td><td>빛을 받으면 <code>body_t</code>가 차오르며 몸이 주황색으로 달아오름. 1이 되면 광인</td><td>blocker (길을 막음)</td></tr>
+        <tr><td>MAD</td><td>빛 속: 정신(<code>sanity</code>)이 돌아오는 동안 <b>플레이어 시야 밖의 어두운 곳</b>(벽 뒤, 모퉁이 너머)을 찾아 도망침(<code>_plan_escape</code>). 숨은 뒤엔 1.5~3.5초 엿보다가 다시 다가옴. 도망칠 곳이 없으면(구석에 몰림) 0.9초 버티다가 <b>비명과 함께 돌발 돌진</b>, 빛 속이어도 붙잡을 수 있음(3.5초에 한 번). 붙잡은 뒤엔 1.6초 물러섬. 빛을 맞는 순간 움찔. 어둠 속: 멀리서는 슬금슬금, 5칸 안이면 돌진·멈춤 반복. 6.5초 지나면 플레이어를 바라보며 다시 석상</td><td>—</td></tr>
+        <tr><td>CURED</td><td>현관 밖 마당(<code>exit_tile</code>)까지 걸어가 구출 처리. 정신이 막 돌아와 길을 잘 몰라서, 갈림길에서 가끔 엉뚱한 쪽으로 가고(<code>confusion</code> 28%) 멈춰서 두리번거림. 플레이어가 5칸 안에 있으면 플레이어를 따라옴(호위). 길이 막히면 멈춤. 빛을 가리지 않고 플레이어와 겹쳐 지나갈 수 있음. <b>어둠 속에서 광인에게 붙잡힐 수 있음</b>: 주저앉아 "살려주세요…!"(멀리서도 들림), 5초(<code>hold_petrify</code>) 동안 굳어 가다가 석상이 됨. 그 안에 빛이 닿으면 광인은 놓고 도망치고, 사람은 다시 일어나 걸어감. 엘리베이터 홀에서 기다리는 사람은 안전</td><td>—</td></tr>
+      </tbody>
+    </table></div>
+    <p><b>부드러운 이동</b>: 칸 중앙에 멈추지 않고 0.45m 전에 다음 칸을 정해서 모퉁이를 둥글게 돕니다. 사람마다 걷는 줄(<code>lane</code>)이 조금씩 다르고, 속도는 서서히 바뀌고, 몸은 천천히 돕니다. <b>개인차</b>: 사람마다 속도 ±15%, 돌진 거리 ±1칸, 다시 굳는 시간이 다릅니다.</p>
+    <p><b>시간</b>: 센 빛으로 정신이 돌아오는 데 약 10초(<code>sanity_speed</code> 0.1). 어둠 속에서 다시 완전히 굳는 데는 풀린 정도에 비례해 5초(막 깨어남)~25초(거의 다 풀림)가 걸립니다(<code>petrify_min</code>, <code>petrify_max</code>). 도망 속도는 2.4~4.4m/s로 빠릅니다.</p>
+    <p class="why"><b>풀릴수록 빨라진다.</b> 광인의 속도는 <code>sanity</code>(0~1)에 따라 변합니다. 막 깨어난 광인은 뻣뻣하고 느리고(쫓는 속도 1.6m/s), 빛을 받아 풀릴수록 매끄럽고 빨라집니다(4.6m/s, 플레이어 3.2m/s보다 빠름). 그래서 반쯤 비추다 놓치면 가장 위험한 광인이 됩니다. 끝까지 비추면 정신이 돌아옵니다.</p>
+    <p><b>움직임</b>: 뼈대 없이 <code>_animate()</code>와 <code>_limb_pose()</code>가 부위를 돌립니다. 다리를 엇갈려 휘두르고, 광인은 팔을 앞으로 뻗고(돌진할수록 높이), 고개가 확 꺾이는 경련이 있습니다. 뻣뻣할수록 보폭이 작고 스톱모션처럼 초당 6장만 보이며(풀리면 30장), 다시 굳을 때는 그때 자세 그대로 굳습니다. 나중에 Mixamo 애니메이션을 넣으면 이 위에 경련만 얹으면 됩니다.</p>
+    <p><b>어둠 속에서 다시 굳어 감</b>: 광인이 어둠에 있으면(<code>dark_t</code>) 점점 느려지고, 움직임이 더 끊기고, 몸이 회색으로 변하다가 6.5초에 석상이 됩니다. 이때 플레이어를 바라보며 굳습니다.</p>
+    <p>인스펙터에서 바꿀 수 있는 값: <code>person_name</code>, <code>wake_speed</code>, <code>sanity_speed</code>, <code>petrify_after</code>, <code>chase_range</code>, <code>rush_range</code>, 뻣뻣할 때·풀렸을 때 속도(쫓기·도망 각각), <code>walk_out_speed</code>. 밸런스 조정은 코드 대신 여기서 합니다.</p>
+
+    <h2 id="lights">5. 빛 오브젝트</h2>
+    <p>범위형 빛은 전부 <code>point_light_source.gd</code> 하나를 씁니다. OmniLight3D에 붙이고 값만 다르게 줍니다.</p>
+    <div class="tw"><table>
+      <thead><tr><th>씬</th><th>노드</th><th>power</th><th>protects_body</th></tr></thead>
+      <tbody>
+        <tr><td><code>lantern.tscn</code></td><td>Lantern(Node3D) <span class="k">lantern.gd</span> › Base, Glass, Flame, Bar0~3, Cap, Chimney, Handle, <b>Light(OmniLight3D)</b> 보이는 범위 9 · 판정 범위(judge_range) 6, <b>Fill</b>(그림자 없는 약한 번짐, 범위 13)</td><td>1.0</td><td>켬 (곁에 있으면 몸이 풀림)</td></tr>
+        <tr><td><code>emergency_light.tscn</code></td><td><b>EmergencyLight(OmniLight3D)</b> 초록, range 5</td><td>0.45</td><td>끔</td></tr>
+        <tr><td><code>curtain.tscn</code>의 Moonlight</td><td>OmniLight3D, range 9, 처음엔 꺼짐</td><td>0.4</td><td>켬</td></tr>
+        <tr><td>Player의 Headlamp</td><td>SpotLight3D + <code>headlamp.gd</code></td><td>거리별 1→0.4</td><td>끔</td></tr>
+      </tbody>
+    </table></div>
+    <p><b>랜턴은 즉시 켜지지 않습니다.</b> 놓으면 심지에 불이 옮겨붙듯 2.5초(<code>light_up_time</code>)에 걸쳐 밝아지고, 빛의 효과(몸이 풀림, 광인 회복)도 밝기만큼만 나옵니다. 주우면 불이 꺼집니다. 놓기·줍기는 무릎을 꿇어야 해서 0.8초·0.6초 동안 움직일 수 없고, 그 사이 붙잡히면 취소됩니다(<code>player.gd</code> <code>_kneel()</code>). 랜턴을 휴대용 안전지대처럼 쓰지 못하게, 미리 길목에 놓아 두는 도구로 만든 것입니다.</p>
+    <p>랜턴 빛은 경계가 딱 끊겨 보이지 않게 보이는 범위를 넓히고(감쇠 1.4, 그림자 흐림 2.5) 약한 번짐 빛을 하나 더 두었습니다. 창살 그림자도 끕니다. 게임 판정 거리는 <code>judge_range</code>로 따로 정하므로 보이는 빛을 바꿔도 밸런스는 그대로입니다.</p>
+    <p class="why"><b>빛의 약속.</b> 빛 스크립트는 ① <code>_ready()</code>에서 <code>add_to_group("light_source")</code>, ② <code>light_value(target, exclude) -&gt; float</code> 함수, ③ <code>protects_body</code> 변수. 이 세 가지만 지키면 무엇이든 빛이 됩니다.</p>
+
+    <h2 id="door">6. Door · Curtain</h2>
+    <h3>door.tscn</h3>
+    <pre>Door (StaticBody3D) <span class="k">door.gd</span>   <span class="c">layer: wall+interact(5)</span>
+├ CollisionShape3D   <span class="c">Box 2 × 3 × 0.2, y 1.5</span>
+└ Mesh (MeshInstance3D)</pre>
+    <ul>
+      <li>문이 동서 방향 복도에 놓이면 인스펙터에서 <b>Sideways</b> 체크.</li>
+      <li>닫힘: wall+interact 레이어, <code>"blocker"</code> 그룹 → 빛과 사람을 막음. 열림: interact 레이어만 → 통과되지만 E로 다시 닫을 수 있음.</li>
+      <li>문틀에 사람이 있으면 닫히지 않습니다.</li>
+    </ul>
+    <h3>curtain.tscn</h3>
+    <p>창이 있는 벽 칸은 지도에서 <code>W</code>로 표시합니다. 이 칸은 레벨이 벽면을 그리지 않고, 차광막 씬이 창 구멍이 난 벽(두께 0.4m)과 창틀·유리를 그립니다. 칸의 바깥쪽 1.6m는 마당처럼 비워 두어서, 창 바로 밖이 야외가 됩니다.</p>
+    <pre>Curtain (StaticBody3D) <span class="k">curtain.gd</span>   <span class="c">layer: wall+interact(5), W 칸 중심에, +Z가 병실 쪽</span>
+├ CollisionShape3D   <span class="c">병실 쪽으로 z +1.06</span>
+├ Mesh
+└ Moonlight (OmniLight3D) <span class="k">point_light_source.gd</span>  <span class="c">병실 가운데(z +6), 처음엔 꺼짐</span></pre>
+    <ul>
+      <li>E를 1.5초 누르면 <code>hold()</code>가 true를 돌려주고, 창문 머티리얼로 바뀌며 달빛이 켜집니다.</li>
+      <li>차광막은 <code>_ready()</code>에서 스스로 <code>GameState.curtains_total</code>을 늘립니다. 레벨에 몇 개 놓든 자동으로 셉니다.</li>
+    </ul>
+
+    <h2 id="misc">7. 배터리 · 계단</h2>
+    <div class="tw"><table>
+      <thead><tr><th>씬</th><th>루트</th><th>하는 일</th></tr></thead>
+      <tbody>
+        <tr><td><code>battery.tscn</code></td><td>Area3D (mask: player)</td><td>플레이어가 닿으면 헤드램프 +50, 사라짐</td></tr>
+        <tr><td><code>stairs.tscn</code></td><td>Area3D (mask: player), 4 × 4m</td><td>구출·차광막 조건을 채우고 밟으면 클리어</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="props">7-1. 병동 구조 · 소품 · 쪽지</h2>
+    <p>1층은 실제 병동처럼 짰습니다. 북쪽과 남쪽에 병실이 6개씩 있고(101~112호), 그 사이로 복도가 두 줄 지나갑니다. 두 복도 사이 가운데 구역에 간호사실, 처치실, 린넨실, 화장실, 약품실이 있습니다. 복도가 고리 모양으로 이어져 있어서 광인에게 쫓길 때 돌아서 도망칠 수 있습니다.</p>
+    <pre>  당직실 │101│102│103│104│105│106│ 비상계단(출구)
+ ────────┴───┴───┴───┴───┴───┴───┴────────────  북쪽 복도
+ 엘리베이터 │처치│린넨│ 간호사실 │화장│약품│ 동쪽 홀
+  홀(입구)  │실  │실  │(앞이 트임)│실  │실  │
+ ────────┬───┬───┬───┬───┬───┬───┬────────────  남쪽 복도
+  현관로비│107│108│109│110│111│112│ 오물실
+     ↓ 유리문      ▼창     ▼창     ▼창
+ ═══════════ 남쪽 마당 (야외, 달빛) ═══════════  ← 구한 사람이 모이는 곳</pre>
+    <ul>
+      <li>병실은 4인실과 6인실. 침대 머리를 양쪽 벽에 붙이고 가운데를 통로로 비웠습니다. 침대마다 사물함, 일부는 링거대, 6인실은 침대 사이에 천장 커튼.</li>
+      <li>차광막은 107·109·111호의 남쪽 창에 있습니다. 걷으면 창밖으로 마당, 나무, 불 꺼진 먼 건물, 밤하늘과 달이 보입니다.</li>
+      <li>휴게실은 현관 로비가 되었고, 남쪽 유리문으로 마당에 나갈 수 있습니다. 마당(지도의 <code>,</code>)은 천장이 없고 달빛 아래라 늘 밝은 곳으로 판정됩니다(광인은 들어오지 않고, 몸이 풀림).</li>
+      <li>병실 문은 방 안쪽으로 열립니다. 절반은 열려 있고 절반은 닫혀 있습니다.</li>
+      <li>복도 양쪽 벽에 손잡이, 문 위에 호실 표지판, 곳곳에 소화기.</li>
+    </ul>
+    <p>처음 배치는 스크립트로 한 번 만들었고, 지금부터는 에디터에서 <code>level_1f.tscn</code>을 열어 직접 옮기면 됩니다. 소품은 기본 도형으로 조립한 로우폴리라 그래픽 담당이 Mesh만 바꾸면 됩니다.</p>
+    <div class="tw"><table>
+      <thead><tr><th>씬 (scenes/props/)</th><th>길을 막나</th><th>쓰는 곳</th></tr></thead>
+      <tbody>
+        <tr><td><code>bed</code></td><td>막음</td><td>병실, 처치실, 당직실</td></tr>
+        <tr><td><code>counter</code>, <code>shelf</code>, <code>cart</code>, <code>stall</code></td><td>막음</td><td>간호사실 카운터, 린넨실·약품실 선반, 처치 카트, 화장실 칸</td></tr>
+        <tr><td><code>locker</code>, <code>iv_stand</code>, <code>desk</code>, <code>chair</code>, <code>bench</code>, <code>table</code>, <code>sink</code>, <code>wheelchair</code></td><td>안 막음</td><td>침대 옆, 간호사실 책상(브라운관 모니터), 대기 의자, 세면대</td></tr>
+        <tr><td><code>handrail</code>, <code>bed_curtain</code>, <code>elevator</code>, <code>extinguisher</code></td><td>충돌 없음</td><td>벽 장식</td></tr>
+        <tr><td><code>sign</code></td><td>—</td><td>표지판. 인스펙터의 <b>Text</b>, <b>Width</b>만 바꿈 (Label3D)</td></tr>
+        <tr><td><code>note</code></td><td>—</td><td>layer: interact(4). E로 읽기. 인스펙터의 <b>Title</b>, <b>Body</b></td></tr>
+      </tbody>
+    </table></div>
+    <p class="why"><b>소품을 옮길 때 지킬 것.</b> 길을 막는 소품으로 방 하나를 통째로 막지 마세요(광인·회복한 사람의 길찾기가 막힘). 문 앞, 차광막 앞 칸, 입구(엘리베이터 홀)는 비워 두세요. 소품이 여러 부품이어도 게임이 시작될 때 <code>mesh_merge.gd</code>가 재질별로 한 메시로 합쳐서 가볍게 그립니다.</p>
+    <h3>쪽지 6장 (배경 이야기)</h3>
+    <p>간호 일지, 연구 메모 두 장(빛 50lx 이하 6시간이면 굳기 시작 · 차광막은 실험 조건 유지용), 아이의 쪽지, 경비 일지(02:10 정전, 발전기 기동 실패), 원무과 안내문. 플레이어가 규칙(어둠 = 굳음, 빛 = 풀림, 풀린 뒤 이상행동, 햇빛 = 회복)을 이야기로 알게 되도록 썼습니다. 지하 연구동과 비상발전기는 다음 층으로 이어지는 떡밥입니다.</p>
+
+    <h2 id="hud">7-2. 화면 UI · 시작 연출</h2>
+    <p>원칙: <b>주인공이 알 수 없는 정보는 화면에 띄우지 않는다.</b> 배터리 잔량, 구한 사람 수와 이름, 차광막 개수는 숫자로 나오지 않습니다. 대신 세계 안에서 보이게 했습니다.</p>
+    <div class="tw"><table>
+      <thead><tr><th>정보</th><th>어떻게 알게 되나</th><th>어디서</th></tr></thead>
+      <tbody>
+        <tr><td>굳음</td><td>화면 가장자리가 회색 돌로 변하며 안쪽으로 파고들고, 30%부터 금이 감</td><td><code>stone_screen.gdshader</code>, <code>ui/crack_overlay.gd</code></td></tr>
+        <tr><td>붙잡힘</td><td>가장자리가 붉게 번짐 + 소리</td><td>같은 셰이더</td></tr>
+        <tr><td>배터리</td><td>헤드램프 빛이 닳을수록 누레지고, 짧아지고(14m→7m), 좁아짐. 20% 아래면 깜빡임. 배터리를 주우면 다시 하얗게 밝아짐</td><td><code>headlamp.gd</code></td></tr>
+        <tr><td>목표 (차광막 병실)</td><td>간호사실 <b>현황판</b>: "102 · 105 · 109호 차광 유지", "정전 시 환자분들은 엘리베이터 홀로!"</td><td><code>props/board.tscn</code>, Text는 인스펙터에서</td></tr>
+        <tr><td>구한 사람</td><td>현관 밖 마당에 모여 서 있음. 로비 유리문 너머로 보임</td><td><code>person.gd</code> <code>_wait_in_hall()</code>, 레벨의 <b>WaitSpots</b>(Marker3D 8개)</td></tr>
+        <tr><td>사람이 깨어남</td><td>이름 대신 목소리 자막("…간호사님?"). 플레이어 근처(약 6칸)에서만 들림</td><td><code>GameState.speak()</code></td></tr>
+        <tr><td>계단 조건</td><td>조건을 못 채우고 계단에 가면 주인공의 생각: "혼자 올라갈 순 없다…" / "현황판에 적힌 병실들… 아직 다 둘러보지 못했다."</td><td><code>stairs.gd</code></td></tr>
+      </tbody>
+    </table></div>
+    <pre>HUD (CanvasLayer) <span class="k">hud.gd</span>
+└ Root (Control)
+   ├ Screen (ColorRect)   <span class="c">굳음·붙잡힘 셰이더</span>
+   ├ Cracks (Control) <span class="k">ui/crack_overlay.gd</span>
+   ├ Crosshair, Hint      <span class="c">조준점, 그 아래 작은 안내 ("E · 읽기")</span>
+   ├ Subtitle             <span class="c">주인공의 생각과 들리는 말만</span>
+   ├ Controls             <span class="c">조작법. 시작 후 12초</span>
+   ├ Status (Control) <span class="k">ui/status_icons.gd</span>   <span class="c">개발용(F1)</span>
+   ├ Center               <span class="c">게임오버·클리어</span>
+   ├ Note (PanelContainer) › Margin › VBox › Title, Body, Close
+   └ Intro (ColorRect) › Text, Skip</pre>
+    <p><b>시작 연출</b>은 처음 실행할 때 한 번만 나옵니다(<code>GameState.intro_seen</code>, R로 다시 해도 안 나옴). 아무 키나 누르면 건너뜁니다. 끝나면 "사람들을 깨워 이 홀로 데려와야 한다. 먼저 간호사실로 가 보자."라는 생각 자막과 조작법이 뜹니다. 문구는 <code>hud.gd</code> 맨 위 <code>INTRO</code>, <code>GOAL</code>, <code>CONTROLS</code>에서 고칩니다.</p>
+    <p>쪽지를 읽거나 시작 연출 중에는 <code>GameState.ui_blocking</code>이 켜져 시간이 멈춥니다. 쪽지는 E, Esc, 클릭으로 닫습니다. 폰트는 <code>hud.gd</code>에서 시스템 한글 폰트를 지정하며, 폰트 파일을 정하면 Theme 리소스로 바꾸면 됩니다.</p>
+
+    <h2 id="events">7-3. 공포 사건 (events.gd)</h2>
+    <p><code>main.tscn</code>의 <b>Events</b> 노드. 점프스케어 없이, 게임 규칙으로 설명되는 사건만 일으킵니다. 간격과 조건은 인스펙터 값으로 조절합니다.</p>
+    <div class="tw"><table>
+      <thead><tr><th>사건</th><th>언제</th><th>설명</th></tr></thead>
+      <tbody>
+        <tr><td>문이 닫혀 있다</td><td>45~80초마다, 최대 3번</td><td>플레이어가 보고 있지 않은 10~26m 거리의 열린 병실 문이 닫힘(멀리서 소리). 광인이 어둠을 지키려고 닫은 것</td></tr>
+        <tr><td>등 뒤의 바퀴 소리</td><td>간호사실에 처음 들어간 지 2.5초 뒤</td><td>플레이어 뒤 5m에서 바퀴 굴러가는 소리</td></tr>
+        <tr><td>엘리베이터 표시등</td><td>한 명 이상 구한 뒤 홀에 처음 돌아왔을 때</td><td>멈춘 엘리베이터 표시등이 붉게 깜빡이고 전기 소리. 비상발전기 떡밥</td></tr>
+        <tr><td>사라진 사람</td><td>홀에 두 명 이상 모인 뒤 25초 넘게 멀리 있을 때</td><td>한 명이 108호로 걸어가 어둠 속에서 다시 굳음. 구출 수 −1</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="main">8. Main (main.tscn)</h2>
+    <pre>Main (Node3D) <span class="k">main.gd</span>
+├ WorldEnvironment    <span class="c">배경 검정, 주변광 0.04, 안개 0.035</span>
+├ Level1F   (level_1f.tscn 인스턴스)
+├ Player    (player.tscn 인스턴스, 위치 5, 0, 19 = 엘리베이터 홀)
+├ HUD       (hud.tscn 인스턴스)
+└ Events    (Node, events.gd)  <span class="c">공포 사건</span></pre>
+    <p><code>main.gd</code>는 시작할 때 <code>GameState.reset()</code>, R을 누르면 씬 다시 불러오기만 합니다. 층이 늘어나면 여기서 Level 씬을 바꿔 끼우면 됩니다.</p>
+
+    <h2 id="extend">확장하는 법</h2>
+    <h3>예시 1. 촛불(새 빛) 추가</h3>
+    <ol class="steps">
+      <li>OmniLight3D로 <code>candle.tscn</code>을 만들고 <code>point_light_source.gd</code>를 붙입니다.</li>
+      <li>range 3, power 0.6 정도로 설정합니다. 끝. 석상이 알아서 반응합니다.</li>
+    </ol>
+    <h3>예시 2. 밀 수 있는 침대(빛 가림막) 추가</h3>
+    <ol class="steps">
+      <li>StaticBody3D, layer는 wall(1)로 둡니다. 빛 판정 레이캐스트가 wall을 보므로 자동으로 그림자가 됩니다.</li>
+      <li>길도 막게 하려면 <code>"blocker"</code> 그룹에 넣고, 움직인 뒤 <code>level.refresh_nav()</code>를 부릅니다.</li>
+      <li>E로 밀게 하려면 <code>interact(by)</code> 함수를 만듭니다. 플레이어 코드는 고칠 필요가 없습니다.</li>
+    </ol>
+    <h3>예시 3. 직업별 광인</h3>
+    <p><code>person.tscn</code>을 상속한 씬(<code>nurse.tscn</code> 등)을 만들고 인스펙터 값(속도, 회복 속도)과 메시만 바꿉니다. 행동이 많이 다르면 <code>person.gd</code>를 상속한 스크립트에서 <code>_mad()</code>만 덮어씁니다.</p>
+
+    <h2 id="roles">역할 분담과 파일</h2>
+    <div class="tw"><table>
+      <thead><tr><th>역할</th><th>주로 만지는 곳</th></tr></thead>
+      <tbody>
+        <tr><td>레벨 디자인</td><td><code>level_1f.tscn</code> (Wall Map, 오브젝트 배치), 새 층 씬</td></tr>
+        <tr><td>게임 로직</td><td><code>person.gd</code>, <code>player.gd</code>, <code>light_system.gd</code></td></tr>
+        <tr><td>오브젝트·상호작용</td><td><code>door.gd</code>, <code>curtain.gd</code>, 새 오브젝트 씬</td></tr>
+        <tr><td>그래픽</td><td>각 <code>.tscn</code>의 Mesh·머티리얼, WorldEnvironment, 조명 색</td></tr>
+        <tr><td>UI·사운드</td><td><code>hud.tscn</code>, <code>hud.gd</code>, <code>shaders/stone_screen.gdshader</code>, <code>scripts/ui/</code>, <code>sounds/</code></td></tr>
+        <tr><td>시나리오</td><td>쪽지 내용(<code>level_1f.tscn</code>의 Notes 노드 인스펙터), 시작 연출 문구(<code>hud.gd</code>)</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="run">실행과 점검</h2>
+    <ol class="steps">
+      <li>압축을 풀고 Godot 4.3에서 <code>project.godot</code>을 엽니다.</li>
+      <li>F5로 실행. 화면을 클릭하면 마우스가 잠기고, Esc로 풀립니다.</li>
+      <li>목표: 차광막 3개 걷기 + 3명 구출 + 오른쪽 위 비상계단. 입구는 왼쪽 엘리베이터 홀. 에디터 실행 중에는 F1로 진행 상황 확인(개발용).</li>
+    </ol>
+    <p>자동 점검: 터미널에서 <code>godot --headless --path . -- selftest</code>. 석상 깨우기 → 광인 → 랜턴으로 회복 → 문 열고 닫기 → 차광막 걷기 → 상호작용 레이캐스트까지 차례로 실행하고 결과를 출력합니다. 이 설명서와 함께 드린 프로젝트는 이 점검을 <span class="ok">모두 통과</span>했습니다. 다만 화면 밝기와 색감은 사람 눈으로 확인이 필요합니다.</p>
+  </main>
+</div>

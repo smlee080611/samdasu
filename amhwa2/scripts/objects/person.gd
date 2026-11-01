@@ -10,20 +10,24 @@ enum State { STATUE, MAD, CURED }
 @export var person_name := "환자"
 @export var state: State = State.STATUE
 @export var wake_speed := 0.7        # 빛을 받을 때 몸이 풀리는 속도
-@export var sanity_speed := 0.3      # 빛 속에서 정신이 돌아오는 속도
-@export var petrify_after := 6.5     # 어둠 속에서 이 시간이 지나면 다시 굳음
+@export var sanity_speed := 0.1      # 빛 속에서 정신이 돌아오는 속도 (센 빛으로 약 10초)
+## 어둠 속에서 다시 완전히 굳는 데 걸리는 시간은 풀린 정도에 비례한다:
+## 막 깨어났으면 petrify_min초, 거의 다 풀렸으면 petrify_max초
+@export var petrify_min := 5.0
+@export var petrify_max := 25.0
+@export var hear_run_range := 16     ## 플레이어가 달리면 이 칸 수 안의 광인이 소리를 듣고 몰려온다
 @export var chase_range := 10        # 이 칸 수 안의 플레이어를 쫓아감
 ## 광인의 속도는 몸이 얼마나 풀렸는지(sanity 0~1)에 따라 변한다.
 ## 막 깨어난 광인은 뻣뻣하고 느리다. 빛을 받아 풀릴수록 매끄럽고 빨라진다(플레이어 3.2보다 빠름).
 ## 그래서 반쯤 비추다 놓치면 오히려 가장 위험한 광인이 된다. 끝까지 비추면 정신이 돌아온다.
 @export var chase_speed_stiff := 1.6
 @export var chase_speed_loose := 4.6
-@export var flee_speed_stiff := 0.7
-@export var flee_speed_loose := 2.6
-@export var rush_range := 5          # 이 칸 수 안에 들어오면 달려들기(돌진·멈춤 반복)
+@export var flee_speed_stiff := 2.4
+@export var flee_speed_loose := 4.4
+@export var rush_range := 7          # 이 칸 수 안에 들어오면 달려들기(돌진·멈춤 반복)
 @export var escape_search := 90       # 숨을 곳을 찾을 때 살펴볼 칸 수
 @export var lunge_speed := 4.8        # 빛에 갇혔을 때 돌발적으로 달려드는 속도
-@export var lunge_cooldown := 5.0
+@export var lunge_cooldown := 3.5
 @export var walk_out_speed := 1.5
 @export var skin: StandardMaterial3D   ## 사람 피부·옷 재질 (models/patient_skin.tres). 사람마다 복제해서 색을 바꾼다
 
@@ -100,7 +104,9 @@ func _ready() -> void:
 	lunge_speed *= m
 	walk_out_speed *= randf_range(0.85, 1.15)
 	rush_range += randi_range(-1, 1)
-	petrify_after *= randf_range(0.85, 1.2)
+	var pm := randf_range(0.85, 1.2)
+	petrify_min *= pm
+	petrify_max *= pm
 	_random_statue_pose()
 	_set_state(state)
 	_late_ready.call_deferred()
@@ -261,7 +267,7 @@ func _mad(dt: float, ex: Array[RID]) -> void:
 			twitch_t = 0.0
 	else:
 		dark_t += dt
-		sanity = max(0.0, sanity - dt * 0.03)
+		sanity = max(0.0, sanity - dt * 0.02)
 		if fled:                       # 숨는 데 성공: 잠시 엿본다
 			fled = false
 			lurk_t = randf_range(1.5, 3.5)
@@ -271,7 +277,8 @@ func _mad(dt: float, ex: Array[RID]) -> void:
 	lunge_cd = maxf(0.0, lunge_cd - dt)
 	retreat_t = maxf(0.0, retreat_t - dt)
 	# 어둠 속에 있을수록 다시 굳어 간다: 느려지고, 뚝뚝 끊기고, 회색으로 변하다가 돌이 된다
-	var harden := clampf(dark_t / petrify_after, 0.0, 1.0)
+	var petrify_time := lerpf(petrify_min, petrify_max, clampf(sanity, 0.0, 1.0))
+	var harden := clampf(dark_t / petrify_time, 0.0, 1.0)
 	var loose := pow(clampf(sanity, 0.0, 1.0), 0.8) * (1.0 - 0.75 * harden)
 	loose_now = loose
 	mats[0].albedo_color = MAD_TINT.lerp(STONE_TINT, harden * harden)
@@ -300,16 +307,20 @@ func _mad(dt: float, ex: Array[RID]) -> void:
 			return
 
 	# 어둠 속에서 가까우면 돌진했다 멈췄다를 반복. 뻣뻣할수록 오래 멈춘다
+	# 플레이어가 달리면 발소리를 듣고 숨어 있던 광인도 몰려온다
+	var heard: bool = player.sprinting and not lit and tile.distance_to(player_tile) <= hear_run_range
+	if heard:
+		lurk_t = 0.0
 	var rushing := not lit and dist <= rush_range and lurk_t <= 0.0
 	if rushing:
 		if rush_t > 0.0:
 			rush_t -= dt
 			if rush_t <= 0.0:
-				pause_t = lerpf(0.9, 0.25, loose) * randf_range(0.7, 1.3)
+				pause_t = lerpf(0.6, 0.15, loose) * randf_range(0.7, 1.3)
 		elif pause_t > 0.0:
 			pause_t -= dt
 		else:
-			rush_t = lerpf(0.5, 1.1, loose) * randf_range(0.8, 1.2)
+			rush_t = lerpf(0.6, 1.3, loose) * randf_range(0.8, 1.2)
 	flinch_t = maxf(0.0, flinch_t - dt)
 
 	var speed := 0.0
@@ -361,7 +372,7 @@ func _mad(dt: float, ex: Array[RID]) -> void:
 				fled = true
 			else:
 				next = _darkest_neighbor(lv, ex)
-		elif dist < chase_range and (lurk_t <= 0.0 or dist <= 2):
+		elif (dist < chase_range or heard) and (lurk_t <= 0.0 or dist <= 2):
 			next = level.next_step(tile, prey_tile)
 		if next != null and (not _taken(next) or lunge_t > 0.0 or next == prey_tile):
 			target = next
@@ -390,7 +401,7 @@ func _mad(dt: float, ex: Array[RID]) -> void:
 		_set_state(State.CURED)
 		Sfx.play_at("cured", global_position + Vector3.UP, -4.0)
 		GameState.speak(global_position, CURED_LINES.pick_random())
-	elif dark_t > petrify_after and tile != player_tile and _arrived():
+	elif dark_t > petrify_time and tile != player_tile and _arrived():
 		_face(player.global_position)   # 다시 굳을 때는 플레이어 쪽을 보고 굳는다
 		body_t = 0.0
 		_set_state(State.STATUE)
@@ -492,6 +503,8 @@ func _cured(dt: float) -> void:
 		var nx: Variant = level.next_step(tile, wander_target)
 		if nx != null:
 			target = nx
+		elif not level.is_outdoor(tile):
+			wander_target = tile        # 길이 막혔으면(문이 닫힘 등) 그 자리에서 굳는다
 		return
 	var goal := level.rescue_tile()
 	if tile == goal:
@@ -506,9 +519,14 @@ func _cured(dt: float) -> void:
 	#  - 혼자일 때는 가끔 엉뚱한 길로 빠지거나 멈춰서 두리번거린다
 	var ptile := level.to_tile(player.global_position)
 	var pd := tile.distance_to(ptile)
-	if pd < 2.0 and not level.is_outdoor(tile):
+	# 플레이어가 출구 근처(홀·로비·마당)에 있으면 따라가지 않고 곧장 밖으로 나간다
+	# (전에는 홀에서 쉬는 플레이어 옆, 엘리베이터 앞에 멈춰 서 있었다)
+	var player_near_exit := ptile.distance_to(level.entrance_tile) <= 5.0 or level.is_outdoor(ptile) \
+			or tile.distance_to(level.entrance_tile) <= 4.0
+	var follow := pd <= 5.0 and not player_near_exit and not level.is_outdoor(tile)
+	if follow and pd < 2.0:
 		return
-	if pd <= 5.0 and not level.is_outdoor(tile):
+	if follow:
 		goal = ptile
 	elif randf() < 0.07:
 		idle_t = randf_range(1.5, 3.0)

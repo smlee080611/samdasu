@@ -25,7 +25,7 @@ func _run() -> void:
 	await _wait(240)
 	print("TEST after light: state=", p.state, " body_t=", p.body_t, " sanity=", p.sanity)
 	player.headlamp.on = false
-	await _wait(400)
+	await _wait(700)             # 풀리는 데 약 10초
 	print("TEST after lantern: state=", p.state, " stiff=", player.stiff)
 	var door = get_tree().get_nodes_in_group("blocker").filter(func(b): return b.has_method("interact"))[0]
 	door.interact(player)
@@ -115,5 +115,14 @@ func _run() -> void:
 	w2._set_state(2)
 	w2.confusion = 0.0
 	await _wait(900)
+	# 달리기: 스태미나가 닳고, 다 떨어지면 못 달림
+	player.global_position = level.tile_center(Vector2i(5, 12))
+	player.rotation.y = -PI * 0.5
+	Input.action_press("sprint"); Input.action_press("move_forward")
+	await _wait(120)
+	print("TEST sprint sprinting=", player.sprinting, " stamina=", snapped(player.stamina, 1))
+	await _wait(240)
+	print("TEST sprint after 6s stamina=", snapped(player.stamina, 1), " winded=", player.winded, " sprinting=", player.sprinting)
+	Input.action_release("sprint"); Input.action_release("move_forward")
 	print("TEST exit: waiting=", w2.waiting, " rescued ", before, "->", GameState.rescued, " pos=", w2.global_position.snapped(Vector3(0.1, 0.1, 0.1)), " outdoor=", level.is_outdoor(level.to_tile(w2.global_position)))
 	get_tree().quit()

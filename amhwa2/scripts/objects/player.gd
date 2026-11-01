@@ -3,6 +3,16 @@ extends CharacterBody3D
 ## 자식 노드: Head(Camera3D) > Headlamp(SpotLight3D), Head > InteractRay(RayCast3D)
 
 @export var walk_speed := 3.2
+@export var run_speed := 5.6
+## 스태미나: 달리면 닳고(약 4.5초), 쉬면 찬다. 숫자는 안 보이고 거친 숨소리로 느낀다.
+## 다 떨어지면 숨이 고를 때까지(40) 다시 못 달린다. 달리는 발소리는 커서 근처 광인이 몰려온다.
+@export var stamina_drain := 22.0
+@export var stamina_regen := 14.0
+var stamina := 100.0
+var sprinting := false
+var winded := false
+var bob_t := 0.0
+var pant: AudioStreamPlayer
 @export var mouse_sens := 0.0025
 @export var lantern_scene: PackedScene
 @export var lanterns_held := 2
@@ -26,6 +36,11 @@ const PERSON_SCENE := preload("res://scenes/person.tscn")
 
 func _ready() -> void:
 	add_to_group("player")
+	pant = AudioStreamPlayer.new()
+	pant.stream = load("res://sounds/pant.wav")
+	pant.volume_db = -60.0
+	add_child(pant)
+	pant.play()
 
 func _unhandled_input(e: InputEvent) -> void:
 	if e is InputEventMouseButton and e.pressed:
@@ -52,15 +67,28 @@ func _physics_process(dt: float) -> void:
 		return
 	var input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	var dir := (transform.basis * Vector3(input.x, 0, input.y)).normalized()
-	var speed := walk_speed * (1.0 - stiff / 100.0 * 0.5)
+	var moving := input.length() > 0.1
+	# 달리기와 스태미나
+	if stamina <= 0.0:
+		winded = true
+	elif winded and stamina >= 40.0:
+		winded = false
+	sprinting = moving and input.y < 0.3 and Input.is_action_pressed("sprint") and not winded
+	if sprinting:
+		stamina = maxf(0.0, stamina - stamina_drain * dt)
+	else:
+		stamina = minf(100.0, stamina + stamina_regen * (1.4 if not moving else 1.0) * (1.0 - stiff / 200.0) * dt)
+	var base := run_speed if sprinting else walk_speed
+	var speed := base * (1.0 - stiff / 100.0 * 0.5)
 	velocity = Vector3(dir.x * speed, 0, dir.z * speed)
 	move_and_slide()
-	# 발소리: 굳을수록 느리고 무거워짐
-	if input.length() > 0.1:
+	# 발소리: 굳을수록 느리고 무거워짐, 달리면 크고 빠름
+	if moving:
+		bob_t += dt * (13.0 if sprinting else 8.5)
 		step_t -= dt
 		if step_t <= 0.0:
-			step_t = 0.45 + stiff / 100.0 * 0.3
-			Sfx.play("step_%d" % (randi() % 3), -10.0)
+			step_t = (0.3 if sprinting else 0.45) + stiff / 100.0 * 0.3
+			Sfx.play("step_%d" % (randi() % 3), -3.0 if sprinting else -10.0)
 	else:
 		step_t = 0.0
 
@@ -80,7 +108,12 @@ func _process(dt: float) -> void:
 			kneel_action = Callable()
 		else:
 			kneel_k = sin(PI * (1.0 - kneel_t / kneel_total))
-	head.position.y = lerpf(head.position.y, HEAD_Y - 0.55 * kneel_k, minf(1.0, dt * 12.0))
+	var bob := sin(bob_t) * (0.055 if sprinting else 0.025) if velocity.length() > 0.5 else 0.0
+	head.position.y = lerpf(head.position.y, HEAD_Y - 0.55 * kneel_k + bob, minf(1.0, dt * 12.0))
+	# 숨이 찰수록 거친 숨소리가 커진다 (스태미나는 숫자로 보여주지 않음)
+	var tired := 1.0 - stamina / 100.0
+	pant.volume_db = lerpf(-40.0, -6.0, clampf(tired * 1.3, 0.0, 1.0)) if tired > 0.15 else -60.0
+	pant.pitch_scale = 0.9 + tired * 0.35
 	if GameState.is_frozen():
 		return
 	grab_cooldown -= dt
