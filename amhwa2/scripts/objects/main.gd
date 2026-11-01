@@ -3,6 +3,9 @@ extends Node3D
 
 func _enter_tree() -> void:
 	GameState.reset()
+	var args := OS.get_cmdline_user_args()
+	if ("selftest" in args or "shot" in args) and not "intro" in args:
+		GameState.intro_seen = true   # 자동 점검·스크린샷에서는 시작 연출 건너뜀
 
 func _unhandled_input(e: InputEvent) -> void:
 	if e.is_action_pressed("restart"):
@@ -13,3 +16,7 @@ func _ready() -> void:
 		var t := Node.new()
 		t.set_script(load("res://scripts/tests/selftest.gd"))
 		add_child(t)
+	if "shot" in OS.get_cmdline_user_args():
+		var t2 := Node.new()
+		t2.set_script(load("res://scripts/tests/shot.gd"))
+		add_child(t2)

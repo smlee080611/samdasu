@@ -1,0 +1,64 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/objects/decor.gd" id="e1"]
+
+[sub_resource type="StandardMaterial3D" id="m_rail"]
+albedo_color = Color(0.6, 0.62, 0.64, 1)
+roughness = 0.4
+metallic = 0.5
+
+[sub_resource type="StandardMaterial3D" id="m_cloth"]
+albedo_color = Color(0.62, 0.72, 0.74, 1)
+roughness = 0.95
+metallic = 0.0
+
+[sub_resource type="BoxMesh" id="r3"]
+material = SubResource("m_rail")
+size = Vector3(2.0, 0.03, 0.04)
+
+[sub_resource type="BoxMesh" id="r4"]
+material = SubResource("m_cloth")
+size = Vector3(0.16, 1.85, 0.02)
+
+[sub_resource type="BoxMesh" id="r5"]
+material = SubResource("m_cloth")
+size = Vector3(0.16, 1.85, 0.02)
+
+[sub_resource type="BoxMesh" id="r6"]
+material = SubResource("m_cloth")
+size = Vector3(0.16, 1.85, 0.02)
+
+[sub_resource type="BoxMesh" id="r7"]
+material = SubResource("m_cloth")
+size = Vector3(0.16, 1.85, 0.02)
+
+[sub_resource type="BoxMesh" id="r8"]
+material = SubResource("m_cloth")
+size = Vector3(0.16, 1.85, 0.02)
+
+[node name="BedCurtain" type="Node3D"]
+script = ExtResource("e1")
+
+[node name="Rail" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.55, 0)
+mesh = SubResource("r3")
+
+[node name="Fold0" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.86603, 0, -0.5, 0, 1, 0, 0.5, 0, 0.86603, -0.9, 1.5, -0.035)
+mesh = SubResource("r4")
+
+[node name="Fold1" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.86603, 0, 0.5, 0, 1, 0, -0.5, 0, 0.86603, -0.77, 1.5, 0.035)
+mesh = SubResource("r5")
+
+[node name="Fold2" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.86603, 0, -0.5, 0, 1, 0, 0.5, 0, 0.86603, -0.64, 1.5, -0.035)
+mesh = SubResource("r6")
+
+[node name="Fold3" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.86603, 0, 0.5, 0, 1, 0, -0.5, 0, 0.86603, -0.51, 1.5, 0.035)
+mesh = SubResource("r7")
+
+[node name="Fold4" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.86603, 0, -0.5, 0, 1, 0, 0.5, 0, 0.86603, -0.38, 1.5, -0.035)
+mesh = SubResource("r8")

@@ -1,0 +1,148 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/objects/prop.gd" id="e1"]
+
+[sub_resource type="StandardMaterial3D" id="m_frame"]
+albedo_color = Color(0.55, 0.57, 0.58, 1)
+roughness = 0.5
+metallic = 0.5
+
+[sub_resource type="StandardMaterial3D" id="m_sheet"]
+albedo_color = Color(0.78, 0.77, 0.72, 1)
+roughness = 0.95
+metallic = 0.0
+
+[sub_resource type="StandardMaterial3D" id="m_blanket"]
+albedo_color = Color(0.47, 0.58, 0.6, 1)
+roughness = 0.95
+metallic = 0.0
+
+[sub_resource type="BoxMesh" id="r4"]
+material = SubResource("m_frame")
+size = Vector3(0.05, 0.45, 0.05)
+
+[sub_resource type="BoxMesh" id="r5"]
+material = SubResource("m_frame")
+size = Vector3(0.05, 0.45, 0.05)
+
+[sub_resource type="BoxMesh" id="r6"]
+material = SubResource("m_frame")
+size = Vector3(0.05, 0.45, 0.05)
+
+[sub_resource type="BoxMesh" id="r7"]
+material = SubResource("m_frame")
+size = Vector3(0.05, 0.45, 0.05)
+
+[sub_resource type="BoxMesh" id="r8"]
+material = SubResource("m_frame")
+size = Vector3(0.92, 0.06, 1.8)
+
+[sub_resource type="BoxMesh" id="r9"]
+material = SubResource("m_sheet")
+size = Vector3(0.86, 0.14, 1.74)
+
+[sub_resource type="BoxMesh" id="r10"]
+material = SubResource("m_blanket")
+size = Vector3(0.88, 0.06, 1.0)
+
+[sub_resource type="BoxMesh" id="r11"]
+material = SubResource("m_sheet")
+size = Vector3(0.55, 0.1, 0.32)
+
+[sub_resource type="BoxMesh" id="r12"]
+material = SubResource("m_frame")
+size = Vector3(0.92, 0.55, 0.04)
+
+[sub_resource type="BoxMesh" id="r13"]
+material = SubResource("m_frame")
+size = Vector3(0.92, 0.35, 0.04)
+
+[sub_resource type="BoxMesh" id="r14"]
+material = SubResource("m_frame")
+size = Vector3(0.03, 0.18, 0.9)
+
+[sub_resource type="StandardMaterial3D" id="m_rubber"]
+albedo_color = Color(0.12, 0.12, 0.12, 1)
+roughness = 0.9
+metallic = 0.0
+
+[sub_resource type="CylinderMesh" id="r16"]
+material = SubResource("m_rubber")
+top_radius = 0.04
+bottom_radius = 0.04
+height = 0.03
+radial_segments = 8
+rings = 1
+
+[sub_resource type="CylinderMesh" id="r17"]
+material = SubResource("m_rubber")
+top_radius = 0.04
+bottom_radius = 0.04
+height = 0.03
+radial_segments = 8
+rings = 1
+
+[sub_resource type="BoxShape3D" id="r18"]
+size = Vector3(0.95, 0.9, 1.85)
+
+[node name="Bed" type="StaticBody3D"]
+collision_layer = 1
+collision_mask = 0
+script = ExtResource("e1")
+blocks_path = true
+
+[node name="Leg0" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.42, 0.225, -0.85)
+mesh = SubResource("r4")
+
+[node name="Leg1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.42, 0.225, -0.85)
+mesh = SubResource("r5")
+
+[node name="Leg2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.42, 0.225, 0.85)
+mesh = SubResource("r6")
+
+[node name="Leg3" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.42, 0.225, 0.85)
+mesh = SubResource("r7")
+
+[node name="Frame" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
+mesh = SubResource("r8")
+
+[node name="Mattress" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
+mesh = SubResource("r9")
+
+[node name="Blanket" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.99863, -0.05234, 0, 0.05234, 0.99863, 0, 0.63, 0.32)
+mesh = SubResource("r10")
+
+[node name="Pillow" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.66, -0.66)
+mesh = SubResource("r11")
+
+[node name="Head" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, -0.9)
+mesh = SubResource("r12")
+
+[node name="Foot" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, 0.9)
+mesh = SubResource("r13")
+
+[node name="RailL" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.47, 0.72, -0.2)
+mesh = SubResource("r14")
+
+[node name="Wheel0a" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.0, -1.0, 0, 1.0, 0.0, 0, 0, 0, 1, -0.42, 0.04, -0.6)
+mesh = SubResource("r16")
+
+[node name="Wheel1a" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.0, -1.0, 0, 1.0, 0.0, 0, 0, 0, 1, -0.42, 0.04, 0.6)
+mesh = SubResource("r17")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
+shape = SubResource("r18")

@@ -9,6 +9,9 @@ const LIT_THRESHOLD := 0.2
 func light_at(pos: Vector3, exclude: Array[RID] = [], safety_only := false) -> float:
 	var target := pos + Vector3(0, 1.0, 0)
 	var best := 0.0
+	var level = get_tree().get_first_node_in_group("level")
+	if level and level.is_outdoor(level.to_tile(pos)):
+		best = 0.75   # 야외: 달빛 아래는 늘 밝다 (몸도 풀림)
 	for src in get_tree().get_nodes_in_group("light_source"):
 		if safety_only and not src.get("protects_body"):
 			continue

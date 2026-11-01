@@ -2,15 +2,19 @@ extends Node3D
 class_name Level
 ## 레벨: 벽 배치(글자 지도)와 칸 단위 길찾기를 담당한다.
 ## 석상·문·차광막 같은 오브젝트는 씬 안에 직접 배치한다(에디터에서 끌어다 놓기).
-## 지도 문자: # 벽, 나머지는 바닥.
+## 지도 문자: # 벽, W 창문이 있는 벽(차광막 씬이 창 구멍을 그림), , 야외(천장 없음, 달빛), 나머지는 실내 바닥.
 
 const TS := 2.0
 const WALL_H := 3.0
 
 @export_multiline var wall_map := ""
-@export var entrance_tile := Vector2i(4, 16)
-@export var wall_material: StandardMaterial3D
-@export var floor_material: StandardMaterial3D
+@export var entrance_tile := Vector2i(4, 16)   ## 플레이어가 쉬는 곳(엘리베이터 홀). 몸이 풀리고 배터리가 찬다
+@export var exit_tile := Vector2i(-1, -1)      ## 구한 사람이 나가는 곳(현관 밖). 없으면 entrance_tile
+@export var wall_material: StandardMaterial3D     ## 벽 한 면(2m × 3m)에 한 장씩 붙는 텍스처
+@export var floor_material: StandardMaterial3D    ## 바닥 한 칸에 한 장
+@export var ceiling_material: StandardMaterial3D  ## 천장 한 칸에 한 장
+@export var facade_material: StandardMaterial3D   ## 바깥에서 보이는 외벽 면
+@export var outdoor_material: StandardMaterial3D  ## 야외 바닥 한 칸에 한 장
 
 var rows: PackedStringArray
 var size := Vector2i.ZERO
@@ -24,38 +28,83 @@ func _ready() -> void:
 	refresh_nav.call_deferred()
 
 func _build_walls() -> void:
-	var mesh := BoxMesh.new()
-	mesh.size = Vector3(TS, WALL_H, TS)
+	# 충돌: 벽 칸마다 상자 하나
 	var shape := BoxShape3D.new()
-	shape.size = mesh.size
+	shape.size = Vector3(TS, WALL_H, TS)
 	var walls := StaticBody3D.new()
 	walls.name = "Walls"
 	walls.collision_layer = GameState.LAYER_WALL
 	walls.collision_mask = 0
 	add_child(walls)
+	# 그래픽: 바닥 쪽으로 드러난 벽 면만 사각형으로 만든다 (텍스처가 면마다 한 장씩 정확히 붙음)
+	var wall_st := SurfaceTool.new()
+	var floor_st := SurfaceTool.new()
+	var ceil_st := SurfaceTool.new()
+	var facade_st := SurfaceTool.new()
+	var ground_st := SurfaceTool.new()
+	for st in [wall_st, floor_st, ceil_st, facade_st, ground_st]:
+		st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for y in size.y:
 		for x in size.x:
-			if rows[y][x] != "#":
+			var x0 := x * TS
+			var x1 := x0 + TS
+			var z0 := y * TS
+			var z1 := z0 + TS
+			var c := rows[y][x]
+			if c == ",":
+				_quad(ground_st, Vector3(x0, 0, z0), Vector3(x1, 0, z0), Vector3(x1, 0, z1), Vector3(x0, 0, z1), Vector3.UP)
 				continue
-			var mi := MeshInstance3D.new()
-			mi.mesh = mesh
-			mi.material_override = wall_material
-			mi.position = tile_center(Vector2i(x, y), WALL_H * 0.5)
-			walls.add_child(mi)
+			if c != "#" and c != "W":
+				_quad(floor_st, Vector3(x0, 0, z0), Vector3(x1, 0, z0), Vector3(x1, 0, z1), Vector3(x0, 0, z1), Vector3.UP)
+				_quad(ceil_st, Vector3(x0, WALL_H, z1), Vector3(x1, WALL_H, z1), Vector3(x1, WALL_H, z0), Vector3(x0, WALL_H, z0), Vector3.DOWN)
+				continue
 			var cs := CollisionShape3D.new()
 			cs.shape = shape
-			cs.position = mi.position
+			cs.position = tile_center(Vector2i(x, y), WALL_H * 0.5)
 			walls.add_child(cs)
-	var plane := PlaneMesh.new()
-	plane.size = Vector2(size.x * TS, size.y * TS)
-	for i in 2:
-		var p := MeshInstance3D.new()
-		p.mesh = plane
-		p.material_override = floor_material
-		p.position = Vector3(size.x * TS * 0.5, WALL_H * i, size.y * TS * 0.5)
-		if i == 1:
-			p.rotation.x = PI
-		add_child(p)
+			if c == "W":
+				continue   # 창문 벽: 면은 차광막 씬(curtain.gd)이 창 구멍과 함께 그린다
+			var h := WALL_H
+			# 이웃이 야외면 외벽 재질, 실내면 실내 벽 재질
+			if _open(x, y + 1):  # 남쪽 면
+				_quad(_side(x, y + 1, wall_st, facade_st), Vector3(x0, h, z1), Vector3(x1, h, z1), Vector3(x1, 0, z1), Vector3(x0, 0, z1), Vector3.BACK)
+			if _open(x, y - 1):  # 북쪽 면
+				_quad(_side(x, y - 1, wall_st, facade_st), Vector3(x1, h, z0), Vector3(x0, h, z0), Vector3(x0, 0, z0), Vector3(x1, 0, z0), Vector3.FORWARD)
+			if _open(x + 1, y):  # 동쪽 면
+				_quad(_side(x + 1, y, wall_st, facade_st), Vector3(x1, h, z1), Vector3(x1, h, z0), Vector3(x1, 0, z0), Vector3(x1, 0, z1), Vector3.RIGHT)
+			if _open(x - 1, y):  # 서쪽 면
+				_quad(_side(x - 1, y, wall_st, facade_st), Vector3(x0, h, z0), Vector3(x0, h, z1), Vector3(x0, 0, z1), Vector3(x0, 0, z0), Vector3.LEFT)
+	for pair in [[wall_st, wall_material, "WallMesh"], [floor_st, floor_material, "FloorMesh"], [ceil_st, ceiling_material, "CeilingMesh"],
+			[facade_st, facade_material, "FacadeMesh"], [ground_st, outdoor_material, "GroundMesh"]]:
+		if pair[1] == null:
+			continue
+		var mi := MeshInstance3D.new()
+		mi.name = pair[2]
+		mi.mesh = pair[0].commit()
+		mi.material_override = pair[1]
+		add_child(mi)
+
+func _open(x: int, y: int) -> bool:
+	return x >= 0 and y >= 0 and x < size.x and y < size.y and rows[y][x] != "#" and rows[y][x] != "W"
+
+func _side(x: int, y: int, inside: SurfaceTool, outside: SurfaceTool) -> SurfaceTool:
+	return outside if rows[y][x] == "," and facade_material else inside
+
+## a 왼쪽 위, b 오른쪽 위, c 오른쪽 아래, d 왼쪽 아래 (바라보는 쪽 기준)
+func _quad(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3, n: Vector3) -> void:
+	var uv := [Vector2(0, 0), Vector2(1, 0), Vector2(1, 1), Vector2(0, 1)]
+	var v := [a, b, c, d]
+	for i in [0, 1, 2, 0, 2, 3]:   # Godot은 시계 방향이 앞면
+		st.set_normal(n)
+		st.set_uv(uv[i])
+		st.add_vertex(v[i])
+
+func rescue_tile() -> Vector2i:
+	return exit_tile if exit_tile.x >= 0 else entrance_tile
+
+## 야외 칸(지도의 ,)인가
+func is_outdoor(t: Vector2i) -> bool:
+	return t.x >= 0 and t.y >= 0 and t.x < size.x and t.y < size.y and rows[t.y][t.x] == ","
 
 func tile_center(t: Vector2i, y := 0.0) -> Vector3:
 	return Vector3(t.x * TS + TS * 0.5, y, t.y * TS + TS * 0.5)
@@ -63,11 +112,21 @@ func tile_center(t: Vector2i, y := 0.0) -> Vector3:
 func to_tile(p: Vector3) -> Vector2i:
 	return Vector2i(int(floor(p.x / TS)), int(floor(p.z / TS)))
 
+## 구출된 사람이 기다릴 자리: 레벨의 WaitSpots 노드 아래 Marker3D들 (먼저 온 사람이 먼저 차지)
+var _used_spots := 0
+func take_wait_spot() -> Vector3:
+	var spots := get_node_or_null("WaitSpots")
+	if spots and _used_spots < spots.get_child_count():
+		_used_spots += 1
+		return spots.get_child(_used_spots - 1).global_position
+	_used_spots += 1
+	return tile_center(entrance_tile) + Vector3(randf_range(-0.8, 0.8), 0, randf_range(-0.8, 0.8))
+
 ## 지나갈 수 있는 칸인가: 벽이 아니고, "blocker" 그룹(석상, 닫힌 문 등)이 서 있지 않은 칸
 func is_walkable(t: Vector2i) -> bool:
 	if t.x < 0 or t.y < 0 or t.x >= size.x or t.y >= size.y:
 		return false
-	if rows[t.y][t.x] == "#":
+	if rows[t.y][t.x] == "#" or rows[t.y][t.x] == "W":
 		return false
 	for b in get_tree().get_nodes_in_group("blocker"):
 		if to_tile(b.global_position) == t:

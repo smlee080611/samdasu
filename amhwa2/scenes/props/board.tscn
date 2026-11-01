@@ -1,0 +1,78 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/objects/board.gd" id="e1"]
+
+[sub_resource type="StandardMaterial3D" id="m_white"]
+albedo_color = Color(0.86, 0.87, 0.85, 1)
+roughness = 0.35
+metallic = 0.0
+
+[sub_resource type="StandardMaterial3D" id="m_frame"]
+albedo_color = Color(0.55, 0.57, 0.58, 1)
+roughness = 0.4
+metallic = 0.5
+
+[sub_resource type="BoxMesh" id="r3"]
+material = SubResource("m_white")
+size = Vector3(1.7, 1.4, 0.02)
+
+[sub_resource type="BoxMesh" id="r4"]
+material = SubResource("m_frame")
+size = Vector3(1.74, 0.03, 0.04)
+
+[sub_resource type="BoxMesh" id="r5"]
+material = SubResource("m_frame")
+size = Vector3(1.74, 0.03, 0.04)
+
+[sub_resource type="BoxMesh" id="r6"]
+material = SubResource("m_frame")
+size = Vector3(1.2, 0.03, 0.08)
+
+[sub_resource type="StandardMaterial3D" id="m_red"]
+albedo_color = Color(0.6, 0.1, 0.08, 1)
+roughness = 0.6
+metallic = 0.0
+
+[sub_resource type="BoxMesh" id="r8"]
+material = SubResource("m_red")
+size = Vector3(0.12, 0.02, 0.02)
+
+[sub_resource type="SystemFont" id="font"]
+font_names = PackedStringArray("Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans CJK KR", "NanumGothic", "sans-serif")
+
+[node name="Board" type="Node3D"]
+script = ExtResource("e1")
+
+[node name="Board" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.01)
+mesh = SubResource("r3")
+
+[node name="Top" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.71, 0.02)
+mesh = SubResource("r4")
+
+[node name="Bottom" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.71, 0.02)
+mesh = SubResource("r5")
+
+[node name="Tray" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.74, 0.05)
+mesh = SubResource("r6")
+
+[node name="Marker" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, -0.71, 0.06)
+mesh = SubResource("r8")
+
+[node name="Label" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.76, 0.6, 0.025)
+pixel_size = 0.0021
+shaded = true
+double_sided = false
+modulate = Color(0.1, 0.16, 0.42, 1)
+outline_size = 0
+font = SubResource("font")
+font_size = 44
+horizontal_alignment = 0
+vertical_alignment = 0
+line_spacing = 4.0
+text = "현황"
