@@ -156,7 +156,7 @@ ol.steps li,ul li{margin-bottom:6px}
         <tr><td><code>interact</code></td><td>E</td><td>문, 차광막(길게)</td></tr>
         <tr><td><code>status</code></td><td>F1</td><td>개발용. 에디터에서 실행할 때만, 누르는 동안 배터리·랜턴·구출·차광막 표시</td></tr>
         <tr><td><code>sprint</code></td><td>Shift</td><td>달리기 (player.gd)</td></tr>
-        <tr><td><code>restart</code></td><td>R</td><td>main.gd</td></tr>
+        <tr><td><code>restart</code></td><td>F9</td><td>main.gd</td></tr>
       </tbody>
     </table></div>
     <h3>충돌 레이어 (프로젝트 설정 → 레이어 이름 → 3D 물리)</h3>
@@ -352,7 +352,7 @@ ol.steps li,ul li{margin-bottom:6px}
    ├ Center               <span class="c">게임오버·클리어</span>
    ├ Note (PanelContainer) › Margin › VBox › Title, Body, Close
    └ Intro (ColorRect) › Text, Skip</pre>
-    <p><b>시작 연출</b>은 처음 실행할 때 한 번만 나옵니다(<code>GameState.intro_seen</code>, R로 다시 해도 안 나옴). 아무 키나 누르면 건너뜁니다. 끝나면 "사람들을 깨워 이 홀로 데려와야 한다. 먼저 간호사실로 가 보자."라는 생각 자막과 조작법이 뜹니다. 문구는 <code>hud.gd</code> 맨 위 <code>INTRO</code>, <code>GOAL</code>, <code>CONTROLS</code>에서 고칩니다.</p>
+    <p><b>시작 연출</b>은 처음 실행할 때 한 번만 나옵니다(<code>GameState.intro_seen</code>, F9로 다시 해도 안 나옴). 아무 키나 누르면 건너뜁니다. 끝나면 "사람들을 깨워 이 홀로 데려와야 한다. 먼저 간호사실로 가 보자."라는 생각 자막과 조작법이 뜹니다. 문구는 <code>hud.gd</code> 맨 위 <code>INTRO</code>, <code>GOAL</code>, <code>CONTROLS</code>에서 고칩니다.</p>
     <p>쪽지를 읽거나 시작 연출 중에는 <code>GameState.ui_blocking</code>이 켜져 시간이 멈춥니다. 쪽지는 E, Esc, 클릭으로 닫습니다. 폰트는 <code>hud.gd</code>에서 시스템 한글 폰트를 지정하며, 폰트 파일을 정하면 Theme 리소스로 바꾸면 됩니다.</p>
 
     <h2 id="events">7-3. 공포 사건 (events.gd)</h2>

@@ -19,7 +19,7 @@ var curtains_open := 0
 var game_over := false
 var won := false
 var ui_blocking := false   # 시작 연출, 쪽지 읽는 중: 플레이어와 광인이 멈춘다
-var intro_seen := false    # 시작 연출은 처음 한 번만 (R로 다시 해도 안 나옴). reset()에서 지우지 않는다
+var intro_seen := false    # 시작 연출은 처음 한 번만 (F9로 다시 해도 안 나옴). reset()에서 지우지 않는다
 
 func reset() -> void:
 	rescued = 0
