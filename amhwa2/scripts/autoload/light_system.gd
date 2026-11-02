@@ -24,7 +24,7 @@ func light_at(pos: Vector3, exclude: Array[RID] = [], safety_only := false) -> f
 func in_neutral(pos: Vector3, exclude: Array[RID] = []) -> bool:
 	var target := pos + Vector3(0, 1.0, 0)
 	for src in get_tree().get_nodes_in_group("light_source"):
-		if src.get("neutral") and src.light_value(target, exclude) > 0.05:
+		if src.get("neutral") and src.light_value(target, exclude) > 0.0:
 			return true
 	return false
 

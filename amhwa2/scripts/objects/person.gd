@@ -62,6 +62,7 @@ var stuck_t := 0.0                    # 빛 속에서 도망칠 곳이 없던 �
 var lunge_t := 0.0                    # 돌발 돌진 중
 var lunge_cd := 0.0
 var retreat_t := 0.0                  # 붙잡은 뒤 뒷걸음질
+var hit_flash := 0.0                  # 경광봉에 맞았을 때 붉게 번쩍
 var held_by: Node = null              # (회복한 사람) 나를 붙잡은 광인
 var held_t := 0.0                     # 붙잡혀 굳어 가는 정도(초). hold_petrify가 되면 석상
 var victim: Node = null               # (광인) 내가 붙잡고 있는 사람
@@ -153,6 +154,11 @@ func _process(dt: float) -> void:
 			_mad(dt, ex)
 		State.CURED:
 			_cured(dt)
+	if hit_flash > 0.0:
+		hit_flash = maxf(0.0, hit_flash - dt)
+		mats[0].emission_enabled = hit_flash > 0.0 or state == State.STATUE
+		mats[0].emission = Color(1.0, 0.15, 0.08)
+		mats[0].emission_energy_multiplier = hit_flash * 5.0
 	if state != State.STATUE:
 		_coast(dt)
 	else:
@@ -457,19 +463,29 @@ func struck(by: Node3D, kind: int) -> void:
 	flinch_t = 0.0
 	retreat_t = 1.3 if kind == 1 else 2.4
 	target = tile
+	# 맞은 쪽 반대로 밀려남 (휘두르기 0.6m, 밀치기 1.2m)
+	var away := global_position - by.global_position
+	away.y = 0
+	away = away.normalized()
+	var dest := global_position + away * (0.6 if kind == 1 else 1.2)
+	var dt_ := level.to_tile(dest)
+	if level.is_walkable(dt_) or dt_ == tile:
+		global_position = dest
+		tile = dt_
+		target = tile
+	vel = Vector3.ZERO
 	if kind == 2:
-		var away := global_position - by.global_position
-		away.y = 0
-		var dest := global_position + away.normalized() * 1.2
-		var dt_ := level.to_tile(dest)
-		if level.is_walkable(dt_):
-			global_position = dest
-			tile = dt_
-			target = tile
 		if victim and is_instance_valid(victim) and victim.held_by == self:
 			victim.held_by = null
 		victim = null
-	Sfx.play_at("shriek", global_position + Vector3.UP * 1.5, -10.0 if kind == 1 else -4.0, 0.2)
+	# 고개가 확 꺾이고 몸이 뒤로 젖혀진 채 잠깐 멈춤, 몸이 붉게 번쩍
+	var side := 1.0 if randf() < 0.5 else -1.0
+	twitch = Vector3(-0.9, 0.6 * side, 0.9 * side) * (1.0 if kind == 1 else 1.4)
+	twitch_t = 0.35
+	pose_t = 0.0
+	hit_flash = 0.3
+	_face(by.global_position)
+	Sfx.play_at("shriek", global_position + Vector3.UP * 1.5, -6.0 if kind == 1 else -2.0, 0.2)
 
 ## (예전) 붙잡기가 막혔을 때: 크게 움찔하고, 잡고 있던 사람도 놓고 물러난다
 func _repelled() -> void:

@@ -27,6 +27,7 @@ var hold_target: Node = null   # E를 누르고 있는 대상 (차광막·문·�
 ## 좌클릭(또는 V) 휘두르기: 앞의 광인을 움찔하게 하고 물러나게 함 (스태미나 10, 0.7초마다)
 ## Space 양손 밀치기: 더 세게 밀어내고 잡고 있던 사람도 놓게 함 (스태미나 30, 1.5초마다)
 var baton: Node3D
+var has_baton := true
 var baton_cd := 0.0
 var swing_t := 0.0
 var swing_kind := 0
@@ -227,12 +228,21 @@ func _relay(heir: Node) -> void:
 	level.get_node("People").add_child(me)
 	me.global_position = level.tile_center(t)
 	me.rotation.y = rotation.y
+	# 들고 있던 것은 굳은 자리에 떨어진다: 랜턴, 남은 케미라이트, 경광봉
 	for i in lanterns_held:
 		var l: Node3D = lantern_scene.instantiate()
 		get_parent().add_child(l)
 		l.global_position = global_position + Vector3(randf_range(-0.5, 0.5), 0, randf_range(-0.5, 0.5))
 		placed_lanterns.append(l)
 	lanterns_held = 0
+	# (줍는 물건은 다음 사람이 자리를 옮긴 뒤에 놓는다. 바로 놓으면 그 자리에서 바로 주워져 버림)
+	_drop_later.call_deferred(global_position, chemlights, has_baton)
+	# 다음 사람: 헤드램프(배터리 그대로)와 케미라이트 하나만 들고 밖에서 들어온다.
+	# 앞사람이 깔아 둔 초록 불빛(케미라이트는 꺼지지 않음)을 따라가 물건을 되찾는다
+	chemlights = 1
+	set_baton(false)
+	for i in hand_stick.get_child_count():
+		hand_stick.get_child(i).visible = i < chemlights
 	GameState.rescued -= 1
 	global_position = heir.global_position
 	rotation = Vector3.ZERO   # 마당에서 건물(북쪽)을 보고 시작
@@ -244,17 +254,30 @@ func _relay(heir: Node) -> void:
 	Sfx.play("petrify", -2.0, 0.0)
 	GameState.relay_happened()
 
+func _drop_later(pos: Vector3, chems: int, baton_too: bool) -> void:
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	if chems > 0:
+		var box: Node3D = load("res://scenes/chem_box.tscn").instantiate()
+		box.amount = chems
+		get_parent().add_child(box)
+		box.global_position = pos + Vector3(0.4, 0, 0.3)
+	if baton_too:
+		var bp: Node3D = load("res://scenes/baton_pickup.tscn").instantiate()
+		get_parent().add_child(bp)
+		bp.global_position = pos + Vector3(-0.4, 0.0, -0.3)
+		bp.rotation.y = randf() * TAU
+
 func looking_at() -> Node:
 	if ray.is_colliding():
 		return ray.get_collider()
 	return null
 
-## 광인이 붙잡을 때 부른다. 케미라이트로 막았으면 true
+## 광인이 붙잡을 때 부른다. (막는 수단이 생기면 true를 돌려준다)
 func grabbed(by_name: String) -> bool:
 	if grab_cooldown > 0.0:
 		return false
 	grab_cooldown = 1.2
-	stiff += 25.0
 	stiff += 25.0
 	Sfx.play("grab", 0.0, 0.0)
 	shake = 1.0
@@ -273,19 +296,13 @@ func _throw_chemlight() -> void:
 		hand_stick.get_child(i).visible = i < chemlights
 	toss_t = 0.35
 	Sfx.play("snap", -4.0, 0.1)
-	var dir := -head.global_transform.basis.z
-	dir.y = 0
-	dir = dir.normalized()
-	var start := head.global_position + head.global_transform.basis.x * 0.2 - Vector3(0, 0.3, 0)
-	var land := global_position + dir * 7.0
-	var q := PhysicsRayQueryParameters3D.create(start, start + dir * 7.0, GameState.LAYER_WALL)
-	var hit := get_world_3d().direct_space_state.intersect_ray(q)
-	if hit:
-		land = hit.position - dir * 0.3
-	land.y = 0.03
+	# 바라보는 방향(위아래 포함)으로 초속 8.5m, 살짝 위로 띄워서 던진다. 왼손에서 출발
+	var aim := -head.global_transform.basis.z
+	var start := head.global_position - head.global_transform.basis.x * 0.2 - Vector3(0, 0.15, 0) + aim * 0.3
+	var v := aim * 8.5 + Vector3(0, 2.0, 0) + velocity * 0.5
 	var c: Node3D = chemlight_scene.instantiate()
 	get_parent().add_child(c)
-	c.launch(start, land)
+	c.launch(start, v)
 
 ## 손은 하나만 쓴다: 오른손은 경광봉, 왼손은 비워 둔다(헤드램프·랜턴·문·뒤지기는 왼손으로).
 ## 케미라이트는 주머니에 넣어 두고, 던질 때만 왼손으로 꺼내 꺾어서 던지는 모습이 잠깐 보인다.
@@ -352,6 +369,7 @@ func _make_baton() -> void:
 	gm.material = g
 	grip.mesh = gm
 	grip.position = Vector3(0, -0.11, 0)
+	grip.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF   # 헤드램프에 손잡이 그림자가 벽에 비치던 버그
 	baton.add_child(grip)
 	var l := OmniLight3D.new()
 	l.set_script(load("res://scripts/objects/point_light_source.gd"))
@@ -365,8 +383,13 @@ func _make_baton() -> void:
 	baton.add_child(l)
 
 ## 경광봉 휘두르기(1)·밀치기(2): 앞쪽 부채꼴 안의 광인을 움찔하게 하고 물러나게 한다
+func set_baton(v: bool) -> void:
+	has_baton = v
+	if baton:
+		baton.visible = v
+
 func _baton_attack(kind: int) -> void:
-	if baton_cd > 0.0 or kneel_t > 0.0:
+	if baton_cd > 0.0 or kneel_t > 0.0 or not has_baton:
 		return
 	var cost := 10.0 if kind == 1 else 30.0
 	if stamina < cost * 0.6:
@@ -391,8 +414,16 @@ func _baton_attack(kind: int) -> void:
 		p.struck(self, kind)
 		hit = true
 	if hit:
-		Sfx.play("thud", -2.0, 0.1)
-		shake = maxf(shake, 0.35)
+		Sfx.play("thud", 2.0 if kind == 2 else 0.0, 0.1)
+		shake = maxf(shake, 0.7 if kind == 2 else 0.55)
+		head.rotation.x += 0.035                 # 손에 걸리는 반동
+		_hit_stop(0.07 if kind == 1 else 0.1)
+
+## 맞히는 순간 시간이 아주 잠깐 멈칫 (타격감)
+func _hit_stop(seconds: float) -> void:
+	Engine.time_scale = 0.06
+	await get_tree().create_timer(seconds, true, false, true).timeout
+	Engine.time_scale = 1.0
 
 ## 개수가 바뀌었을 때(주움): 주머니를 잠깐 보여 준다
 func _update_hand_stick() -> void:

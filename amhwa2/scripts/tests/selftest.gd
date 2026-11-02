@@ -62,6 +62,9 @@ func _run() -> void:
 	await _wait(10)
 	print("TEST relay: game_over=", GameState.game_over, " stiff=", player.stiff, " player=", level.to_tile(player.global_position), " rescued=", GameState.rescued, " persons ", n_before, "->", get_tree().get_nodes_in_group("person").size())
 	var me = get_tree().get_nodes_in_group("person").filter(func(q): return q.person_name == "간호사 (나)")
+	await _wait(5)
+	print("TEST relay heir items baton=", player.has_baton, " chem=", player.chemlights, " dropped_baton=", get_tree().get_root().find_children("*", "Area3D", true, false).filter(func(n): return n.get_script() and n.get_script().resource_path.ends_with("baton_pickup.gd")).size())
+	player.set_baton(true)
 	print("TEST relay statue at=", me[0].tile if me.size() > 0 else "none", " state=", me[0].state if me.size() > 0 else -1)
 	await _wait(400)
 	print("TEST after relay ui_blocking=", GameState.ui_blocking)
@@ -134,9 +137,12 @@ func _run() -> void:
 	player.chemlights = 2
 	var before_nodes := get_tree().get_nodes_in_group("light_source").size()
 	player._throw_chemlight()
-	await _wait(60)
+	await _wait(150)
 	var cl = get_tree().get_nodes_in_group("light_source").size() - before_nodes
 	print("TEST chem thrown left=", player.chemlights, " new lights=", cl)
+	var sticks = get_tree().get_root().find_children("*", "Node3D", true, false).filter(func(n): return n.get_script() and n.get_script().resource_path.ends_with("chemlight.gd"))
+	var st0 = sticks[-1]
+	print("TEST chem landed flying=", st0.flying, " y=", snapped(st0.global_position.y, 0.01), " dist=", snapped(Vector2(st0.global_position.x, st0.global_position.z).distance_to(Vector2(player.global_position.x, player.global_position.z)), 0.1), " bounces=", st0.bounces)
 	# 경광봉: 앞의 광인을 휘두르기로 물러나게, 밀치기로 밀어냄
 	var ps3 = get_tree().get_nodes_in_group("person").filter(func(q): return q.state == 0)
 	var m3 = ps3[0]
