@@ -14,10 +14,13 @@ var winded := false
 var bob_t := 0.0
 var pant: AudioStreamPlayer
 ## 케미라이트: G로 던져 길바닥에 깐다(약 75초 빛남). 약한 빛이라 몸을 지켜 주진 않지만 길 표시가 되고 광인이 그 자리를 피한다.
-## 개수는 화면에 안 나오고 왼손에 든 초록 막대로만 보인다.
+## 주머니에 넣어 다니고, 개수는 C를 누르고 있을 때 왼손에 펼쳐서 확인한다.
 @export var chemlight_scene: PackedScene = preload("res://scenes/chemlight.tscn")
 @export var chemlights := 5
 var hand_stick: Node3D
+var toss_stick: MeshInstance3D
+var pocket_t := 0.0
+var toss_t := 0.0
 var hold_target: Node = null   # E를 누르고 있는 대상 (차광막·문·뒤질 곳)
 ## 경광봉: 경비원의 빨간 경광봉. 오른손에 늘 들고 있다.
 ## 빨간 빛은 약해서 광인을 풀어 주지도, 다시 굳게 하지도 않는다(그 자리에서 변화 없음).
@@ -140,6 +143,17 @@ func _process(dt: float) -> void:
 		else:
 			baton.position = baton.position.lerp(BATON_REST_POS, minf(1.0, dt * 12.0))
 			baton.rotation = baton.rotation.lerp(BATON_REST_ROT, minf(1.0, dt * 12.0))
+	# 왼손: 주머니 확인(C), 던지는 동작
+	pocket_t = maxf(0.0, pocket_t - dt)
+	if hand_stick:
+		hand_stick.visible = (Input.is_action_pressed("check_pocket") or pocket_t > 0.0) and chemlights > 0 and toss_t <= 0.0
+	if toss_stick:
+		toss_t = maxf(0.0, toss_t - dt)
+		toss_stick.visible = toss_t > 0.0
+		if toss_t > 0.0:
+			var k := 1.0 - toss_t / 0.35
+			toss_stick.position = Vector3(lerpf(-0.22, -0.05, k), lerpf(-0.28, -0.08, k), lerpf(-0.45, -0.75, k))
+			toss_stick.rotation = Vector3(0.3 + k * 2.0, 0.0, 0.6)
 	# 화면 흔들림
 	shake = maxf(0.0, shake - dt * 2.2)
 	head.h_offset = randf_range(-1, 1) * 0.06 * shake * shake
@@ -255,7 +269,9 @@ func _throw_chemlight() -> void:
 		GameState.say("케미라이트가 없다.")
 		return
 	chemlights -= 1
-	_update_hand_stick()
+	for i in hand_stick.get_child_count():
+		hand_stick.get_child(i).visible = i < chemlights
+	toss_t = 0.35
 	Sfx.play("snap", -4.0, 0.1)
 	var dir := -head.global_transform.basis.z
 	dir.y = 0
@@ -271,28 +287,39 @@ func _throw_chemlight() -> void:
 	get_parent().add_child(c)
 	c.launch(start, land)
 
-## 손에 든 케미라이트: 하나라도 있으면 화면 오른쪽 아래에 초록 막대가 보인다
+## 손은 하나만 쓴다: 오른손은 경광봉, 왼손은 비워 둔다(헤드램프·랜턴·문·뒤지기는 왼손으로).
+## 케미라이트는 주머니에 넣어 두고, 던질 때만 왼손으로 꺼내 꺾어서 던지는 모습이 잠깐 보인다.
+## C를 누르고 있으면 왼손에 남은 개수만큼 막대를 펼쳐 보여 준다 (화면 숫자 대신). 주웠을 때도 잠깐 보인다.
 func _make_hand_stick() -> void:
-	hand_stick = Node3D.new()
-	hand_stick.name = "HandStick"
-	head.add_child(hand_stick)
-	hand_stick.position = Vector3(-0.24, -0.26, -0.5)   # 왼손
-	hand_stick.rotation = Vector3(0.3, 0.0, 0.5)
-	var mi := MeshInstance3D.new()
-	var cm := CylinderMesh.new()
-	cm.top_radius = 0.008
-	cm.bottom_radius = 0.008
-	cm.height = 0.12
 	var m := StandardMaterial3D.new()
 	m.albedo_color = Color(0.5, 1.0, 0.55)
 	m.emission_enabled = true
 	m.emission = Color(0.35, 1.0, 0.45)
 	m.emission_energy_multiplier = 0.35   # 아직 안 꺾어서 희미하게
+	var cm := CylinderMesh.new()
+	cm.top_radius = 0.008
+	cm.bottom_radius = 0.008
+	cm.height = 0.12
 	cm.material = m
-	mi.mesh = cm
-	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	hand_stick.add_child(mi)
-	_update_hand_stick()
+	hand_stick = Node3D.new()            # 주머니 확인: 부채꼴로 펼친 막대들
+	hand_stick.name = "Pocket"
+	head.add_child(hand_stick)
+	hand_stick.position = Vector3(-0.2, -0.24, -0.48)
+	for i in 8:
+		var mi := MeshInstance3D.new()
+		mi.mesh = cm
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mi.rotation = Vector3(0.2, 0.0, 0.7 - i * 0.18)
+		mi.position = Vector3(i * 0.012, 0, 0)
+		hand_stick.add_child(mi)
+	toss_stick = MeshInstance3D.new()    # 던질 때 왼손에 잠깐 보이는 막대
+	toss_stick.mesh = cm
+	toss_stick.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	head.add_child(toss_stick)
+	toss_stick.visible = false
+	hand_stick.visible = false
+	for i in hand_stick.get_child_count():
+		hand_stick.get_child(i).visible = i < chemlights
 
 func _make_baton() -> void:
 	baton = Node3D.new()
@@ -367,9 +394,12 @@ func _baton_attack(kind: int) -> void:
 		Sfx.play("thud", -2.0, 0.1)
 		shake = maxf(shake, 0.35)
 
+## 개수가 바뀌었을 때(주움): 주머니를 잠깐 보여 준다
 func _update_hand_stick() -> void:
 	if hand_stick:
-		hand_stick.visible = chemlights > 0
+		for i in hand_stick.get_child_count():
+			hand_stick.get_child(i).visible = i < chemlights
+		pocket_t = 1.2
 
 ## 랜턴 놓기·줍기는 무릎을 꿇어야 해서 시간이 걸린다(놓기 0.8초, 줍기 0.6초). 그동안 움직일 수 없다.
 func _toggle_lantern() -> void:

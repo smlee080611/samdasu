@@ -154,6 +154,7 @@ ol.steps li,ul li{margin-bottom:6px}
         <tr><td><code>toggle_lamp</code></td><td>F, 마우스 우클릭</td><td>헤드램프 켜고 끄기</td></tr>
         <tr><td>(마우스 휠)</td><td>휠 위·아래</td><td>헤드램프 초점: 좁게(멀리·밝게) ↔ 넓게 (player.gd)</td></tr>
         <tr><td><code>throw</code></td><td>G</td><td>케미라이트 던지기</td></tr>
+        <tr><td><code>check_pocket</code></td><td>C</td><td>누르고 있는 동안 왼손에 케미라이트 개수만큼 펼쳐 보기</td></tr>
         <tr><td><code>swing</code></td><td>좌클릭, V</td><td>경광봉 휘두르기</td></tr>
         <tr><td><code>shove</code></td><td>Space</td><td>경광봉 양손 밀치기</td></tr>
         <tr><td><code>lantern</code></td><td>Q</td><td>랜턴 놓기·줍기</td></tr>
@@ -222,8 +223,8 @@ ol.steps li,ul li{margin-bottom:6px}
         <tr><td>E 상호작용</td><td>InteractRay가 맞은 노드에 <code>interact()</code>가 있으면 호출. 길게 누르면 <code>hold()</code></td></tr>
         <tr><td>몸이 굳는 수치 <code>stiff</code></td><td>입구나 "몸을 지켜주는 빛"(랜턴·달빛) 곁이면 감소, 아니면 증가. 100이면 게임오버</td></tr>
         <tr><td>헤드램프 배터리, 깜빡임</td><td><code>headlamp.gd</code></td></tr>
-        <tr><td>케미라이트</td><td>G로 던지면 포물선으로 날아가 바닥에서 약 75초 초록빛(<code>chemlight.tscn</code>). 몸을 지켜 주진 않지만 길 표시가 되고 광인이 그 자리를 피함. 시작 5개, 뒤져서 +2. 개수는 왼손에 든 초록 막대로</td></tr>
-        <tr><td>경광봉</td><td>오른손에 든 빨간 경광봉. 빛은 비상구 표시등 정도로 희미하고 "변화 없음"(그 빛 안의 광인은 풀리지도 굳지도 않음, <code>neutral</code>). 좌클릭·V 휘두르기: 1.9m 안 앞쪽 광인 움찔·후퇴(스태미나 10). Space 밀치기: 1.5m 안 광인을 1.2m 밀어내고 잡고 있던 사람도 놓게 함(스태미나 30)</td></tr>
+        <tr><td>케미라이트</td><td>G로 던지면 포물선으로 날아가 바닥에서 약 75초 초록빛(<code>chemlight.tscn</code>). 몸을 지켜 주진 않지만 길 표시가 되고 광인이 그 자리를 피함. 시작 5개, 뒤져서 +2. 주머니에 넣어 다니고, C를 누르고 있으면 왼손에 남은 개수만큼 펼쳐 보여 줌. 던질 때만 왼손으로 꺼내는 모습이 보임</td></tr>
+        <tr><td>경광봉</td><td>손은 하나만 쓴다: 오른손은 경광봉, 왼손은 비워 두고 헤드램프·랜턴·문·뒤지기를 왼손으로 한다. 오른손에 든 빨간 경광봉. 빛은 비상구 표시등 정도로 희미하고 "변화 없음"(그 빛 안의 광인은 풀리지도 굳지도 않음, <code>neutral</code>). 좌클릭·V 휘두르기: 1.9m 안 앞쪽 광인 움찔·후퇴(스태미나 10). Space 밀치기: 1.5m 안 광인을 1.2m 밀어내고 잡고 있던 사람도 놓게 함(스태미나 30)</td></tr>
         <tr><td>뒤지기</td><td>사물함·책상·선반·카트를 E 길게(1.4초, 그동안 못 움직임). 배터리(+50) / 케미라이트 2개 / 빈손. 간호사실 책상, 처치실 카트, 창고·린넨실·오물실 선반, 당직실 책상엔 확실히 있고 사물함은 무작위 (<code>prop.gd</code> <code>loot</code>)</td></tr>
         <tr><td>헤드램프 초점</td><td>휠로 조절. 넓게 56도·10m ↔ 좁게 24도·20m(더 밝음). 배터리 소모는 같음 (<code>headlamp.gd</code> <code>zoom</code>)</td></tr>
         <tr><td>달리기·스태미나</td><td>Shift로 달림(5.6m/s). 스태미나는 약 4.5초 만에 닳고, 다 떨어지면 40까지 찰 때까지 못 달림. 숫자 대신 거친 숨소리와 시선 흔들림으로 느낌. 달리는 발소리를 들은 광인(16칸 안)이 몰려옴</td></tr>

@@ -39,6 +39,8 @@ func _run() -> void:
 				best = d
 		best.amount = 0.3
 		best._apply()
+	if "pocket" in args:   # 주머니 확인 (C를 누르고 있는 상태)
+		Input.action_press("check_pocket")
 	if "lampoff" in args:
 		player.headlamp.on = false
 	if "lantern" in args:   # 앞에 랜턴을 놓고 한 걸음 물러서서 찍기
