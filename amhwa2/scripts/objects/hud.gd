@@ -18,7 +18,7 @@ const INTRO := [
 	"헤드램프 하나, 랜턴 둘.",
 ]
 const GOAL := "사람들을 깨워 현관 밖으로 내보내야 한다. 먼저 간호사실로 가 보자."
-const CONTROLS := "WASD 이동 · 마우스 둘러보기 · F/우클릭 헤드램프 · 휠 초점 · Q 랜턴 · G 케미라이트 · E 상호작용 · Shift 달리기 · F9 다시"
+const CONTROLS := "WASD 이동 · 마우스 둘러보기 · F/우클릭 헤드램프 · 휠 초점 · 좌클릭/V 휘두르기 · Space 밀치기 · Q 랜턴 · G 케미라이트 · E(길게) 문·뒤지기 · Shift 달리기 · F9 다시"
 
 @onready var screen_mat: ShaderMaterial = $Root/Screen.material
 @onready var cracks = $Root/Cracks

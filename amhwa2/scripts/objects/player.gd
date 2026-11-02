@@ -13,11 +13,22 @@ var sprinting := false
 var winded := false
 var bob_t := 0.0
 var pant: AudioStreamPlayer
-## 케미라이트: G로 던져 길바닥에 깔고(약 75초 빛남), 손에 하나라도 있으면 붙잡혔을 때 꺾어서 광인 얼굴에 들이대 막는다.
-## 막으면 하나 쓰고, 굳음이 조금만 오르고 헤드램프도 안 꺼진다. 개수는 화면에 안 나오고 손에 든 초록 막대로만 보인다.
+## 케미라이트: G로 던져 길바닥에 깐다(약 75초 빛남). 약한 빛이라 몸을 지켜 주진 않지만 길 표시가 되고 광인이 그 자리를 피한다.
+## 개수는 화면에 안 나오고 왼손에 든 초록 막대로만 보인다.
 @export var chemlight_scene: PackedScene = preload("res://scenes/chemlight.tscn")
 @export var chemlights := 5
 var hand_stick: Node3D
+var hold_target: Node = null   # E를 누르고 있는 대상 (차광막·문·뒤질 곳)
+## 경광봉: 경비원의 빨간 경광봉. 오른손에 늘 들고 있다.
+## 빨간 빛은 약해서 광인을 풀어 주지도, 다시 굳게 하지도 않는다(그 자리에서 변화 없음).
+## 좌클릭(또는 V) 휘두르기: 앞의 광인을 움찔하게 하고 물러나게 함 (스태미나 10, 0.7초마다)
+## Space 양손 밀치기: 더 세게 밀어내고 잡고 있던 사람도 놓게 함 (스태미나 30, 1.5초마다)
+var baton: Node3D
+var baton_cd := 0.0
+var swing_t := 0.0
+var swing_kind := 0
+const BATON_REST_POS := Vector3(0.3, -0.34, -0.6)
+const BATON_REST_ROT := Vector3(-0.55, 0.0, -0.22)   # 끝이 앞쪽 위를 향하게
 @export var mouse_sens := 0.0025
 @export var lantern_scene: PackedScene
 @export var lanterns_held := 2
@@ -47,8 +58,10 @@ func _ready() -> void:
 	add_child(pant)
 	pant.play()
 	_make_hand_stick()
+	_make_baton()
 
 func _unhandled_input(e: InputEvent) -> void:
+	var was_captured := Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
 	if e is InputEventMouseButton and e.pressed:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	elif e is InputEventKey and e.pressed and e.physical_keycode == KEY_ESCAPE:
@@ -67,6 +80,11 @@ func _unhandled_input(e: InputEvent) -> void:
 			headlamp.adjust_zoom(-0.1)
 	if e.is_action_pressed("throw"):
 		_throw_chemlight()
+	var click: bool = e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT and was_captured
+	if click or e.is_action_pressed("swing"):
+		_baton_attack(1)
+	if e.is_action_pressed("shove"):
+		_baton_attack(2)
 	if e.is_action_pressed("lantern"):
 		_toggle_lantern()
 	if e.is_action_pressed("interact"):
@@ -75,7 +93,8 @@ func _unhandled_input(e: InputEvent) -> void:
 			t.interact(self)
 
 func _physics_process(dt: float) -> void:
-	if GameState.is_frozen() or kneel_t > 0.0:
+	var searching: bool = hold_target != null and is_instance_valid(hold_target) and hold_target.get("loot") != null and hold_target.loot != ""
+	if GameState.is_frozen() or kneel_t > 0.0 or searching or (swing_kind == 2 and swing_t > 0.0):
 		velocity = Vector3.ZERO
 		return
 	var input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
@@ -106,6 +125,21 @@ func _physics_process(dt: float) -> void:
 		step_t = 0.0
 
 func _process(dt: float) -> void:
+	# 경광봉: 쿨타임과 휘두르는 모양
+	baton_cd = maxf(0.0, baton_cd - dt)
+	if baton:
+		if swing_t > 0.0:
+			swing_t = maxf(0.0, swing_t - dt)
+			var k := 1.0 - swing_t / (0.3 if swing_kind == 1 else 0.45)
+			if swing_kind == 1:   # 오른쪽에서 왼쪽으로 크게 휘두름
+				baton.position = Vector3(lerpf(0.32, -0.12, k), -0.3 + sin(k * PI) * 0.08, -0.6)
+				baton.rotation = Vector3(-0.55 - sin(k * PI) * 0.5, 0.0, lerpf(-1.0, 1.0, k))
+			else:                 # 양손으로 앞으로 쭉 밀기 (봉이 가로로)
+				baton.position = Vector3(0.0, -0.3, lerpf(-0.45, -0.8, sin(k * PI)))
+				baton.rotation = Vector3(0.0, 0.0, PI * 0.5)
+		else:
+			baton.position = baton.position.lerp(BATON_REST_POS, minf(1.0, dt * 12.0))
+			baton.rotation = baton.rotation.lerp(BATON_REST_ROT, minf(1.0, dt * 12.0))
 	# 화면 흔들림
 	shake = maxf(0.0, shake - dt * 2.2)
 	head.h_offset = randf_range(-1, 1) * 0.06 * shake * shake
@@ -132,11 +166,15 @@ func _process(dt: float) -> void:
 	grab_cooldown -= dt
 	# 길게 누르는 상호작용(차광막)
 	var t := looking_at()
-	if t and t.has_method("hold") and Input.is_action_pressed("interact"):
+	if t and t.has_method("hold") and Input.is_action_pressed("interact") and (hold_target == null or hold_target == t):
+		hold_target = t
 		hold_time += dt
 		if t.hold(hold_time):
 			hold_time = 0.0
 	else:
+		if hold_target and is_instance_valid(hold_target) and hold_target.has_method("release"):
+			hold_target.release(hold_time)
+		hold_target = null
 		hold_time = 0.0
 	# 몸이 굳는 속도: 랜턴·달빛 곁이나 입구에서는 풀리고, 어둠에서는 빨리 굳는다
 	var level := get_tree().get_first_node_in_group("level") as Level
@@ -202,19 +240,6 @@ func grabbed(by_name: String) -> bool:
 	if grab_cooldown > 0.0:
 		return false
 	grab_cooldown = 1.2
-	if chemlights > 0:
-		chemlights -= 1
-		stiff += 6.0
-		shake = 0.5
-		Sfx.play("snap", 0.0, 0.1)
-		var c: Node3D = chemlight_scene.instantiate()   # 꺾인 막대가 발밑에 떨어져 잠시 빛난다
-		get_parent().add_child(c)
-		c.lifetime = 20.0
-		c.fade_time = 8.0
-		c.global_position = global_position - global_transform.basis.z * 0.5 + Vector3(0, 0.03, 0)
-		c.rotation = Vector3(0, randf() * TAU, PI * 0.5)
-		_update_hand_stick()
-		return true
 	stiff += 25.0
 	stiff += 25.0
 	Sfx.play("grab", 0.0, 0.0)
@@ -251,8 +276,8 @@ func _make_hand_stick() -> void:
 	hand_stick = Node3D.new()
 	hand_stick.name = "HandStick"
 	head.add_child(hand_stick)
-	hand_stick.position = Vector3(0.22, -0.25, -0.5)
-	hand_stick.rotation = Vector3(0.3, 0.0, -0.5)
+	hand_stick.position = Vector3(-0.24, -0.26, -0.5)   # 왼손
+	hand_stick.rotation = Vector3(0.3, 0.0, 0.5)
 	var mi := MeshInstance3D.new()
 	var cm := CylinderMesh.new()
 	cm.top_radius = 0.008
@@ -268,6 +293,79 @@ func _make_hand_stick() -> void:
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	hand_stick.add_child(mi)
 	_update_hand_stick()
+
+func _make_baton() -> void:
+	baton = Node3D.new()
+	baton.name = "Baton"
+	head.add_child(baton)
+	baton.position = BATON_REST_POS
+	baton.rotation = BATON_REST_ROT
+	var mi := MeshInstance3D.new()
+	var cm := CylinderMesh.new()
+	cm.top_radius = 0.018
+	cm.bottom_radius = 0.022
+	cm.height = 0.5
+	var m := StandardMaterial3D.new()
+	m.albedo_color = Color(1.0, 0.25, 0.15)
+	m.emission_enabled = true
+	m.emission = Color(1.0, 0.12, 0.05)
+	m.emission_energy_multiplier = 0.9
+	cm.material = m
+	mi.mesh = cm
+	mi.position = Vector3(0, 0.2, 0)
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	baton.add_child(mi)
+	var grip := MeshInstance3D.new()
+	var gm := CylinderMesh.new()
+	gm.top_radius = 0.022
+	gm.bottom_radius = 0.022
+	gm.height = 0.14
+	var g := StandardMaterial3D.new()
+	g.albedo_color = Color(0.08, 0.08, 0.08)
+	gm.material = g
+	grip.mesh = gm
+	grip.position = Vector3(0, -0.11, 0)
+	baton.add_child(grip)
+	var l := OmniLight3D.new()
+	l.set_script(load("res://scripts/objects/point_light_source.gd"))
+	l.light_color = Color(1.0, 0.15, 0.08)
+	l.light_energy = 0.12      # 비상구 표시등 정도로 아주 희미하게
+	l.omni_range = 2.0
+	l.position = Vector3(0, 0.3, 0)
+	l.set("power", 0.25)
+	l.set("protects_body", false)
+	l.set("neutral", true)   # 풀어 주지도 굳게 하지도 않는 빛
+	baton.add_child(l)
+
+## 경광봉 휘두르기(1)·밀치기(2): 앞쪽 부채꼴 안의 광인을 움찔하게 하고 물러나게 한다
+func _baton_attack(kind: int) -> void:
+	if baton_cd > 0.0 or kneel_t > 0.0:
+		return
+	var cost := 10.0 if kind == 1 else 30.0
+	if stamina < cost * 0.6:
+		GameState.say("숨이 차서 팔이 안 올라간다.")
+		return
+	stamina = maxf(0.0, stamina - cost)
+	baton_cd = 0.7 if kind == 1 else 1.5
+	swing_kind = kind
+	swing_t = 0.3 if kind == 1 else 0.45
+	Sfx.play("whoosh", -4.0, 0.1)
+	var reach := 1.9 if kind == 1 else 1.5
+	var cone := 70.0 if kind == 1 else 85.0
+	var fwd := -global_transform.basis.z
+	var hit := false
+	for p in get_tree().get_nodes_in_group("person"):
+		if p.state != 1:   # 광인만
+			continue
+		var to: Vector3 = p.global_position - global_position
+		to.y = 0
+		if to.length() > reach or rad_to_deg(fwd.angle_to(to)) > cone * 0.5:
+			continue
+		p.struck(self, kind)
+		hit = true
+	if hit:
+		Sfx.play("thud", -2.0, 0.1)
+		shake = maxf(shake, 0.35)
 
 func _update_hand_stick() -> void:
 	if hand_stick:

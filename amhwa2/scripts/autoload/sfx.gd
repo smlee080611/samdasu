@@ -7,7 +7,7 @@ var streams := {}
 func _ready() -> void:
 	for n in ["step_0", "step_1", "step_2", "stone_crack", "petrify", "mad_step_0", "mad_step_1",
 			"grab", "door_open", "door_close", "curtain", "lantern", "click", "cured",
-			"wheel_roll", "elevator_buzz", "inhale", "shriek", "snap", "toss"]:
+			"wheel_roll", "elevator_buzz", "inhale", "shriek", "snap", "toss", "whoosh", "thud", "rummage"]:
 		streams[n] = load("res://sounds/%s.wav" % n)
 
 ## 3D 위치에서 나는 소리 (멀수록 작고, 좌우로 들림)

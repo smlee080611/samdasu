@@ -263,6 +263,8 @@ func _mad(dt: float, ex: Array[RID]) -> void:
 		if not was_lit and lunge_t <= 0.0:
 			flinch_t = 0.45            # 빛을 맞는 순간 움찔하며 멈춤
 			twitch_t = 0.0
+	elif LightSystem.in_neutral(global_position, ex):
+		pass                           # 경광봉의 빨간 빛: 풀리지도 굳지도 않음
 	else:
 		dark_t += dt
 		sanity = max(0.0, sanity - dt * 0.02)
@@ -444,7 +446,32 @@ func _plan_escape(ex: Array[RID]) -> bool:
 			queue.append(n)
 	return false
 
-## 케미라이트에 얼굴을 찔려 붙잡기가 막혔을 때: 크게 움찔하고, 잡고 있던 사람도 놓고 물러난다
+## 경광봉에 맞았을 때 (1 휘두르기, 2 밀치기): 움찔하고 물러난다. 밀치기는 몸이 뒤로 밀리고 잡고 있던 사람도 놓는다
+func struck(by: Node3D, kind: int) -> void:
+	if state != State.MAD:
+		return
+	lunge_t = 0.0
+	rush_t = 0.0
+	pause_t = 1.0
+	twitch_t = 0.0
+	flinch_t = 0.0
+	retreat_t = 1.3 if kind == 1 else 2.4
+	target = tile
+	if kind == 2:
+		var away := global_position - by.global_position
+		away.y = 0
+		var dest := global_position + away.normalized() * 1.2
+		var dt_ := level.to_tile(dest)
+		if level.is_walkable(dt_):
+			global_position = dest
+			tile = dt_
+			target = tile
+		if victim and is_instance_valid(victim) and victim.held_by == self:
+			victim.held_by = null
+		victim = null
+	Sfx.play_at("shriek", global_position + Vector3.UP * 1.5, -10.0 if kind == 1 else -4.0, 0.2)
+
+## (예전) 붙잡기가 막혔을 때: 크게 움찔하고, 잡고 있던 사람도 놓고 물러난다
 func _repelled() -> void:
 	flinch_t = 0.0
 	retreat_t = 2.4

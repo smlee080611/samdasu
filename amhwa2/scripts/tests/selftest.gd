@@ -137,10 +137,41 @@ func _run() -> void:
 	await _wait(60)
 	var cl = get_tree().get_nodes_in_group("light_source").size() - before_nodes
 	print("TEST chem thrown left=", player.chemlights, " new lights=", cl)
-	player.grab_cooldown = 0.0
-	var s0: float = player.stiff
-	var defended: bool = player.grabbed("x")
-	print("TEST chem defend=", defended, " stiff+=", snapped(player.stiff - s0, 0.1), " left=", player.chemlights, " lamp_on=", player.headlamp.is_on())
+	# 경광봉: 앞의 광인을 휘두르기로 물러나게, 밀치기로 밀어냄
+	var ps3 = get_tree().get_nodes_in_group("person").filter(func(q): return q.state == 0)
+	var m3 = ps3[0]
+	player.global_position = level.tile_center(Vector2i(16, 6))
+	player.rotation.y = -PI * 0.5
+	player.stamina = 100.0
+	m3.global_position = player.global_position + Vector3(1.2, 0, 0); m3.tile = level.to_tile(m3.global_position); m3.target = m3.tile
+	m3._set_state(1); m3.sanity = 0.3; m3.sanity_speed = 0.0
+	player.baton_cd = 0.0
+	player._baton_attack(1)
+	print("TEST baton swing retreat=", snapped(m3.retreat_t, 0.1), " stamina=", snapped(player.stamina, 1))
+	await _wait(60)
+	m3.global_position = player.global_position + Vector3(1.2, 0, 0); m3.tile = level.to_tile(m3.global_position); m3.target = m3.tile
+	player.baton_cd = 0.0
+	var p_before: Vector3 = m3.global_position
+	player._baton_attack(2)
+	print("TEST baton shove pushed=", snapped(m3.global_position.distance_to(p_before), 0.1), " retreat=", snapped(m3.retreat_t, 0.1))
+	print("TEST red light neutral lit=", LightSystem.is_lit(m3.global_position, [m3.get_rid()]), " in_neutral=", LightSystem.in_neutral(m3.global_position, [m3.get_rid(), player.get_rid()]))
+	# 문: 누르고 있으면 서서히 열리고, 짧게 누르면 닫힘. 틈이면 빛은 통과, 사람은 못 지나감
+	var d2 = get_node("/root/Main/Level1F/Doors").get_children().filter(func(d): return d.amount < 0.05)[0]
+	d2.hold(0.0); d2.hold(0.15); d2.release(0.15)
+	await _wait(2)
+	print("TEST door crack amount=", snapped(d2.amount, 0.01), " walkable=", level.is_walkable(level.to_tile(d2.global_position)), " light_layer=", d2.collision_layer & 1)
+	d2.hold(0.0); d2.hold(1.2); d2.release(1.2)
+	await _wait(2)
+	print("TEST door held open amount=", snapped(d2.amount, 0.01), " walkable=", level.is_walkable(level.to_tile(d2.global_position)))
+	d2.hold(0.0); d2.release(0.1)
+	await _wait(2)
+	print("TEST door tap close amount=", snapped(d2.amount, 0.01))
+	# 뒤지기
+	var lockers = get_node("/root/Main/Level1F/Props").get_children().filter(func(q): return q.get("loot") == "battery")
+	player.headlamp.battery = 20.0
+	var lk = lockers[0]
+	lk.hold(0.5); var done: bool = lk.hold(1.5)
+	print("TEST search done=", done, " battery=", snapped(player.headlamp.battery, 1), " searched=", lk.searched)
 	player.headlamp.adjust_zoom(1.0)
 	await _wait(3)
 	print("TEST zoom narrow angle=", snapped(player.headlamp.spot_angle, 0.1), " range=", snapped(player.headlamp.spot_range, 0.1))

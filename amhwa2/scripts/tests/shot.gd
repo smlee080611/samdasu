@@ -32,6 +32,13 @@ func _run() -> void:
 		player.rotation.y += 0.25
 		player._throw_chemlight()
 		player.rotation.y -= 0.25
+	if "crack" in args:   # 가장 가까운 문을 틈만 열기
+		var best = null
+		for d in get_tree().get_nodes_in_group("level")[0].get_node("Doors").get_children():
+			if best == null or d.global_position.distance_to(player.global_position) < best.global_position.distance_to(player.global_position):
+				best = d
+		best.amount = 0.3
+		best._apply()
 	if "lampoff" in args:
 		player.headlamp.on = false
 	if "lantern" in args:   # 앞에 랜턴을 놓고 한 걸음 물러서서 찍기
