@@ -301,7 +301,8 @@ func _mad(dt: float, ex: Array[RID]) -> void:
 			_face(victim.global_position)
 			move_mode = 0
 			if player.global_position.distance_to(global_position) < 0.95 and player.grab_cooldown <= 0.0:
-				player.grabbed(person_name)
+				if player.grabbed(person_name):
+					_repelled()
 			return
 
 	# 어둠 속에서 가까우면 돌진했다 멈췄다를 반복. 뻣뻣할수록 오래 멈춘다
@@ -389,7 +390,8 @@ func _mad(dt: float, ex: Array[RID]) -> void:
 				break
 	if (not lit or lunge_t > 0.0) and retreat_t <= 0.0 and global_position.distance_to(player.global_position) < 0.95:
 		if player.grab_cooldown <= 0.0:
-			player.grabbed(person_name)
+			if player.grabbed(person_name):
+				_repelled()
 			lunge_t = 0.0
 			retreat_t = 1.4    # 붙잡은 뒤에는 뒷걸음질쳐 물러서서 플레이어에게 틈을 준다
 			rush_t = 0.0
@@ -441,6 +443,16 @@ func _plan_escape(ex: Array[RID]) -> bool:
 			prev[n] = cur
 			queue.append(n)
 	return false
+
+## 케미라이트에 얼굴을 찔려 붙잡기가 막혔을 때: 크게 움찔하고, 잡고 있던 사람도 놓고 물러난다
+func _repelled() -> void:
+	flinch_t = 0.0
+	retreat_t = 2.4
+	twitch_t = 0.0
+	if victim and is_instance_valid(victim) and victim.held_by == self:
+		victim.held_by = null
+	victim = null
+	Sfx.play_at("shriek", global_position + Vector3.UP * 1.5, -6.0, 0.15)
 
 ## 플레이어에게서 멀어지는 이웃 칸 (붙잡은 뒤 물러설 때)
 func _away_from_player() -> Variant:

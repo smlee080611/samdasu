@@ -128,6 +128,22 @@ func _run() -> void:
 	for k in 20:
 		if not level.is_outdoor(level.to_tile(level.take_wait_spot())):
 			all_out = false
+	# 케미라이트: 던지면 하나 줄고 바닥에 떨어져 빛남, 손에 있으면 붙잡힘을 막음
+	player.global_position = level.tile_center(Vector2i(10, 6))
+	player.rotation.y = -PI * 0.5
+	player.chemlights = 2
+	var before_nodes := get_tree().get_nodes_in_group("light_source").size()
+	player._throw_chemlight()
+	await _wait(60)
+	var cl = get_tree().get_nodes_in_group("light_source").size() - before_nodes
+	print("TEST chem thrown left=", player.chemlights, " new lights=", cl)
+	player.grab_cooldown = 0.0
+	var s0: float = player.stiff
+	var defended: bool = player.grabbed("x")
+	print("TEST chem defend=", defended, " stiff+=", snapped(player.stiff - s0, 0.1), " left=", player.chemlights, " lamp_on=", player.headlamp.is_on())
+	player.headlamp.adjust_zoom(1.0)
+	await _wait(3)
+	print("TEST zoom narrow angle=", snapped(player.headlamp.spot_angle, 0.1), " range=", snapped(player.headlamp.spot_range, 0.1))
 	print("TEST 20 more wait spots all outdoors=", all_out)
 	print("TEST exit: waiting=", w2.waiting, " rescued ", before, "->", GameState.rescued, " pos=", w2.global_position.snapped(Vector3(0.1, 0.1, 0.1)), " outdoor=", level.is_outdoor(level.to_tile(w2.global_position)))
 	get_tree().quit()

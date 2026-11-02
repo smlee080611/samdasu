@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" path="res://scenes/battery.tscn" id="battery"]
 [ext_resource type="PackedScene" path="res://scenes/emergency_light.tscn" id="elight"]
 [ext_resource type="PackedScene" path="res://scenes/stairs.tscn" id="stairs"]
+[ext_resource type="PackedScene" path="res://scenes/chem_box.tscn" id="chembox"]
 [ext_resource type="Texture2D" path="res://textures/wall.png" id="t_wall"]
 [ext_resource type="Texture2D" path="res://textures/floor.png" id="t_floor"]
 [ext_resource type="Texture2D" path="res://textures/ceiling.png" id="t_ceiling"]
@@ -357,6 +358,12 @@ transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 39, 0, 19)
 
 [node name="배터리_2" parent="Pickups" instance=ExtResource("battery")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 73, 0, 33)
+
+[node name="케미라이트상자_0" parent="Pickups" instance=ExtResource("chembox")]
+transform = Transform3D(0.90631, 0, 0.42262, 0, 1, 0, -0.42262, 0, 0.90631, 21, 0, 19)
+
+[node name="케미라이트상자_1" parent="Pickups" instance=ExtResource("chembox")]
+transform = Transform3D(0.90631, 0, 0.42262, 0, 1, 0, -0.42262, 0, 0.90631, 65, 0, 19)
 
 [node name="StairsW" parent="." instance=ExtResource("stairs")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 4, 0, 8)

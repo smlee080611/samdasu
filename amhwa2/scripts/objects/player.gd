@@ -13,6 +13,11 @@ var sprinting := false
 var winded := false
 var bob_t := 0.0
 var pant: AudioStreamPlayer
+## 케미라이트: G로 던져 길바닥에 깔고(약 75초 빛남), 손에 하나라도 있으면 붙잡혔을 때 꺾어서 광인 얼굴에 들이대 막는다.
+## 막으면 하나 쓰고, 굳음이 조금만 오르고 헤드램프도 안 꺼진다. 개수는 화면에 안 나오고 손에 든 초록 막대로만 보인다.
+@export var chemlight_scene: PackedScene = preload("res://scenes/chemlight.tscn")
+@export var chemlights := 5
+var hand_stick: Node3D
 @export var mouse_sens := 0.0025
 @export var lantern_scene: PackedScene
 @export var lanterns_held := 2
@@ -41,6 +46,7 @@ func _ready() -> void:
 	pant.volume_db = -60.0
 	add_child(pant)
 	pant.play()
+	_make_hand_stick()
 
 func _unhandled_input(e: InputEvent) -> void:
 	if e is InputEventMouseButton and e.pressed:
@@ -54,6 +60,13 @@ func _unhandled_input(e: InputEvent) -> void:
 		return
 	if e.is_action_pressed("toggle_lamp"):
 		headlamp.toggle()
+	if e is InputEventMouseButton and e.pressed:
+		if e.button_index == MOUSE_BUTTON_WHEEL_UP:
+			headlamp.adjust_zoom(0.1)
+		elif e.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			headlamp.adjust_zoom(-0.1)
+	if e.is_action_pressed("throw"):
+		_throw_chemlight()
 	if e.is_action_pressed("lantern"):
 		_toggle_lantern()
 	if e.is_action_pressed("interact"):
@@ -184,10 +197,25 @@ func looking_at() -> Node:
 		return ray.get_collider()
 	return null
 
-func grabbed(by_name: String) -> void:
+## 광인이 붙잡을 때 부른다. 케미라이트로 막았으면 true
+func grabbed(by_name: String) -> bool:
 	if grab_cooldown > 0.0:
-		return
+		return false
 	grab_cooldown = 1.2
+	if chemlights > 0:
+		chemlights -= 1
+		stiff += 6.0
+		shake = 0.5
+		Sfx.play("snap", 0.0, 0.1)
+		var c: Node3D = chemlight_scene.instantiate()   # 꺾인 막대가 발밑에 떨어져 잠시 빛난다
+		get_parent().add_child(c)
+		c.lifetime = 20.0
+		c.fade_time = 8.0
+		c.global_position = global_position - global_transform.basis.z * 0.5 + Vector3(0, 0.03, 0)
+		c.rotation = Vector3(0, randf() * TAU, PI * 0.5)
+		_update_hand_stick()
+		return true
+	stiff += 25.0
 	stiff += 25.0
 	Sfx.play("grab", 0.0, 0.0)
 	shake = 1.0
@@ -195,6 +223,55 @@ func grabbed(by_name: String) -> void:
 		kneel_t = 0.0
 		kneel_action = Callable()
 	headlamp.blackout_t = 0.9   # 붙잡히면 헤드램프가 잠깐 꺼진다. 1초 동안의 완전한 어둠
+	return false
+
+func _throw_chemlight() -> void:
+	if chemlights <= 0:
+		GameState.say("케미라이트가 없다.")
+		return
+	chemlights -= 1
+	_update_hand_stick()
+	Sfx.play("snap", -4.0, 0.1)
+	var dir := -head.global_transform.basis.z
+	dir.y = 0
+	dir = dir.normalized()
+	var start := head.global_position + head.global_transform.basis.x * 0.2 - Vector3(0, 0.3, 0)
+	var land := global_position + dir * 7.0
+	var q := PhysicsRayQueryParameters3D.create(start, start + dir * 7.0, GameState.LAYER_WALL)
+	var hit := get_world_3d().direct_space_state.intersect_ray(q)
+	if hit:
+		land = hit.position - dir * 0.3
+	land.y = 0.03
+	var c: Node3D = chemlight_scene.instantiate()
+	get_parent().add_child(c)
+	c.launch(start, land)
+
+## 손에 든 케미라이트: 하나라도 있으면 화면 오른쪽 아래에 초록 막대가 보인다
+func _make_hand_stick() -> void:
+	hand_stick = Node3D.new()
+	hand_stick.name = "HandStick"
+	head.add_child(hand_stick)
+	hand_stick.position = Vector3(0.22, -0.25, -0.5)
+	hand_stick.rotation = Vector3(0.3, 0.0, -0.5)
+	var mi := MeshInstance3D.new()
+	var cm := CylinderMesh.new()
+	cm.top_radius = 0.008
+	cm.bottom_radius = 0.008
+	cm.height = 0.12
+	var m := StandardMaterial3D.new()
+	m.albedo_color = Color(0.5, 1.0, 0.55)
+	m.emission_enabled = true
+	m.emission = Color(0.35, 1.0, 0.45)
+	m.emission_energy_multiplier = 0.35   # 아직 안 꺾어서 희미하게
+	cm.material = m
+	mi.mesh = cm
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	hand_stick.add_child(mi)
+	_update_hand_stick()
+
+func _update_hand_stick() -> void:
+	if hand_stick:
+		hand_stick.visible = chemlights > 0
 
 ## 랜턴 놓기·줍기는 무릎을 꿇어야 해서 시간이 걸린다(놓기 0.8초, 줍기 0.6초). 그동안 움직일 수 없다.
 func _toggle_lantern() -> void:

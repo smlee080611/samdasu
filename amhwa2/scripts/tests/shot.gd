@@ -27,6 +27,11 @@ func _run() -> void:
 	if "opencurtains" in args:
 		for c in get_tree().get_nodes_in_group("level")[0].get_node("Curtains").get_children():
 			c.hold(10.0)
+	if "chem" in args:   # 앞쪽으로 케미라이트 두 개 던지기
+		player._throw_chemlight()
+		player.rotation.y += 0.25
+		player._throw_chemlight()
+		player.rotation.y -= 0.25
 	if "lampoff" in args:
 		player.headlamp.on = false
 	if "lantern" in args:   # 앞에 랜턴을 놓고 한 걸음 물러서서 찍기
@@ -63,7 +68,7 @@ func _run() -> void:
 		if n:
 			n.interact(player)
 	var t0 := Time.get_ticks_msec()
-	while Time.get_ticks_msec() - t0 < (2200 if ("intro" in args or stiff >= 0.0) else 700):
+	while Time.get_ticks_msec() - t0 < (4000 if "chem" in args else (2200 if ("intro" in args or stiff >= 0.0) else 700)):
 		if stiff >= 0.0:
 			player.stiff = stiff
 		if "grab" in args:
