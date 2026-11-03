@@ -1,8 +1,7 @@
 extends StaticBody3D
-## 병실 문. 열린 정도(amount 0~1)가 연속으로 바뀐다.
-##  - E를 누르고 있으면 서서히 열리고, 떼면 그 각도에서 멈춘다. 살짝 누르면 틈만 열린다.
-##  - 열려 있는 문을 짧게 탁 누르면 닫힌다.
-## 열린 정도에 따라:
+## 병실 문. E를 누를 때마다 살짝 열림(틈) → 활짝 열림 → 닫힘 순서로 바뀐다.
+## (예전엔 E를 누르고 있는 만큼 열렸는데, 손이 바쁜 상황에서 원하는 만큼 맞추기 어려워 단계식으로 바꿨다)
+## 열린 정도(amount 0~1)에 따라:
 ##  - 닫힘(< CRACK): 빛도 사람도 막음 (벽 레이어, "blocker")
 ##  - 틈(CRACK ~ PASS): 빛은 새어 들어가고, 사람은 못 지나감 (플레이어도 못 지나감)
 ##  - 열림(≥ PASS): 지나갈 수 있음
@@ -11,16 +10,15 @@ extends StaticBody3D
 
 const CRACK := 0.08
 const PASS := 0.6
-const OPEN_SPEED := 0.8          ## 누르고 있을 때 초당 열리는 정도 (끝까지 약 1.2초)
 const LAYER_DOOR_BLOCK := 16     ## 틈일 때: 플레이어만 막고 빛은 통과시키는 충돌 레이어 (5번)
 
 @export var open := false        ## 처음에 활짝 열려 있는지
 @export var sideways := false    ## 문이 동서로 놓였으면 체크(90도 회전)
+@export var crack_amount := 0.25 ## 한 번 눌렀을 때 열리는 정도 (틈: 빛은 새고 사람은 못 지나감)
 
 @onready var mesh: Node3D = $Mesh
 var amount := 0.0
 var shown := 0.0                 # 화면에 보이는 각도 (부드럽게 따라감)
-var _hold_start := 0.0
 var _passable := false
 var _closing := false
 
@@ -44,32 +42,20 @@ func _process(dt: float) -> void:
 	mesh.rotation.y = -a
 	mesh.position = Vector3(-1.0 + cos(a), mesh.position.y, sin(a))
 
-## E를 누르고 있는 동안 매 프레임 (player.gd)
-func hold(seconds: float) -> bool:
-	if seconds <= get_process_delta_time() * 1.5:
-		_hold_start = amount
-		_closing = false
-		if amount < 0.98:
-			Sfx.play_at("door_open", global_position + Vector3.UP * 1.5, -6.0)
-	if _hold_start < 0.98:
-		amount = minf(1.0, _hold_start + seconds * OPEN_SPEED + 0.1)
-		_apply()
-	return false
-
-## E를 뗐을 때 (player.gd). 짧게 눌렀고 문이 열려 있었으면 닫는다
-func release(seconds: float) -> void:
-	if seconds < 0.25 and _hold_start > CRACK:
-		_try_close()
-
-## 스크립트에서 쓰는 열기/닫기 전환 (공포 사건, 자동 점검)
+## E 한 번 (player.gd), 스크립트(공포 사건, 자동 점검)도 같은 순서를 쓴다:
+## 닫힘 → 틈 → 활짝 → 닫힘. 화면에 보이는 각도(shown)는 _process에서 부드럽게 따라간다
 func interact(_by: Node) -> void:
-	if amount > CRACK:
-		_try_close()
-	else:
+	_closing = false
+	if amount < CRACK:
+		amount = crack_amount
+		Sfx.play_at("door_open", global_position + Vector3.UP * 1.5, -8.0)
+		_apply()
+	elif amount < 0.98:
 		amount = 1.0
-		shown = 1.0
 		Sfx.play_at("door_open", global_position + Vector3.UP * 1.5)
 		_apply()
+	else:
+		_try_close()
 	open = amount >= PASS
 
 func _try_close() -> void:
@@ -82,7 +68,6 @@ func _try_close() -> void:
 	if level.to_tile(get_tree().get_first_node_in_group("player").global_position) == t:
 		return
 	amount = 0.0
-	shown = 0.0
 	_closing = false
 	Sfx.play_at("door_close", global_position + Vector3.UP * 1.5)
 	_apply()
@@ -111,5 +96,5 @@ func get_hint() -> String:
 	if amount >= 0.98:
 		return "E · 문 닫기"
 	if amount > CRACK:
-		return "E 누르고 있기 · 더 열기   /   짧게 · 닫기"
-	return "E 누르고 있기 · 문 열기"
+		return "E · 활짝 열기"
+	return "E · 살짝 열기"

@@ -18,7 +18,7 @@ const INTRO := [
 	"헤드램프 하나, 랜턴 둘.",
 ]
 const GOAL := "사람들을 깨워 현관 밖으로 내보내야 한다. 먼저 간호사실로 가 보자."
-const CONTROLS := "WASD 이동 · 마우스 둘러보기 · F/우클릭 헤드램프 · 휠 초점 · 좌클릭/V 휘두르기 · Space 밀치기 · Q 랜턴 · G 케미라이트(C 확인) · E(길게) 문·뒤지기 · Shift 달리기 · F9 다시"
+const CONTROLS := "WASD 이동 · 마우스 둘러보기 · F/우클릭 헤드램프 · 휠 초점 · 좌클릭/V 휘두르기 · Space 밀치기 · Q 랜턴 · G 케미라이트(C 확인) · E 문(누를 때마다 틈→활짝→닫힘) · E 길게 뒤지기 · Shift 달리기 · F9 다시"
 
 @onready var screen_mat: ShaderMaterial = $Root/Screen.material
 @onready var cracks = $Root/Cracks
@@ -40,8 +40,8 @@ var stiff_shown := 0.0
 var result_t := 0.0
 
 func _ready() -> void:
-	var f := SystemFont.new()
-	f.font_names = PackedStringArray(["Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans CJK KR", "NanumGothic", "sans-serif"])
+	# 한글 폰트는 프로젝트에 넣은 파일을 쓴다. 웹(브라우저)에서는 시스템 폰트를 못 써서 SystemFont면 글자가 네모로 나온다
+	var f: Font = load("res://fonts/Pretendard-Regular.otf")
 	$Root.theme = Theme.new()
 	$Root.theme.default_font = f
 	$Root.theme.default_font_size = 18

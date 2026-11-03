@@ -70,6 +70,7 @@ ol.steps li,ul li{margin-bottom:6px}
     <a href="#main">8. Main</a>
     <a href="#extend">확장하는 법</a>
     <a href="#roles">역할 분담</a>
+    <a href="#web">웹으로 공유하기</a>
     <a href="#run">실행과 점검</a>
   </nav>
 
@@ -286,7 +287,7 @@ ol.steps li,ul li{margin-bottom:6px}
 └ Mesh (MeshInstance3D)</pre>
     <ul>
       <li>문이 동서 방향 복도에 놓이면 인스펙터에서 <b>Sideways</b> 체크.</li>
-      <li>열린 정도 <code>amount</code>(0~1)가 연속값: E를 누르고 있으면 서서히 열리고 떼면 멈춤, 짧게 누르면 닫힘. 0.08 미만 닫힘(빛·사람 막음), 0.6 미만 틈(빛은 통과, 사람은 못 지나감, 충돌 레이어 5), 그 이상 열림.</li>
+      <li>E를 누를 때마다 <b>살짝 열림(틈, <code>crack_amount</code> 0.25) → 활짝 열림 → 닫힘</b> 순서로 바뀜. 각도는 부드럽게 따라감. 열린 정도 <code>amount</code>(0~1): 0.08 미만 닫힘(빛·사람 막음), 0.6 미만 틈(빛은 통과, 사람은 못 지나감, 충돌 레이어 5), 그 이상 열림.</li>
       <li>닫힘: wall+interact 레이어, <code>"blocker"</code> 그룹 → 빛과 사람을 막음. 열림: interact 레이어만 → 통과되지만 E로 다시 닫을 수 있음.</li>
       <li>문틀에 사람이 있으면 닫히지 않습니다.</li>
     </ul>
@@ -439,6 +440,15 @@ ol.steps li,ul li{margin-bottom:6px}
         <tr><td>시나리오</td><td>쪽지 내용(<code>level_1f.tscn</code>의 Notes 노드 인스펙터), 시작 연출 문구(<code>hud.gd</code>)</td></tr>
       </tbody>
     </table></div>
+
+    <h2 id="web">웹으로 공유하기</h2>
+    <p>브라우저에서 바로 하는 빌드가 저장소의 <code>docs/</code> 폴더에 있습니다(스레드 없는 Web 내보내기라 GitHub Pages처럼 특별한 서버 설정이 없는 곳에서도 돌아감). 저장소 주인이 한 번만 <b>Settings → Pages → Build and deployment → Deploy from a branch → <code>Anord</code> / <code>/docs</code></b>로 정하면 <code>https://smlee080611.github.io/samdasu/</code>로 열립니다. 크롬·엣지 같은 데스크톱 브라우저에서, 화면을 클릭해야 마우스가 잠기고 소리가 납니다.</p>
+    <ol class="steps">
+      <li>Godot에 4.7.1 Web 내보내기 템플릿을 설치합니다(에디터: 편집기 → 내보내기 템플릿 관리).</li>
+      <li>내보내기 설정은 <code>export_presets.cfg</code>의 "Web" 프리셋(스레드 끔, 출력 <code>../docs/index.html</code>).</li>
+      <li>터미널: <code>godot --headless --path amhwa2 --export-release "Web" ../docs/index.html</code> 후 <code>docs/</code>를 커밋하면 링크가 갱신됩니다.</li>
+      <li>한글은 <code>fonts/Pretendard-Regular.otf</code>(OFL)를 씁니다. 웹에는 시스템 폰트가 없으니 새 글자 UI에 SystemFont를 쓰지 마세요.</li>
+    </ol>
 
     <h2 id="run">실행과 점검</h2>
     <ol class="steps">

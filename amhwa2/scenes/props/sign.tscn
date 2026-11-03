@@ -1,5 +1,6 @@
 [gd_scene format=3]
 
+[ext_resource type="FontFile" path="res://fonts/Pretendard-Regular.otf" id="font_kr"]
 [ext_resource type="Script" path="res://scripts/objects/sign.gd" id="e1"]
 
 [sub_resource type="StandardMaterial3D" id="m_plate"]
@@ -11,8 +12,6 @@ metallic = 0.0
 material = SubResource("m_plate")
 size = Vector3(0.7, 0.24, 0.03)
 
-[sub_resource type="SystemFont" id="font"]
-font_names = PackedStringArray("Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans CJK KR", "NanumGothic", "sans-serif")
 
 [node name="Sign" type="Node3D"]
 script = ExtResource("e1")
@@ -28,6 +27,6 @@ shaded = true
 double_sided = false
 modulate = Color(0.9, 0.9, 0.85, 1)
 outline_size = 0
-font = SubResource("font")
+font = ExtResource("font_kr")
 font_size = 44
 text = "101"

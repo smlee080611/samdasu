@@ -36,9 +36,10 @@ func _run() -> void:
 	await _wait(700)             # 풀리는 데 약 10초
 	print("TEST after lantern: state=", p.state, " stiff=", player.stiff)
 	var door = get_tree().get_nodes_in_group("blocker").filter(func(b): return b.has_method("interact"))[0]
-	door.interact(player)
+	door.interact(player)   # 닫힘 → 틈
+	door.interact(player)   # 틈 → 활짝
 	print("TEST door open=", door.open, " walkable=", level.is_walkable(level.to_tile(door.global_position)))
-	door.interact(player)
+	door.interact(player)   # 활짝 → 닫힘
 	print("TEST door open=", door.open)
 	var c = get_node("/root/Main/Level1F/Curtains").get_child(0)
 	c.hold(2.0)
@@ -178,17 +179,20 @@ func _run() -> void:
 	_check("baton no reuse during recover", player.stamina == st_before, "stamina %d->%d" % [st_before, player.stamina])
 	await _wait(100)
 	_check("baton recovered after ~1.5s", player.recover_t == 0.0 and player.move_mult() == 1.0, "recover=%.2f" % player.recover_t)
-	# 문: 누르고 있으면 서서히 열리고, 짧게 누르면 닫힘. 틈이면 빛은 통과, 사람은 못 지나감
+	# 문: E를 누를 때마다 살짝 열림(틈) → 활짝 → 닫힘. 틈이면 빛은 통과, 사람은 못 지나감
 	var d2 = get_node("/root/Main/Level1F/Doors").get_children().filter(func(d): return d.amount < 0.05)[0]
-	d2.hold(0.0); d2.hold(0.15); d2.release(0.15)
+	var dt2: Vector2i = level.to_tile(d2.global_position)
+	d2.interact(player)
 	await _wait(2)
-	print("TEST door crack amount=", snapped(d2.amount, 0.01), " walkable=", level.is_walkable(level.to_tile(d2.global_position)), " light_layer=", d2.collision_layer & 1)
-	d2.hold(0.0); d2.hold(1.2); d2.release(1.2)
+	_check("door press 1 crack", d2.amount > 0.05 and d2.amount < 0.6 and not level.is_walkable(dt2) and (d2.collision_layer & 1) == 0,
+			"amount=%.2f walkable=%s" % [d2.amount, level.is_walkable(dt2)])
+	d2.interact(player)
 	await _wait(2)
-	print("TEST door held open amount=", snapped(d2.amount, 0.01), " walkable=", level.is_walkable(level.to_tile(d2.global_position)))
-	d2.hold(0.0); d2.release(0.1)
+	_check("door press 2 open", d2.amount >= 0.98 and level.is_walkable(dt2), "amount=%.2f" % d2.amount)
+	d2.interact(player)
 	await _wait(2)
-	print("TEST door tap close amount=", snapped(d2.amount, 0.01))
+	_check("door press 3 close", d2.amount == 0.0 and not level.is_walkable(dt2) and (d2.collision_layer & 1) == 1, "amount=%.2f" % d2.amount)
+	_check("door no hold", not d2.has_method("hold"))
 	# 뒤지기
 	var lockers = get_node("/root/Main/Level1F/Props").get_children().filter(func(q): return q.get("loot") == "battery")
 	player.headlamp.battery = 20.0
