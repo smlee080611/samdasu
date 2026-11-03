@@ -28,7 +28,8 @@ func hold(seconds: float) -> bool:
 	var p = get_tree().get_first_node_in_group("player")
 	match loot:
 		"battery":
-			p.headlamp.recharge(50.0)
+			var level := get_tree().get_first_node_in_group("level") as Level
+			p.headlamp.recharge(level.battery_amount if level else 50.0)
 			Sfx.play("click")
 			GameState.say("예비 배터리. 램프가 다시 밝아진다.")
 		"chem":

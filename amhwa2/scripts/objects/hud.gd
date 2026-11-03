@@ -37,6 +37,7 @@ var player: Node
 var subtitle_tw: Tween
 var intro_tw: Tween
 var stiff_shown := 0.0
+var result_t := 0.0
 
 func _ready() -> void:
 	var f := SystemFont.new()
@@ -140,6 +141,17 @@ func _show_subtitle(text: String, seconds := 4.0) -> void:
 	subtitle_tw.tween_interval(seconds)
 	subtitle_tw.tween_property(subtitle, "modulate:a", 0.0, 1.0)
 
+# ---------- 해돋이 결과 ----------
+## 그때까지 현관 밖으로 데려온 사람이 결과다. 햇빛에 깨어난 사람은 따로 적는다 (차광막을 걷은 보람)
+func _result_text() -> String:
+	var lines := ["날이 밝았다", "", "현관 밖으로 데려온 사람  %d명" % GameState.rescued]
+	if GameState.dawn_cured > 0:
+		lines.append("햇빛을 받고 깨어난 사람  %d명" % GameState.dawn_cured)
+	if GameState.dawn_left > 0:
+		lines.append("아직 어둠 속에 남은 사람  %d명" % GameState.dawn_left)
+	lines.append_array(["", "F9로 다시 시작"])
+	return "\n".join(lines)
+
 # ---------- 매 프레임 ----------
 func _process(dt: float) -> void:
 	if player == null:
@@ -161,11 +173,18 @@ func _process(dt: float) -> void:
 	status.lanterns = player.lanterns_held
 	status.lanterns_max = player.lanterns_held + player.placed_lanterns.size()
 	status.show_counts = tab
-	status.counts_text = "구출 %d/%d   차광막 %d/%d   케미 %d   초점 %d%%" % [GameState.rescued, GameState.need_rescue, GameState.curtains_open, GameState.curtains_total, player.chemlights, int(lamp.zoom * 100)]
+	var cm := int(GameState.clock_minutes)
+	var lv = get_tree().get_first_node_in_group("level")
+	status.counts_text = "구출 %d/%d   차광막 %d/%d   케미 %d   초점 %d%%   %d:%02d   홀 충전 %d" % [GameState.rescued, GameState.need_rescue, GameState.curtains_open, GameState.curtains_total, player.chemlights, int(lamp.zoom * 100), cm / 60, cm % 60, int(lv.hall_reserve) if lv else 0]
 
 	var t: Node = player.looking_at()
 	hint.text = t.get_hint() if t and t.has_method("get_hint") and not GameState.ui_blocking else ""
-	if GameState.game_over:
+	if GameState.night_over:
+		# 해돋이: 잠깐 창밖이 밝아지는 걸 보여 준 뒤 결과가 천천히 떠오른다
+		result_t += dt
+		center.text = _result_text()
+		center.modulate.a = clampf((result_t - 2.0) / 1.5, 0.0, 1.0)
+	elif GameState.game_over:
 		center.text = "몸이 완전히 굳었다\n\nF9로 다시 시작"
 	elif GameState.won:
 		center.text = "1층 확보\n구출 %d명\n\nF9로 다시 시작" % GameState.rescued

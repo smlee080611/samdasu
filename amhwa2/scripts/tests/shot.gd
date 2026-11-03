@@ -1,6 +1,6 @@
 extends Node
 ## 스크린샷: godot --path . -- shot <파일명> <x> <y> <각도> [pitch] [freeze]
-## 추가 옵션(어디든): battery=15, rescued=3, stiff=70 (굳음 고정), note (첫 쪽지 열기), intro (시작 연출 찍기), grab (붙잡힘)
+## 추가 옵션(어디든): dawn=0.9 (밤이 그만큼 지난 하늘·시계), battery=15, rescued=3, stiff=70 (굳음 고정), note (첫 쪽지 열기), intro (시작 연출 찍기), grab (붙잡힘)
 
 func _ready() -> void:
 	_run.call_deferred()
@@ -47,6 +47,8 @@ func _run() -> void:
 		player._toggle_lantern()
 		player.global_position += player.global_transform.basis.z * 0.9
 	for a in args:
+		if a.begins_with("dawn="):
+			get_tree().get_first_node_in_group("night").set_progress(float(a.substr(5)))
 		if a.begins_with("battery="):
 			player.headlamp.battery = float(a.substr(8))
 		if a.begins_with("rescued="):   # 구한 사람이 홀에 모인 모습

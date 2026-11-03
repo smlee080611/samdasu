@@ -3,6 +3,11 @@ extends SpotLight3D
 
 @export var battery := 100.0
 @export var drain_per_sec := 0.8
+## 석상을 풀 때 드는 추가 소모(초당). 빛으로 사람의 몸과 정신을 되돌리는 건 램프를 가장 세게 쓰는 일이다.
+## 한 사람을 끝까지(석상 → 광인 → 회복) 비추는 데 약 12~15초 → 이것만으로 배터리 절반 가까이 든다.
+## 여럿을 한 빛에 같이 비추면 한 번만 닳는다 (모아서 푸는 것도 요령).
+@export var wake_drain_per_sec := 4.0
+var waking_t := 0.0     # 사람이 이 빛으로 풀리는 중이면 잠깐 켜진다 (person.gd가 mark_waking으로 알림)
 var on := true
 var blackout_t := 0.0   # 붙잡혔을 때 잠깐 꺼짐
 var protects_body := false   # 헤드램프 빛은 내 몸이 굳는 걸 막아주지는 않는다
@@ -38,13 +43,22 @@ func adjust_zoom(delta: float) -> void:
 	if zoom != before:
 		Sfx.play("click", -22.0, 0.3)
 
+## 이 램프 빛이 지금 누군가를 풀고 있다 (석상의 몸, 광인의 정신)
+func mark_waking() -> void:
+	waking_t = 0.1
+
+## 사람에게 닿는 빛 중 이 램프 몫이 충분한가: 랜턴·달빛만으로 풀리는 사람 때문에 배터리가 닳지 않게
+func lights_person(target: Vector3, exclude: Array[RID]) -> bool:
+	return light_value(target + Vector3(0, 1.0, 0), exclude) > LightSystem.LIT_THRESHOLD
+
 func recharge(amount: float) -> void:
 	battery = min(100.0, battery + amount)
 
 func _process(dt: float) -> void:
 	blackout_t = maxf(0.0, blackout_t - dt)
+	waking_t = maxf(0.0, waking_t - dt)
 	if is_on() and not GameState.is_frozen():
-		battery -= drain_per_sec * dt
+		battery -= (drain_per_sec + (wake_drain_per_sec if waking_t > 0.0 else 0.0)) * dt
 		if battery <= 0.0:
 			battery = 0.0
 	visible = is_on()

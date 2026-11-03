@@ -18,6 +18,12 @@ var curtains_total := 0
 var curtains_open := 0
 var game_over := false
 var won := false
+## 하룻밤: Night 노드(night.gd)가 매 프레임 채운다. 남은 시간은 화면에 숫자로 띄우지 않고 벽시계와 창밖 하늘로만 보인다.
+var night_k := 0.0          # 0 = 밤이 막 시작, 1 = 해가 뜸
+var clock_minutes := 130.0  # 벽시계가 가리키는 시각(자정부터 분). 130 = 새벽 2시 10분
+var night_over := false     # 해가 떠서 결과 화면을 보여 주는 중
+var dawn_cured := 0         # 해가 뜰 때 햇빛이 닿아 저절로 깨어난 사람
+var dawn_left := 0          # 해가 떠도 어둠 속에 남은 사람(석상·광인)
 var ui_blocking := false   # 시작 연출, 쪽지 읽는 중: 플레이어와 광인이 멈춘다
 var intro_seen := false    # 시작 연출은 처음 한 번만 (F9로 다시 해도 안 나옴). reset()에서 지우지 않는다
 
@@ -28,13 +34,18 @@ func reset() -> void:
 	game_over = false
 	won = false
 	ui_blocking = false
+	night_k = 0.0
+	clock_minutes = 130.0
+	night_over = false
+	dawn_cured = 0
+	dawn_left = 0
 
 func open_note(title: String, body: String) -> void:
 	ui_blocking = true
 	note_opened.emit(title, body)
 
 func is_frozen() -> bool:
-	return game_over or won or ui_blocking
+	return game_over or won or ui_blocking or night_over
 
 func say(text: String) -> void:
 	print(text)

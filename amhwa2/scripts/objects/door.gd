@@ -25,6 +25,7 @@ var _passable := false
 var _closing := false
 
 func _ready() -> void:
+	add_to_group("door")
 	if sideways:
 		rotation.y = PI * 0.5
 	amount = 1.0 if open else 0.0

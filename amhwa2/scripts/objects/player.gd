@@ -24,8 +24,17 @@ var toss_t := 0.0
 var hold_target: Node = null   # E를 누르고 있는 대상 (차광막·문·뒤질 곳)
 ## 경광봉: 경비원의 빨간 경광봉. 오른손에 늘 들고 있다.
 ## 빨간 빛은 약해서 광인을 풀어 주지도, 다시 굳게 하지도 않는다(그 자리에서 변화 없음).
-## 좌클릭(또는 V) 휘두르기: 앞의 광인을 움찔하게 하고 물러나게 함 (스태미나 10, 0.7초마다)
-## Space 양손 밀치기: 더 세게 밀어내고 잡고 있던 사람도 놓게 함 (스태미나 30, 1.5초마다)
+## 좌클릭(또는 V) 휘두르기: 앞의 광인을 움찔하게 하고 물러나게 함
+## Space 양손 밀치기: 더 세게 밀어내고 잡고 있던 사람도 놓게 함
+## 쓸 수는 있지만 막 휘두를 수는 없게: 스태미나를 크게 먹고(달리기와 같은 통을 씀),
+## 휘두른 뒤에는 팔이 무거워 약 1초 동안 몸과 고개가 둔해지고 다시 휘두를 수 없다(무방비).
+## 그래서 광인 여럿에게 둘러싸이면 경광봉으로는 버틸 수 없다.
+@export var swing_stamina := 25.0         ## 휘두르기 스태미나 (예전 10)
+@export var shove_stamina := 70.0         ## 밀치기 스태미나 (예전 30). 한 번 밀면 달리기는 거의 못 한다
+@export var baton_recover := 1.0          ## 휘두른 동작이 끝난 뒤 무방비 시간(초). 이 동안 재사용 불가
+@export var recover_move_mult := 0.35     ## 무방비 동안 이동 속도 배율
+@export var recover_look_mult := 0.3      ## 무방비 동안 시점 회전 배율
+var recover_t := 0.0                      # 남은 무방비 시간(휘두르는 동작 포함)
 var baton: Node3D
 var has_baton := true
 var baton_cd := 0.0
@@ -71,8 +80,9 @@ func _unhandled_input(e: InputEvent) -> void:
 	elif e is InputEventKey and e.pressed and e.physical_keycode == KEY_ESCAPE:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	elif e is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and not GameState.ui_blocking:
-		rotate_y(-e.relative.x * mouse_sens)
-		head.rotation.x = clamp(head.rotation.x - e.relative.y * mouse_sens, -1.3, 1.3)
+		var sens := mouse_sens * look_mult()
+		rotate_y(-e.relative.x * sens)
+		head.rotation.x = clamp(head.rotation.x - e.relative.y * sens, -1.3, 1.3)
 	if GameState.is_frozen():
 		return
 	if e.is_action_pressed("toggle_lamp"):
@@ -109,13 +119,13 @@ func _physics_process(dt: float) -> void:
 		winded = true
 	elif winded and stamina >= 40.0:
 		winded = false
-	sprinting = moving and input.y < 0.3 and Input.is_action_pressed("sprint") and not winded
+	sprinting = moving and input.y < 0.3 and Input.is_action_pressed("sprint") and not winded and recover_t <= 0.0
 	if sprinting:
 		stamina = maxf(0.0, stamina - stamina_drain * dt)
 	else:
 		stamina = minf(100.0, stamina + stamina_regen * (1.4 if not moving else 1.0) * (1.0 - stiff / 200.0) * dt)
 	var base := run_speed if sprinting else walk_speed
-	var speed := base * (1.0 - stiff / 100.0 * 0.5)
+	var speed := base * (1.0 - stiff / 100.0 * 0.5) * move_mult()
 	velocity = Vector3(dir.x * speed, 0, dir.z * speed)
 	move_and_slide()
 	# 발소리: 굳을수록 느리고 무거워짐, 달리면 크고 빠름
@@ -131,6 +141,7 @@ func _physics_process(dt: float) -> void:
 func _process(dt: float) -> void:
 	# 경광봉: 쿨타임과 휘두르는 모양
 	baton_cd = maxf(0.0, baton_cd - dt)
+	recover_t = maxf(0.0, recover_t - dt)
 	if baton:
 		if swing_t > 0.0:
 			swing_t = maxf(0.0, swing_t - dt)
@@ -141,6 +152,9 @@ func _process(dt: float) -> void:
 			else:                 # 양손으로 앞으로 쭉 밀기 (봉이 가로로)
 				baton.position = Vector3(0.0, -0.3, lerpf(-0.45, -0.8, sin(k * PI)))
 				baton.rotation = Vector3(0.0, 0.0, PI * 0.5)
+		elif recover_t > 0.0:   # 무방비: 팔이 처져서 천천히 올라온다
+			baton.position = baton.position.lerp(BATON_REST_POS + Vector3(0.04, -0.14, 0.06), minf(1.0, dt * 5.0))
+			baton.rotation = baton.rotation.lerp(BATON_REST_ROT + Vector3(0.5, 0.0, -0.3), minf(1.0, dt * 5.0))
 		else:
 			baton.position = baton.position.lerp(BATON_REST_POS, minf(1.0, dt * 12.0))
 			baton.rotation = baton.rotation.lerp(BATON_REST_ROT, minf(1.0, dt * 12.0))
@@ -197,7 +211,7 @@ func _process(dt: float) -> void:
 	if at_entrance or LightSystem.light_at(global_position, [get_rid()], true) > 0.25:
 		stiff = max(0.0, stiff - 6.0 * dt)
 		if at_entrance:
-			headlamp.recharge(12.0 * dt)
+			_charge_at_hall(level, dt)
 	else:
 		stiff += (0.6 if headlamp.is_on() else 2.0) * dt
 	_update_heartbeat()
@@ -209,6 +223,19 @@ func _process(dt: float) -> void:
 			GameState.game_over = true
 			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 			GameState.state_changed.emit()
+
+## 엘리베이터 홀 충전은 비상 축전지에서 나온다. 바닥나면 한 번만 알려 준다 (숫자는 보여 주지 않음)
+var _hall_empty_said := false
+func _charge_at_hall(level: Level, dt: float) -> void:
+	var want := minf(level.hall_charge_rate * dt, 100.0 - headlamp.battery)
+	if want <= 0.0:
+		return
+	if level.hall_reserve <= 0.0:
+		if not _hall_empty_said:
+			_hall_empty_said = true
+			GameState.say("충전기 불이 꺼졌다. 엘리베이터 축전지가 바닥났다.")
+		return
+	headlamp.recharge(level.draw_hall_charge(want))
 
 ## 교대: 엘리베이터 홀에서 기다리던 사람이 있으면, 내 몸은 그 자리에서 석상이 되고 그 사람이 이어받는다.
 ## 굳은 내 몸은 다른 석상처럼 나중에 다시 깨워 구할 수 있다. 들고 있던 랜턴은 그 자리에 떨어진다.
@@ -391,14 +418,15 @@ func set_baton(v: bool) -> void:
 func _baton_attack(kind: int) -> void:
 	if baton_cd > 0.0 or kneel_t > 0.0 or not has_baton:
 		return
-	var cost := 10.0 if kind == 1 else 30.0
+	var cost := swing_stamina if kind == 1 else shove_stamina
 	if stamina < cost * 0.6:
 		GameState.say("숨이 차서 팔이 안 올라간다.")
 		return
 	stamina = maxf(0.0, stamina - cost)
-	baton_cd = 0.7 if kind == 1 else 1.5
 	swing_kind = kind
 	swing_t = 0.3 if kind == 1 else 0.45
+	recover_t = swing_t + baton_recover
+	baton_cd = recover_t
 	Sfx.play("whoosh", -4.0, 0.1)
 	var reach := 1.9 if kind == 1 else 1.5
 	var cone := 70.0 if kind == 1 else 85.0
@@ -418,6 +446,13 @@ func _baton_attack(kind: int) -> void:
 		shake = maxf(shake, 0.7 if kind == 2 else 0.55)
 		head.rotation.x += 0.035                 # 손에 걸리는 반동
 		_hit_stop(0.07 if kind == 1 else 0.1)
+
+## 휘두른 뒤 무방비 동안 이동·시점이 둔해지는 배율 (1이면 보통)
+func move_mult() -> float:
+	return recover_move_mult if recover_t > 0.0 else 1.0
+
+func look_mult() -> float:
+	return recover_look_mult if recover_t > 0.0 else 1.0
 
 ## 맞히는 순간 시간이 아주 잠깐 멈칫 (타격감)
 func _hit_stop(seconds: float) -> void:

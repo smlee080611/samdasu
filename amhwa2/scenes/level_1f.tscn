@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/objects/level.gd" id="level"]
+[ext_resource type="Script" path="res://scripts/objects/clock.gd" id="clock"]
 [ext_resource type="PackedScene" path="res://scenes/person.tscn" id="person"]
 [ext_resource type="PackedScene" path="res://scenes/door.tscn" id="door"]
 [ext_resource type="PackedScene" path="res://scenes/curtain.tscn" id="curtain"]
@@ -158,6 +159,16 @@ outdoor_material = SubResource("ground")
 [node name="Signs" type="Node3D" parent="."]
 
 [node name="Notes" type="Node3D" parent="."]
+
+[node name="Clocks" type="Node3D" parent="."]
+
+[node name="벽시계_홀" type="Node3D" parent="Clocks"]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 34.0, 2.3, 8.3)
+script = ExtResource("clock")
+
+[node name="벽시계_간호사실" type="Node3D" parent="Clocks"]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 37.0, 2.35, 22.0)
+script = ExtResource("clock")
 
 [node name="WaitSpots" type="Node3D" parent="."]
 
@@ -373,7 +384,7 @@ mesh = SubResource("q_skyline")
 [node name="현관유리문" parent="Exterior" instance=ExtResource("p_glass_door")]
 transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 39, 0, 37.9)
 
-[node name="달빛_0" type="OmniLight3D" parent="Exterior"]
+[node name="달빛_0" type="OmniLight3D" parent="Exterior" groups=["moon"]]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 12, 7.5, 47)
 light_color = Color(0.55, 0.65, 0.9, 1)
 light_energy = 1.4
@@ -381,7 +392,7 @@ shadow_enabled = true
 omni_range = 20.0
 omni_attenuation = 0.8
 
-[node name="달빛_1" type="OmniLight3D" parent="Exterior"]
+[node name="달빛_1" type="OmniLight3D" parent="Exterior" groups=["moon"]]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 38, 7.5, 47)
 light_color = Color(0.55, 0.65, 0.9, 1)
 light_energy = 1.4
@@ -389,7 +400,7 @@ shadow_enabled = true
 omni_range = 20.0
 omni_attenuation = 0.8
 
-[node name="달빛_2" type="OmniLight3D" parent="Exterior"]
+[node name="달빛_2" type="OmniLight3D" parent="Exterior" groups=["moon"]]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 64, 7.5, 47)
 light_color = Color(0.55, 0.65, 0.9, 1)
 light_energy = 1.4
@@ -459,7 +470,7 @@ transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 10.945, 0.0, 35.0)
 
 [node name="locker_7" parent="Props" instance=ExtResource("p_locker")]
 transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 10.25, 0.0, 34.26)
-loot = "battery"
+loot = "empty"
 
 [node name="bed_8" parent="Props" instance=ExtResource("p_bed")]
 transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 10.945, 0.0, 31.0)
@@ -487,7 +498,7 @@ transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 18.945, 0.0, 3.0)
 
 [node name="locker_11" parent="Props" instance=ExtResource("p_locker")]
 transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 18.25, 0.0, 3.74)
-loot = "battery"
+loot = "empty"
 
 [node name="iv_stand_2" parent="Props" instance=ExtResource("p_iv_stand")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 18.45, 0.0, 2.3)
@@ -591,7 +602,7 @@ transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 26.945, 0.0, 5.0)
 
 [node name="locker_22" parent="Props" instance=ExtResource("p_locker")]
 transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 26.25, 0.0, 5.74)
-loot = "battery"
+loot = "empty"
 
 [node name="iv_stand_6" parent="Props" instance=ExtResource("p_iv_stand")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 26.45, 0.0, 4.3)
@@ -700,7 +711,7 @@ transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 46.945, 0.0, 35.0)
 
 [node name="locker_35" parent="Props" instance=ExtResource("p_locker")]
 transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 46.25, 0.0, 34.26)
-loot = "battery"
+loot = "empty"
 
 [node name="bed_36" parent="Props" instance=ExtResource("p_bed")]
 transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 46.945, 0.0, 31.0)
@@ -992,7 +1003,7 @@ transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 10.945, 0.0, 21.0)
 
 [node name="cart_2" parent="Props" instance=ExtResource("p_cart")]
 transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 15.73, 0.0, 21.0)
-loot = "battery"
+loot = "empty"
 
 [node name="extinguisher_1" parent="Props" instance=ExtResource("p_extinguisher")]
 transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 15.88, 0.0, 17.0)

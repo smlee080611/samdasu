@@ -245,6 +245,7 @@ func _statue(dt: float, ex: Array[RID]) -> void:
 	var lv := LightSystem.light_at(global_position, ex)
 	if lv > LightSystem.LIT_THRESHOLD:
 		body_t += dt * (0.4 + lv) * wake_speed
+		_drain_lamp(ex)
 	else:
 		body_t = max(0.0, body_t - dt * 0.15)
 	for m in mats:
@@ -254,6 +255,12 @@ func _statue(dt: float, ex: Array[RID]) -> void:
 		dark_t = 0.0
 		_set_state(State.MAD)
 		Sfx.play_at("stone_crack", global_position + Vector3.UP)
+
+## 헤드램프로 사람을 풀고 있으면 배터리가 크게 닳는다 (headlamp.wake_drain_per_sec)
+func _drain_lamp(ex: Array[RID]) -> void:
+	var lamp = player.headlamp
+	if lamp.is_on() and lamp.lights_person(global_position, ex):
+		lamp.mark_waking()
 
 ## 광인의 행동
 ##  빛 속: 플레이어 시야 밖의 어두운 곳을 찾아 그곳까지 도망친다(벽 뒤, 모퉁이 너머, 문 안쪽).
@@ -266,6 +273,7 @@ func _mad(dt: float, ex: Array[RID]) -> void:
 	if lit:
 		dark_t = 0.0
 		sanity += dt * sanity_speed * min(1.0, lv * 1.6)
+		_drain_lamp(ex)
 		if not was_lit and lunge_t <= 0.0:
 			flinch_t = 0.45            # 빛을 맞는 순간 움찔하며 멈춤
 			twitch_t = 0.0

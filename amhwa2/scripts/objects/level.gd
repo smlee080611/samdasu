@@ -10,6 +10,12 @@ const WALL_H := 3.0
 @export_multiline var wall_map := ""
 @export var entrance_tile := Vector2i(4, 16)   ## 플레이어가 쉬는 곳(엘리베이터 홀). 몸이 풀리고 배터리가 찬다
 @export var exit_tile := Vector2i(-1, -1)      ## 구한 사람이 나가는 곳(현관 밖). 없으면 entrance_tile
+## 배터리 총량(이 층에서 쓸 수 있는 헤드램프 배터리 전부) = 처음 100 + hall_reserve + 예비 배터리 개수 × battery_amount.
+## 한 사람 구하는 데 약 100이 든다고 보고(풀기 50 + 오가는 길 50) 27명 중 6~8명만 구할 수 있게 맞췄다.
+## 엘리베이터 홀의 충전은 정전 뒤 엘리베이터 비상 축전지에 남은 전기라 끝이 있다.
+@export var hall_reserve := 300.0          ## 홀 충전에 남은 양 (배터리 %로 셈)
+@export var hall_charge_rate := 12.0       ## 홀에서 쉴 때 초당 차는 양
+@export var battery_amount := 60.0         ## 뒤져서 찾는 예비 배터리 하나가 채우는 양 (loot = "battery"인 소품 6곳)
 @export var wall_material: StandardMaterial3D     ## 벽 한 면(2m × 3m)에 한 장씩 붙는 텍스처
 @export var floor_material: StandardMaterial3D    ## 바닥 한 칸에 한 장
 @export var ceiling_material: StandardMaterial3D  ## 천장 한 칸에 한 장
@@ -99,6 +105,12 @@ func _quad(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3, n: V
 		st.set_normal(n)
 		st.set_uv(uv[i])
 		st.add_vertex(v[i])
+
+## 홀에서 쉬며 충전: 비상 축전지에서 꺼내 준 만큼 돌려준다. 다 쓰면 0
+func draw_hall_charge(want: float) -> float:
+	var got := minf(want, hall_reserve)
+	hall_reserve -= got
+	return got
 
 func rescue_tile() -> Vector2i:
 	return exit_tile if exit_tile.x >= 0 else entrance_tile
