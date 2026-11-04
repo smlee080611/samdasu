@@ -241,9 +241,11 @@ func _new_tests(level: Level, player) -> void:
 	_check("wake drains lamp", drop > 3.5, "1초에 %.1f 닳음 (평소 %.1f) body_t=%.2f" % [drop, player.headlamp.drain_per_sec, stat.body_t])
 	stat._set_state(0); stat.body_t = 0.0
 	player.headlamp.on = false
+	await _floors(level, player)
+	level = get_tree().get_first_node_in_group("level")
 	# 하룻밤: 시계와 하늘. 시간은 HUD에 숫자로 안 나온다
 	var night = get_tree().get_first_node_in_group("night")
-	_check("night 15min", absf(night.night_seconds - 900.0) < 1.0, "night=%ds" % night.night_seconds)
+	_check("night 25min (1F+2F)", absf(night.night_seconds - 1500.0) < 1.0, "night=%ds" % night.night_seconds)
 	night.set_progress(0.5)
 	await _wait(2)
 	var clocks = get_node("/root/Main/Level1F/Clocks").get_children()
@@ -283,3 +285,134 @@ func _new_tests(level: Level, player) -> void:
 	await _wait(240)
 	_check("result screen", hud.center.text.contains("날이 밝았다") and hud.center.text.contains("%d명" % rescued_before) and hud.center.modulate.a > 0.9,
 			hud.center.text.replace("\n", " / "))
+
+
+## 2층: 계단으로 오르내리기, 층마다 상태 보존, 수술등에 배터리 옮겨 꽂기, 구한 사람이 내려가기, 층을 건너는 교대
+func _floors(level1: Level, player) -> void:
+	var main = get_tree().get_first_node_in_group("main")
+	var l2: Level = main.levels.get(2)
+	_check("2F exists", l2 != null and not l2.is_inside_tree() and not l2.has_rest(), "")
+	if l2 == null:
+		return
+	var p2 := 0
+	var packs := 0
+	for pr in l2.get_node("Props").get_children():
+		if pr.get("loot") == "battery":
+			packs += 1
+	p2 = l2.get_node("People").get_child_count()
+	_check("2F people/batteries", p2 >= 18 and p2 <= 24 and packs == 4 and l2.get_node("Lamps").get_child_count() == 4, "people=%d packs=%d" % [p2, packs])
+	# 1층에 랜턴을 하나 놓고 올라간다 → 2층에선 안 보이고, 내려오면 그대로 있어야 한다
+	var held_before: int = player.lanterns_held
+	player.global_position = level1.tile_center(Vector2i(3, 6))
+	player._place()
+	var lan1: Node3D = player.placed_lanterns[-1]
+	# 서쪽 계단 첫 단 앞으로 걸어 들어가기
+	player.global_position = Vector3(4, 0, 6.8)
+	player.rotation = Vector3.ZERO
+	await _wait(100)
+	var here = get_tree().get_first_node_in_group("level")
+	_check("stairs up to 2F", GameState.floor_no == 2 and here == l2 and not level1.is_inside_tree() and here.to_tile(player.global_position) == Vector2i(2, 4),
+			"floor=%d tile=%s" % [GameState.floor_no, here.to_tile(player.global_position)])
+	_check("only 2F people active", get_tree().get_nodes_in_group("person").size() == p2 and not lan1.is_inside_tree(), "persons=%d" % get_tree().get_nodes_in_group("person").size())
+	_check("2F is dark", not LightSystem.is_lit(l2.tile_center(Vector2i(9, 15))) and not l2.is_outdoor(Vector2i(9, 15)), "")
+	# 2층 홀은 쉴 곳이 아니다: 홀에 서 있어도 몸이 굳는다
+	player.global_position = l2.tile_center(Vector2i(19, 3))
+	player.stiff = 10.0
+	player.headlamp.on = false
+	await _wait(60)
+	_check("2F hall no rest", player.stiff > 10.5, "stiff=%.1f" % player.stiff)
+	# 중환자실 천장등: 배터리를 옮겨 꽂는다
+	var lamp = l2.get_node("Lamps/천장등_중환자실1")
+	player.headlamp.battery = 100.0
+	var tsum := 0.0
+	for i in 120:   # E를 2초 누르고 있기
+		tsum += 1.0 / 60.0
+		lamp.hold(tsum)
+	lamp.release(tsum)
+	_check("lamp fed from headlamp", absf(lamp.charge - 50.0) < 2.0 and absf(player.headlamp.battery - 50.0) < 2.0, "charge=%.1f battery=%.1f" % [lamp.charge, player.headlamp.battery])
+	var icu_p = null
+	for q in l2.get_node("People").get_children():
+		if q.tile == Vector2i(9, 16):
+			icu_p = q
+	_check("lamp lights ICU", LightSystem.is_lit(l2.tile_center(Vector2i(10, 15))) and LightSystem.light_at(l2.tile_center(Vector2i(13, 15)), [], true) > 0.25
+			and not LightSystem.is_lit(l2.tile_center(Vector2i(10, 6))), "")
+	# 등 아래에 서 있으면 몸이 풀린다
+	player.global_position = l2.tile_center(Vector2i(10, 15))
+	player.stiff = 40.0
+	await _wait(60)
+	_check("lamp protects body", player.stiff < 40.0, "stiff=%.1f" % player.stiff)
+	_check("lamp wakes statue", icu_p != null and (icu_p.state != 0 or icu_p.body_t > 0.0), "state=%d body_t=%.2f" % [icu_p.state if icu_p else -1, icu_p.body_t if icu_p else -1.0])
+	var c0: float = lamp.charge
+	await _wait(60)
+	_check("lamp drains", absf((c0 - lamp.charge) - lamp.drain_per_sec) < 0.3, "1초에 %.2f" % (c0 - lamp.charge))
+	_check("headlamp not drained by lamp cure", player.headlamp.battery > 48.0, "battery=%.1f" % player.headlamp.battery)
+	# 핵심 기믹: 등을 켜고 문을 닫아 두면, 깨어난 광인이 빛 밖으로 못 달아나 결국 정신이 돌아온다
+	var icu := []
+	for q in l2.get_node("People").get_children():
+		if q.tile.x >= 5 and q.tile.x <= 15 and q.tile.y >= 14:
+			icu.append(q)
+	var icu_door = null
+	for d in l2.get_node("Doors").get_children():
+		if l2.to_tile(d.global_position) == Vector2i(10, 13):
+			icu_door = d
+	_check("ICU door starts closed", icu_door != null and not icu_door.open, "")
+	player.global_position = l2.tile_center(Vector2i(22, 12))   # 문 밖 멀리
+	lamp.charge = 100.0
+	await _wait(1200)
+	var cured_n := 0
+	for q in icu:
+		if not is_instance_valid(q) or q.state == 2:
+			cured_n += 1
+	_check("lamp + closed door cures room", cured_n >= icu.size() - 1, "%d/%d 회복, 등 남은 양 %.0f" % [cured_n, icu.size(), lamp.charge])
+	lamp.charge = 0.0
+	# 정신이 돌아온 사람은 가까운 계단으로 내려간다 → 1층에 나타남
+	var walker = null
+	for q in l2.get_node("People").get_children():
+		if q.tile == Vector2i(6, 9):
+			walker = q
+	walker.global_position = l2.tile_center(Vector2i(2, 6))
+	walker.tile = Vector2i(2, 6); walker.target = walker.tile
+	walker.confusion = 0.0
+	walker._set_state(2)
+	player.global_position = l2.tile_center(Vector2i(30, 12))   # 멀리 (따라오지 않게)
+	var name_w: String = walker.person_name
+	await _wait(300)
+	var came = null
+	for q in level1.get_node("People").get_children():
+		if q.get("came_down") and q.person_name == name_w:
+			came = q
+	_check("cured go downstairs", not is_instance_valid(walker) and came != null and came.state == 2, "came=%s" % came)
+	# 2층에 랜턴 하나 두고 내려간다
+	player._place()
+	var lan2: Node3D = player.placed_lanterns[-1]
+	player.global_position = Vector3(4, 0, 6.8)
+	await _wait(100)
+	_check("stairs down to 1F", GameState.floor_no == 1 and level1.is_inside_tree() and not l2.is_inside_tree() and lan1.is_inside_tree() and not lan2.is_inside_tree(),
+			"floor=%d" % GameState.floor_no)
+	player.global_position = level1.tile_center(Vector2i(19, 12))   # 옆에 있으면 따라오려고 기다리니 비켜 준다
+	await _wait(240)
+	_check("came-down walks out", came.tile != Vector2i(2, 4) or came.waiting, "tile=%s waiting=%s" % [came.tile, came.waiting])
+	player._pick_up(lan1)
+	# 다시 올라가 랜턴이 그대로 있는지
+	player.global_position = Vector3(72, 0, 6.8)
+	await _wait(100)
+	_check("2F state kept", GameState.floor_no == 2 and lan2.is_inside_tree() and player.global_position.distance_to(l2.tile_center(Vector2i(36, 4))) < 0.5, "pos=%s" % player.global_position)
+	player.global_position = lan2.global_position + Vector3(0.5, 0, 0)
+	player._pick_up(lan2)
+	_check("lanterns back", player.lanterns_held == held_before, "held=%d before=%d" % [player.lanterns_held, held_before])
+	# 2층에서 완전히 굳으면 1층 마당에서 기다리던 사람이 이어받는다
+	var heir = main.find_heir()
+	if heir == null:
+		var w = level1.get_node("People").get_child(0)
+		w.waiting = true
+		heir = w
+	var n2 := l2.get_node("People").get_child_count()
+	player.global_position = l2.tile_center(Vector2i(30, 6))
+	player.headlamp.on = false
+	player.stiff = 99.9
+	await _wait(30)
+	_check("relay across floors", GameState.floor_no == 1 and level1.is_inside_tree() and l2.get_node("People").get_child_count() == n2 + 1 and player.stiff < 1.0,
+			"floor=%d people2=%d->%d" % [GameState.floor_no, n2, l2.get_node("People").get_child_count()])
+	await _wait(240)   # 교대 안내 화면
+	GameState.ui_blocking = false
+	player.headlamp.on = false

@@ -11,6 +11,7 @@ extends StaticBody3D
 @onready var moon = $Moonlight
 var open := false
 var progress := 0.0
+var sun_tiles: Array[Vector2i] = []   # 이 창으로 햇빛이 드는 방의 칸들 (걷을 때 채움)
 
 func _ready() -> void:
 	add_to_group("curtain")
@@ -33,6 +34,7 @@ func hold(seconds: float) -> bool:
 	$DrapeR.visible = true
 	collision_layer = GameState.LAYER_INTERACT
 	moon.set_active(true)
+	sun_tiles = room_tiles()   # 걷을 때 미리 구해 둔다: 해 뜰 때 플레이어가 다른 층에 있으면 이 층은 트리 밖이라 못 구함
 	Sfx.play_at("curtain", global_position + Vector3(0, 1.5, 1))
 	GameState.curtain_opened()
 	return true

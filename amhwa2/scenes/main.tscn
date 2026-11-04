@@ -9,6 +9,7 @@
 [ext_resource type="Texture2D" path="res://textures/sky.png" id="7"]
 [ext_resource type="Shader" path="res://shaders/dawn_sky.gdshader" id="8"]
 [ext_resource type="Script" path="res://scripts/objects/night.gd" id="9"]
+[ext_resource type="PackedScene" path="res://scenes/level_2f.tscn" id="10"]
 
 [sub_resource type="ShaderMaterial" id="skymat"]
 shader = ExtResource("8")
@@ -34,6 +35,7 @@ fog_sky_affect = 0.0
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1")
+upper_floors = Array[PackedScene]([ExtResource("10")])
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." groups=["world_env"]]
 environment = SubResource("env")

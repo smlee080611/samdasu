@@ -6,7 +6,7 @@ extends Node
 ##    그때까지 현관 밖으로 데려온 사람 수가 결과가 된다.
 ## 시작 연출·쪽지 읽는 동안(is_frozen)은 시간이 멈춘다.
 
-@export var night_seconds := 900.0     ## 하룻밤의 실제 길이(초). 15분
+@export var night_seconds := 1500.0    ## 하룻밤의 실제 길이(초). 25분 (1층 15~20분 + 2층). 지하가 생기면 40~50분으로
 @export var clock_start := 130.0       ## 시작 시각 (자정부터 분). 130 = 02:10 (시작 연출과 맞춤)
 @export var clock_dawn := 340.0        ## 해 뜨는 시각. 340 = 05:40
 @export var sky_curve := 2.2           ## 하늘이 밝아지는 모양. 클수록 밤 내내 어둡다가 끝에 몰아서 밝아짐
@@ -68,29 +68,37 @@ func sunrise() -> void:
 	GameState.clock_minutes = clock_dawn
 	if sky_mat:
 		sky_mat.set_shader_parameter("dawn", 1.0)
-	var level := get_tree().get_first_node_in_group("level") as Level
-	var sun := {}
-	for c in get_tree().get_nodes_in_group("curtain"):
-		if c.open:
-			c.moon.light_color = sun_color
-			c.moon.light_energy = sun_energy
-			for tl in c.room_tiles():
-				sun[tl] = true
+	# 모든 층을 센다. 플레이어가 없는 층은 트리 밖이라 그룹으로 못 찾으니 main.gd에서 층마다 꺼낸다
+	var main := get_tree().get_first_node_in_group("main")
+	var floors: Array = main.all_levels() if main else [get_tree().get_first_node_in_group("level")]
 	var cured := 0
 	var left := 0
-	for p in get_tree().get_nodes_in_group("person"):
-		if p.waiting:
-			continue
-		var in_sun: bool = sun.has(p.tile) or level.is_outdoor(p.tile)
-		if p.state == p.State.CURED:
-			cured += 1          # 이미 정신이 돌아와 걸어 나오던 사람: 해가 떴으니 무사하다
-		elif in_sun:
-			p.held_by = null
-			p.held_t = 0.0
-			p._set_state(p.State.CURED)
-			cured += 1
-		else:
-			left += 1
+	for level in floors:
+		var sun := {}
+		var curtains = level.get_node_or_null("Curtains")
+		if curtains:
+			for c in curtains.get_children():
+				if c.open:
+					c.moon.light_color = sun_color
+					c.moon.light_energy = sun_energy
+					for tl in c.sun_tiles:
+						sun[tl] = true
+		var live: bool = level.is_inside_tree()
+		var ppl: Array = main.people_of(level) if main else get_tree().get_nodes_in_group("person")
+		for p in ppl:
+			if p.waiting or p.is_queued_for_deletion():
+				continue
+			var in_sun: bool = sun.has(p.tile) or level.is_outdoor(p.tile)
+			if p.state == p.State.CURED:
+				cured += 1          # 이미 정신이 돌아와 걸어 나오던 사람: 해가 떴으니 무사하다
+			elif in_sun:
+				if live:            # 눈앞의 층이면 실제로 깨어나는 모습을 보여 준다
+					p.held_by = null
+					p.held_t = 0.0
+					p._set_state(p.State.CURED)
+				cured += 1
+			else:
+				left += 1
 	GameState.dawn_cured = cured
 	GameState.dawn_left = left
 	GameState.night_over = true

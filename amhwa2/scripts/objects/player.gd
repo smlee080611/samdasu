@@ -207,7 +207,7 @@ func _process(dt: float) -> void:
 		hold_time = 0.0
 	# 몸이 굳는 속도: 랜턴·달빛 곁이나 입구에서는 풀리고, 어둠에서는 빨리 굳는다
 	var level := get_tree().get_first_node_in_group("level") as Level
-	var at_entrance := level.to_tile(global_position).distance_to(level.entrance_tile) < 1.5
+	var at_entrance := level.has_rest() and level.to_tile(global_position).distance_to(level.entrance_tile) < 1.5
 	if at_entrance or LightSystem.light_at(global_position, [get_rid()], true) > 0.25:
 		stiff = max(0.0, stiff - 6.0 * dt)
 		if at_entrance:
@@ -240,6 +240,9 @@ func _charge_at_hall(level: Level, dt: float) -> void:
 ## 교대: 엘리베이터 홀에서 기다리던 사람이 있으면, 내 몸은 그 자리에서 석상이 되고 그 사람이 이어받는다.
 ## 굳은 내 몸은 다른 석상처럼 나중에 다시 깨워 구할 수 있다. 들고 있던 랜턴은 그 자리에 떨어진다.
 func _find_heir() -> Node:
+	var main := get_tree().get_first_node_in_group("main")
+	if main:
+		return main.find_heir()   # 위층에서 굳어도 1층 마당에서 기다리던 사람이 이어받는다
 	for p in get_tree().get_nodes_in_group("person"):
 		if p.waiting:
 			return p
@@ -258,12 +261,12 @@ func _relay(heir: Node) -> void:
 	# 들고 있던 것은 굳은 자리에 떨어진다: 랜턴, 남은 케미라이트, 경광봉
 	for i in lanterns_held:
 		var l: Node3D = lantern_scene.instantiate()
-		get_parent().add_child(l)
-		l.global_position = global_position + Vector3(randf_range(-0.5, 0.5), 0, randf_range(-0.5, 0.5))
+		_floor().add_child(l)
+		l.position = global_position + Vector3(randf_range(-0.5, 0.5), 0, randf_range(-0.5, 0.5))
 		placed_lanterns.append(l)
 	lanterns_held = 0
 	# (줍는 물건은 다음 사람이 자리를 옮긴 뒤에 놓는다. 바로 놓으면 그 자리에서 바로 주워져 버림)
-	_drop_later.call_deferred(global_position, chemlights, has_baton)
+	_drop_later.call_deferred(global_position, chemlights, has_baton, _floor())
 	# 다음 사람: 헤드램프(배터리 그대로)와 케미라이트 하나만 들고 밖에서 들어온다.
 	# 앞사람이 깔아 둔 초록 불빛(케미라이트는 꺼지지 않음)을 따라가 물건을 되찾는다
 	chemlights = 1
@@ -271,6 +274,11 @@ func _relay(heir: Node) -> void:
 	for i in hand_stick.get_child_count():
 		hand_stick.get_child(i).visible = i < chemlights
 	GameState.rescued -= 1
+	# 이어받는 사람이 다른 층(1층 마당)에 있으면 그 층으로 바꾼다. 굳은 나와 물건은 원래 층에 남는다
+	var heir_level := heir.get_parent().get_parent() as Level
+	if heir_level and not heir_level.is_inside_tree():
+		get_tree().get_first_node_in_group("main").switch_level(heir_level)
+		level = heir_level
 	global_position = heir.global_position
 	rotation = Vector3.ZERO   # 마당에서 건물(북쪽)을 보고 시작
 	head.rotation.x = 0.0
@@ -281,19 +289,25 @@ func _relay(heir: Node) -> void:
 	Sfx.play("petrify", -2.0, 0.0)
 	GameState.relay_happened()
 
-func _drop_later(pos: Vector3, chems: int, baton_too: bool) -> void:
+func _drop_later(pos: Vector3, chems: int, baton_too: bool, where: Node) -> void:
 	await get_tree().physics_frame
 	await get_tree().physics_frame
 	if chems > 0:
 		var box: Node3D = load("res://scenes/chem_box.tscn").instantiate()
 		box.amount = chems
-		get_parent().add_child(box)
-		box.global_position = pos + Vector3(0.4, 0, 0.3)
+		where.add_child(box)
+		box.position = pos + Vector3(0.4, 0, 0.3)   # 층 원점이 (0,0,0)이라 같은 값. 그 층이 트리 밖이어도 됨
 	if baton_too:
 		var bp: Node3D = load("res://scenes/baton_pickup.tscn").instantiate()
-		get_parent().add_child(bp)
-		bp.global_position = pos + Vector3(-0.4, 0.0, -0.3)
+		where.add_child(bp)
+		bp.position = pos + Vector3(-0.4, 0.0, -0.3)
 		bp.rotation.y = randf() * TAU
+
+## 바닥에 두는 물건(랜턴, 케미라이트, 떨어뜨린 물건)은 지금 층에 붙인다.
+## 그래야 다른 층으로 가면 그 층에 그대로 남아 있고, 돌아오면 다시 보인다.
+func _floor() -> Node:
+	var lv := get_tree().get_first_node_in_group("level")
+	return lv if lv else get_parent()
 
 func looking_at() -> Node:
 	if ray.is_colliding():
@@ -328,7 +342,7 @@ func _throw_chemlight() -> void:
 	var start := head.global_position - head.global_transform.basis.x * 0.2 - Vector3(0, 0.15, 0) + aim * 0.3
 	var v := aim * 8.5 + Vector3(0, 2.0, 0) + velocity * 0.5
 	var c: Node3D = chemlight_scene.instantiate()
-	get_parent().add_child(c)
+	_floor().add_child(c)
 	c.launch(start, v)
 
 ## 손은 하나만 쓴다: 오른손은 경광봉, 왼손은 비워 둔다(헤드램프·랜턴·문·뒤지기는 왼손으로).
@@ -472,7 +486,7 @@ func _toggle_lantern() -> void:
 	if kneel_t > 0.0:
 		return
 	for l in placed_lanterns:
-		if l.global_position.distance_to(global_position) < 1.6:
+		if is_instance_valid(l) and l.is_inside_tree() and l.global_position.distance_to(global_position) < 1.6:
 			_kneel(0.6, _pick_up.bind(l))
 			return
 	if lanterns_held <= 0:
@@ -488,7 +502,7 @@ func _kneel(seconds: float, action: Callable) -> void:
 
 func _place() -> void:
 	var l: Node3D = lantern_scene.instantiate()
-	get_parent().add_child(l)
+	_floor().add_child(l)
 	l.global_position = global_position - global_transform.basis.z * 0.8
 	placed_lanterns.append(l)
 	lanterns_held -= 1

@@ -67,6 +67,7 @@ ol.steps li,ul li{margin-bottom:6px}
     <a href="#hud">7-2. 화면 UI · 시작 연출</a>
     <a href="#events">7-3. 공포 사건</a>
     <a href="#night">7-4. 하룻밤 · 배터리 총량</a>
+    <a href="#floors">7-5. 2층 · 층 이동 · 수술등</a>
     <a href="#main">8. Main</a>
     <a href="#extend">확장하는 법</a>
     <a href="#roles">역할 분담</a>
@@ -106,6 +107,8 @@ ol.steps li,ul li{margin-bottom:6px}
 ├ scenes/
 │  ├ main.tscn             <span class="c">시작 씬: 환경 + 레벨 + 플레이어 + HUD</span>
 │  ├ level_1f.tscn         <span class="c">1층: 벽 지도 + 배치된 오브젝트</span>
+│  ├ level_2f.tscn         <span class="c">2층 수술·중환자동 (tools/gen_level_2f.py로 생성)</span>
+│  ├ surgical_light.tscn   <span class="c">수술등·중환자실 천장등의 비상 배터리함 (등은 스크립트가 만듦)</span>
 │  ├ player.tscn
 │  ├ person.tscn           <span class="c">석상 / 광인 / 회복한 사람 (한 씬이 상태를 바꿈)</span>
 │  ├ lantern.tscn          <span class="c">로우폴리 랜턴(받침·유리·창살·손잡이·불꽃)</span>
@@ -123,7 +126,11 @@ ol.steps li,ul li{margin-bottom:6px}
    │  └ sfx.gd             <span class="c">효과음 재생 (Sfx.play / Sfx.play_at)</span>
    ├ objects/              <span class="c">각 씬에 붙는 스크립트</span>
    ├ ui/                   <span class="c">crack_overlay.gd(금), status_icons.gd(배터리·랜턴 아이콘)</span>
-   └ tests/selftest.gd     <span class="c">자동 점검</span></pre>
+   └ tests/selftest.gd     <span class="c">자동 점검</span>
+<span class="c">(저장소 맨 위)</span> tools/
+   ├ gen_level_2f.py       <span class="c">2층 지도·소품·석상·쪽지를 써서 level_2f.tscn을 통째로 만듦</span>
+   ├ gen_props_2f.py       <span class="c">수술대·감시 모니터·마취기·내려가는 계단·배터리함 씬</span>
+   └ props_common.py       <span class="c">위 둘이 같이 쓰는 도형 조립 도구</span></pre>
 
     <p>실행하면 <code>main.tscn</code>의 트리는 이렇게 됩니다.</p>
     <pre>Main (Node3D) <span class="k">main.gd</span>
@@ -307,7 +314,7 @@ ol.steps li,ul li{margin-bottom:6px}
       <thead><tr><th>씬</th><th>루트</th><th>하는 일</th></tr></thead>
       <tbody>
         <tr><td><code>battery.tscn</code></td><td>Area3D (mask: player)</td><td>플레이어가 닿으면 헤드램프 +50, 사라짐</td></tr>
-        <tr><td><code>stairs.tscn</code></td><td>Area3D (mask: player), 4 × 4m</td><td>구출·차광막 조건을 채우고 밟으면 클리어</td></tr>
+        <tr><td><code>stairs.tscn</code></td><td>Area3D (mask: player). 크기는 인스펙터 <b>Zone</b> (기본 3.8 × 1 × 1.2m)</td><td>계단 첫 단 앞(내려가는 계단은 구멍 가장자리)에 걸어 들어가면 화면이 잠깐 어두워지고 <b>To Floor</b> 층의 같은 쪽(<b>Side</b> W/E) 계단으로 갑니다. 도착하면 그 층 계단의 <b>Arrive Tile</b>에 섭니다. 자세한 건 7-5</td></tr>
       </tbody>
     </table></div>
 
@@ -357,7 +364,7 @@ ol.steps li,ul li{margin-bottom:6px}
         <tr><td>사람이 깨어남</td><td>이름 대신 목소리 자막("…간호사님?"). 플레이어 근처(약 6칸)에서만 들림</td><td><code>GameState.speak()</code></td></tr>
         <tr><td>남은 밤 시간</td><td>숫자 없음. 엘리베이터 홀과 간호사실의 <b>벽시계</b>(02:10 → 05:40)와 창밖 하늘. 밤 내내 어둡다가 끝 무렵 지평선부터 붉어지고 하늘이 밝아짐. 창으로 드는 달빛도 조금씩 붉어짐</td><td><code>clock.gd</code>, <code>night.gd</code>, <code>dawn_sky.gdshader</code></td></tr>
         <tr><td>홀 충전이 바닥남</td><td>한 번만 생각 자막: "충전기 불이 꺼졌다. 엘리베이터 축전지가 바닥났다."</td><td><code>player.gd</code> <code>_charge_at_hall()</code></td></tr>
-        <tr><td>계단 조건</td><td>조건을 못 채우고 계단에 가면 주인공의 생각: "혼자 올라갈 순 없다…" / "현황판에 적힌 병실들… 아직 다 둘러보지 못했다."</td><td><code>stairs.gd</code></td></tr>
+        <tr><td>층 이동</td><td>계단을 오르내릴 때 화면이 0.45초 어두워졌다 밝아짐. 처음 올라간 층에서는 주인공의 생각 한 줄(2층: "창이 하나도 없다…")</td><td><code>main.gd</code> <code>go_to()</code>, <code>hud.gd</code> <code>fade()</code></td></tr>
       </tbody>
     </table></div>
     <pre>HUD (CanvasLayer) <span class="k">hud.gd</span>
@@ -391,7 +398,7 @@ ol.steps li,ul li{margin-bottom:6px}
     <div class="tw"><table>
       <thead><tr><th>값 (인스펙터)</th><th>기본</th><th>뜻</th></tr></thead>
       <tbody>
-        <tr><td><code>Night.night_seconds</code></td><td>900</td><td>하룻밤 실제 길이(초). 15분</td></tr>
+        <tr><td><code>Night.night_seconds</code></td><td>1500</td><td>하룻밤 실제 길이(초). 25분 (1층 15~20분 + 2층). 지하가 생기면 40~50분으로</td></tr>
         <tr><td><code>Night.clock_start</code> / <code>clock_dawn</code></td><td>130 / 340</td><td>벽시계 시각(자정부터 분). 02:10 → 05:40</td></tr>
         <tr><td><code>Night.sky_curve</code></td><td>2.2</td><td>클수록 밤 내내 어둡다가 끝에 몰아서 밝아짐</td></tr>
         <tr><td><code>Level.hall_reserve</code></td><td>300</td><td>엘리베이터 홀 충전에 남은 양. 정전 뒤 엘리베이터 비상 축전지라 끝이 있음</td></tr>
@@ -403,6 +410,49 @@ ol.steps li,ul li{margin-bottom:6px}
     <p><b>배터리 계산.</b> 1층에서 쓸 수 있는 총량 = 처음 100 + 홀 300 + 예비 6 × 60 = <b>760</b>. 한 사람을 구하는 데 약 100(풀기 ≈ 50, 찾고 오가는 길 ≈ 50)이 든다고 보면 27명 중 <b>6~8명</b>. 플레이 시간으로도 한 사람에 약 2분이라 15분이면 7명 안팎이라 두 제한이 맞물립니다. 실제 수치는 플레이테스트로 맞춥니다.</p>
     <p><b>해돋이.</b> 시간이 다 되면 차광막을 걷어 둔 방(창 앞 칸에서 벽·문간까지 번진 칸, <code>curtain.gd</code> <code>room_tiles()</code>)과 마당의 석상·광인은 햇빛을 받아 깨어납니다. 창으로 드는 빛이 햇빛 색으로 바뀌고, 2초 뒤 결과가 떠오릅니다: 현관 밖으로 데려온 사람 / 햇빛을 받고 깨어난 사람(이미 걸어 나오던 사람 포함) / 아직 어둠 속에 남은 사람. 햇빛은 위협이 아니라 구원입니다.</p>
 
+    <h2 id="floors">7-5. 2층 수술·중환자동 · 층 이동 · 수술등</h2>
+    <p>2층은 1층과 같은 골격(가운데 엘리베이터 홀과 막힌 중앙 계단, 양 끝 비상계단, 남북 복도 두 줄)을 그대로 쌓았습니다. 다른 점은 셋입니다.</p>
+    <ul>
+      <li><b>창이 하나도 없다.</b> 달빛도 마당도 없습니다. 빛은 계단의 초록 비상 유도등뿐입니다.</li>
+      <li><b>쉴 곳이 없다.</b> 엘리베이터는 1층에 멈춰 있어서 2층 홀에서는 몸이 풀리지도 충전되지도 않습니다(<code>entrance_tile = (-1, -1)</code>). 쉬려면 랜턴 곁, 켜 둔 수술등 아래, 아니면 1층으로 내려가야 합니다.</li>
+      <li><b>수술등에 배터리를 꽂을 수 있다.</b> 이 층의 핵심 선택입니다(아래).</li>
+    </ul>
+    <pre> 계단↓│제1수술실│회복실│엘베·중앙계단(막힘)│제2수술실│마취·준비실│계단↓
+ ─────────────────── 북쪽 복도 ───────────────────
+     │스크럽│멸균물품│탈의실│중환자실 스테이션│혈액·약품│당직의사실│장비창고│
+ ─────────────────── 남쪽 복도 ───────────────────
+ 오물실│   제1중환자실 (6병상)  │보호자 대기실│  제2중환자실 (6병상)  │린넨</pre>
+    <p>석상 22명: 수술팀(제1수술실 넷, 제2수술실 셋), 회복실 둘, 중환자실 1에 넷, 중환자실 2에 셋, 그 밖에 스크럽실·스테이션·당직의사실·준비실·대기실·복도에 한 명씩. 예비 배터리는 4곳(스테이션 책상, 당직의사실 책상, 장비 창고 선반, 준비실 카트), 케미라이트는 2곳.</p>
+    <h3>수술등 (surgical_light.tscn, surgical_light.gd)</h3>
+    <p>수술실 두 곳과 중환자실 두 곳 벽에 "무영등 비상전원" 배터리함이 있습니다. 정전 때 쓰라고 있는 비상 배터리인데 점검 뒤로 비어 있습니다(수술 기록 쪽지). 배터리함에 대고 <b>E를 길게</b> 누르면 누르는 동안 헤드램프 배터리를 옮겨 꽂습니다(초당 25). 옮긴 만큼 등이 켜져 있다가 닳으면 꺼집니다. 한 번 꽂은 건 다시 빼지 못합니다.</p>
+    <ul>
+      <li>등 아래는 강한 고정 빛입니다. 석상이 풀리고, 광인은 정신이 돌아오고, <b>플레이어의 몸도 굳지 않습니다</b>(<code>protects_body</code>). 2층에서 유일하게 쉴 수 있는 곳을 내 배터리로 만드는 셈입니다.</li>
+      <li>한 빛 아래 여럿을 함께 풉니다. 같은 배터리로 헤드램프보다 많은 사람을 구할 수 있습니다(점검: 중환자실 등에 40을 넣고 문을 닫아 두면 4명 모두 회복). 헤드램프로 풀 때 드는 추가 소모(초당 4)도 없습니다.</li>
+      <li>대신 깨어난 광인은 빛을 피해 문으로 달아납니다. <b>문을 닫아 두면</b> 빛 속에 갇혀 결국 정신이 돌아옵니다. 플레이어가 안에 있으면 구석에 몰린 광인이 달려들 수 있습니다. 회복한 사람이 나가려면 다시 문을 열어 줘야 합니다. 제1수술실은 처음부터 문이 열려 있습니다.</li>
+      <li>그리고 헤드램프가 그만큼 어두워집니다. 창도 쉴 곳도 없는 층에서 헤드램프를 아낄지, 방 하나를 통째로 밝힐지가 이 층의 고민입니다.</li>
+    </ul>
+    <div class="tw"><table>
+      <thead><tr><th>값 (인스펙터)</th><th>수술실 / 중환자실</th><th>뜻</th></tr></thead>
+      <tbody>
+        <tr><td><code>fixtures</code></td><td>2개 / 4개</td><td>등이 달린 곳(층 기준 좌표, 천장 바로 아래). 등갓·팔·불빛은 스크립트가 만듦</td></tr>
+        <tr><td><code>reach</code></td><td>5.6 / 5.2</td><td>등 하나가 비추는 범위(바닥을 따라 잰 거리 m). 방 구석까지 닿게 맞춤. 어두운 틈이 있으면 광인이 거기 숨는다</td></tr>
+        <tr><td><code>drain_per_sec</code></td><td>2.0 / 3.0</td><td>켜져 있을 때 초당 닳는 양(헤드램프 %와 같은 단위). 한 방을 다 풀려면 약 15~20초</td></tr>
+        <tr><td><code>feed_rate</code></td><td>25</td><td>E를 누르고 있을 때 초당 옮기는 양</td></tr>
+        <tr><td><code>capacity</code></td><td>100</td><td>배터리함에 들어가는 최대량</td></tr>
+      </tbody>
+    </table></div>
+    <h3>층 이동 (main.gd)</h3>
+    <ul>
+      <li>1층은 <code>main.tscn</code>에 들어 있고, 위층은 Main의 <b>Upper Floors</b> 배열(지금은 <code>level_2f.tscn</code>)을 시작할 때 미리 만들어 둡니다.</li>
+      <li><b>씬 트리에는 플레이어가 있는 층 하나만 붙어 있습니다.</b> 다른 층은 트리에서 떼어 두기만 해서 석상·광인·랜턴·케미라이트·문 상태가 그대로 남고, 그동안은 멈춰 있습니다. 그래서 다른 스크립트는 바뀐 것 없이 <code>get_first_node_in_group("level")</code>로 지금 층을 찾습니다.</li>
+      <li>바닥에 두는 물건(랜턴, 케미라이트, 교대 때 떨어뜨린 물건)은 Main이 아니라 <b>지금 층 노드</b>에 붙입니다(<code>player.gd</code> <code>_floor()</code>). 2층에 둔 랜턴은 2층에 남습니다.</li>
+      <li>광인과 석상은 층을 오가지 않습니다. 2층에서 정신이 돌아온 사람은 가까운 비상계단(<code>Level.exit_tile</code> / <code>exit_tile_alt</code>, <code>exit_down = true</code>)으로 내려가 1층 계단참에 나타나고, 거기서 다시 현관 밖까지 걸어가야 구출로 셉니다. 1층에서 광인에게 붙잡힐 수도 있습니다. 플레이어가 2층에 있는 동안 1층은 멈춰 있으니, 내려온 사람은 플레이어가 내려가야 움직입니다.</li>
+      <li>교대: 2층에서 완전히 굳으면 1층 마당에서 기다리던 사람이 이어받고 1층으로 바뀝니다. 굳은 나와 물건은 2층 그 자리에 남습니다.</li>
+      <li>해돋이 결과는 모든 층을 셉니다. 2층에는 창이 없어서 해가 떠도 저절로 깨어나는 사람이 없습니다.</li>
+      <li>지도 글자 <code>v</code>: 아래층으로 내려가는 계단 구멍(바닥 없음, 못 걸어감). 구멍 안의 계단·벽은 <code>props/stair_down.tscn</code>이 그립니다.</li>
+    </ul>
+    <p class="why"><b>새 층을 붙이는 법.</b> <code>tools/gen_level_2f.py</code>를 복사해 지도·소품·사람을 바꾸고 <code>floor_no</code>를 정해 씬을 만든 뒤, Main의 Upper Floors 배열에 넣습니다. 계단(<code>stairs.tscn</code>)은 위아래 층에 같은 Side로 하나씩 두고, 서로의 층 번호를 To Floor에 적습니다. 생성기를 다시 돌리면 씬을 통째로 새로 쓰니, 에디터에서 손본 게 있으면 생성기에도 옮겨 적어 주세요.</p>
+
     <h2 id="main">8. Main (main.tscn)</h2>
     <pre>Main (Node3D) <span class="k">main.gd</span>
 ├ WorldEnvironment    <span class="c">배경 검정, 주변광 0.04, 안개 0.035</span>
@@ -411,7 +461,7 @@ ol.steps li,ul li{margin-bottom:6px}
 ├ HUD       (hud.tscn 인스턴스)
 ├ Events    (Node, events.gd)  <span class="c">공포 사건</span>
 └ Night     (Node, night.gd)   <span class="c">하룻밤 시간, 하늘, 해돋이</span></pre>
-    <p><code>main.gd</code>는 시작할 때 <code>GameState.reset()</code>, R을 누르면 씬 다시 불러오기만 합니다. 층이 늘어나면 여기서 Level 씬을 바꿔 끼우면 됩니다.</p>
+    <p><code>main.gd</code>는 시작할 때 <code>GameState.reset()</code>, F9를 누르면 씬 다시 불러오기, 그리고 층 관리(<b>Upper Floors</b>에 넣은 위층 씬, 계단으로 오르내리기, 층을 건너는 교대)를 맡습니다. 7-5 참고.</p>
 
     <h2 id="extend">확장하는 법</h2>
     <h3>예시 1. 촛불(새 빛) 추가</h3>
@@ -454,7 +504,7 @@ ol.steps li,ul li{margin-bottom:6px}
     <ol class="steps">
       <li>압축을 풀고 Godot 4.3에서 <code>project.godot</code>을 엽니다.</li>
       <li>F5로 실행. 화면을 클릭하면 마우스가 잠기고, Esc로 풀립니다.</li>
-      <li>목표: 해가 뜰 때(약 15분)까지 되도록 많은 사람을 현관 밖으로 데려오기. 배터리가 모자라 모두를 구할 수는 없다. (예전 조건인 차광막 3개 + 3명 구출 + 비상계단도 아직 남아 있음) 시작은 가운데 엘리베이터 홀. 에디터 실행 중에는 F1로 진행 상황 확인(개발용).</li>
+      <li>목표: 해가 뜰 때(약 25분)까지 1층과 2층에서 되도록 많은 사람을 현관 밖으로 데려오기. 2층은 양 끝 비상계단으로 올라갑니다. 배터리가 모자라 모두를 구할 수는 없다. (예전 조건인 차광막 3개 + 3명 구출 + 비상계단도 아직 남아 있음) 시작은 가운데 엘리베이터 홀. 에디터 실행 중에는 F1로 진행 상황 확인(개발용).</li>
     </ol>
     <p>자동 점검: 터미널에서 <code>godot --headless --path . -- selftest</code>. 석상 깨우기 → 광인 → 랜턴으로 회복 → 문 열고 닫기 → 차광막 걷기 → 상호작용 레이캐스트까지 차례로 실행하고 결과를 출력합니다. 경광봉 무방비, 배터리 총량·홀 축전지·풀기 소모, 벽시계·하늘·해돋이·결과 화면은 <code>ok</code>/<code>FAIL</code>로 찍히고 맨 끝에 "새 점검 실패 N개"가 나옵니다. 이 설명서와 함께 드린 프로젝트는 이 점검을 <span class="ok">모두 통과</span>했습니다. 다만 화면 밝기와 색감은 사람 눈으로 확인이 필요합니다.</p>
   </main>

@@ -86,6 +86,7 @@ var statue_pose := {}               # 석상일 때 굳은 자세
 var wander := false                 # 홀에서 기다리다 어둠 속으로 걸어 나감 (사건)
 var wander_target := Vector2i.ZERO
 var waiting := false          # 구출되어 엘리베이터 홀에서 기다리는 중
+var came_down := false        # 위층에서 구해져 계단으로 내려온 사람 (main.gd send_down)
 var wait_pos := Vector3.ZERO
 
 const CURED_LINES := ["...간호사님?", "여기가... 어디예요?", "몸이... 움직여요.", "불, 불 좀 켜 주세요...", "우리 애는요? 우리 애...", "추워요... 너무 추워요."]
@@ -113,7 +114,13 @@ func _ready() -> void:
 	_late_ready.call_deferred()
 
 func _late_ready() -> void:
-	level = get_tree().get_first_node_in_group("level")
+	if not is_inside_tree():
+		# 플레이어가 다른 층으로 간 직후라 이 층이 트리에서 떨어져 있다 (교대로 굳은 나 등): 돌아오면 마저 한다
+		tree_entered.connect(func(): _late_ready.call_deferred(), CONNECT_ONE_SHOT)
+		return
+	level = get_parent().get_parent() as Level   # People의 부모 = 내가 속한 층
+	if level == null:
+		level = get_tree().get_first_node_in_group("level")
 	player = get_tree().get_first_node_in_group("player")
 	tile = level.to_tile(global_position)
 	target = tile
@@ -567,7 +574,13 @@ func _cured(dt: float) -> void:
 		elif not level.is_outdoor(tile):
 			wander_target = tile        # 길이 막혔으면(문이 닫힘 등) 그 자리에서 굳는다
 		return
-	var goal := level.rescue_tile()
+	var goal := level.rescue_tile(tile)
+	if tile == goal and level.exit_down:
+		# 위층: 계단에 닿으면 아래층으로 내려간다. 아래층에서 다시 현관 밖까지 걸어가야 구출로 센다
+		GameState.speak(global_position, "내려가면... 되는 거죠?")
+		get_tree().get_first_node_in_group("main").send_down(self, level)
+		set_process(false)
+		return
 	if tile == goal:
 		GameState.add_rescued(person_name)
 		waiting = true
@@ -582,8 +595,9 @@ func _cured(dt: float) -> void:
 	var pd := tile.distance_to(ptile)
 	# 플레이어가 출구 근처(홀·로비·마당)에 있으면 따라가지 않고 곧장 밖으로 나간다
 	# (전에는 홀에서 쉬는 플레이어 옆, 엘리베이터 앞에 멈춰 서 있었다)
-	var player_near_exit := ptile.distance_to(level.entrance_tile) <= 5.0 or level.is_outdoor(ptile) \
-			or tile.distance_to(level.entrance_tile) <= 4.0
+	var home := level.home_tile(tile)
+	var player_near_exit := ptile.distance_to(home) <= 5.0 or level.is_outdoor(ptile) \
+			or tile.distance_to(home) <= 4.0
 	var follow := pd <= 5.0 and not player_near_exit and not level.is_outdoor(tile)
 	if follow and pd < 2.0:
 		return

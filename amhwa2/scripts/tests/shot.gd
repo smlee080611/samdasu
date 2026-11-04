@@ -1,6 +1,6 @@
 extends Node
 ## 스크린샷: godot --path . -- shot <파일명> <x> <y> <각도> [pitch] [freeze]
-## 추가 옵션(어디든): dawn=0.9 (밤이 그만큼 지난 하늘·시계), battery=15, rescued=3, stiff=70 (굳음 고정), note (첫 쪽지 열기), intro (시작 연출 찍기), grab (붙잡힘)
+## 추가 옵션(어디든): floor=2 (그 층에서 찍기), lamps (그 층 수술등을 모두 켜기), dawn=0.9 (밤이 그만큼 지난 하늘·시계), battery=15, rescued=3, stiff=70 (굳음 고정), note (첫 쪽지 열기), intro (시작 연출 찍기), grab (붙잡힘)
 
 func _ready() -> void:
 	_run.call_deferred()
@@ -9,10 +9,17 @@ func _run() -> void:
 	var args := OS.get_cmdline_user_args()
 	var i := args.find("shot")
 	var out := args[i + 1]
-	var level: Level = get_tree().get_first_node_in_group("level")
 	var player = get_tree().get_first_node_in_group("player")
+	for a in args:
+		if a.begins_with("floor="):
+			var main = get_tree().get_first_node_in_group("main")
+			main.switch_level(main.levels[int(a.substr(6))])
 	for k in 3:
 		await get_tree().process_frame
+	var level: Level = get_tree().get_first_node_in_group("level")
+	if "lamps" in args:
+		for l in get_tree().get_nodes_in_group("surgical_light"):
+			l.charge = 60.0
 	player.global_position = level.tile_center(Vector2i(int(args[i + 2]), int(args[i + 3])))
 	player.rotation.y = deg_to_rad(float(args[i + 4]))
 	if args.size() > i + 5:

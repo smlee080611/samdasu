@@ -362,10 +362,16 @@ transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 39, 2.7, 3)
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 73, 2.7, 9)
 
 [node name="StairsW" parent="." instance=ExtResource("stairs")]
-transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 4, 0, 8)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 6.6)
+side = "W"
+to_floor = 2
+arrive_tile = Vector2i(2, 4)
 
 [node name="StairsE" parent="." instance=ExtResource("stairs")]
-transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 72, 0, 8)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 72, 0, 6.6)
+side = "E"
+to_floor = 2
+arrive_tile = Vector2i(36, 4)
 
 [node name="Exterior" type="Node3D" parent="."]
 

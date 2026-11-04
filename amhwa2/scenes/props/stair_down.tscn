@@ -1,0 +1,253 @@
+[gd_scene format=3]
+
+[sub_resource type="StandardMaterial3D" id="m_step"]
+albedo_color = Color(0.55, 0.54, 0.5, 1)
+roughness = 0.9
+metallic = 0.0
+
+[sub_resource type="StandardMaterial3D" id="m_nose"]
+albedo_color = Color(0.3, 0.3, 0.3, 1)
+roughness = 0.6
+metallic = 0.3
+
+[sub_resource type="StandardMaterial3D" id="m_wall"]
+albedo_color = Color(0.36, 0.37, 0.35, 1)
+roughness = 0.95
+metallic = 0.0
+
+[sub_resource type="StandardMaterial3D" id="m_rail"]
+albedo_color = Color(0.5, 0.52, 0.53, 1)
+roughness = 0.4
+metallic = 0.6
+
+[sub_resource type="StandardMaterial3D" id="m_dark"]
+albedo_color = Color(0.0, 0.0, 0.0, 1)
+roughness = 1.0
+metallic = 0.0
+
+[sub_resource type="BoxMesh" id="r6"]
+material = SubResource("m_step")
+size = Vector3(3.8, 2.925, 0.5)
+
+[sub_resource type="BoxMesh" id="r7"]
+material = SubResource("m_nose")
+size = Vector3(3.8, 0.03, 0.06)
+
+[sub_resource type="BoxMesh" id="r8"]
+material = SubResource("m_step")
+size = Vector3(3.8, 2.55, 0.5)
+
+[sub_resource type="BoxMesh" id="r9"]
+material = SubResource("m_nose")
+size = Vector3(3.8, 0.03, 0.06)
+
+[sub_resource type="BoxMesh" id="r10"]
+material = SubResource("m_step")
+size = Vector3(3.8, 2.175, 0.5)
+
+[sub_resource type="BoxMesh" id="r11"]
+material = SubResource("m_nose")
+size = Vector3(3.8, 0.03, 0.06)
+
+[sub_resource type="BoxMesh" id="r12"]
+material = SubResource("m_step")
+size = Vector3(3.8, 1.8, 0.5)
+
+[sub_resource type="BoxMesh" id="r13"]
+material = SubResource("m_nose")
+size = Vector3(3.8, 0.03, 0.06)
+
+[sub_resource type="BoxMesh" id="r14"]
+material = SubResource("m_step")
+size = Vector3(3.8, 1.425, 0.5)
+
+[sub_resource type="BoxMesh" id="r15"]
+material = SubResource("m_nose")
+size = Vector3(3.8, 0.03, 0.06)
+
+[sub_resource type="BoxMesh" id="r16"]
+material = SubResource("m_step")
+size = Vector3(3.8, 1.05, 0.5)
+
+[sub_resource type="BoxMesh" id="r17"]
+material = SubResource("m_nose")
+size = Vector3(3.8, 0.03, 0.06)
+
+[sub_resource type="BoxMesh" id="r18"]
+material = SubResource("m_step")
+size = Vector3(3.8, 0.675, 0.5)
+
+[sub_resource type="BoxMesh" id="r19"]
+material = SubResource("m_nose")
+size = Vector3(3.8, 0.03, 0.06)
+
+[sub_resource type="BoxMesh" id="r20"]
+material = SubResource("m_step")
+size = Vector3(3.8, 0.3, 0.5)
+
+[sub_resource type="BoxMesh" id="r21"]
+material = SubResource("m_nose")
+size = Vector3(3.8, 0.03, 0.06)
+
+[sub_resource type="BoxMesh" id="r22"]
+material = SubResource("m_wall")
+size = Vector3(0.04, 3.3, 4.0)
+
+[sub_resource type="BoxMesh" id="r23"]
+material = SubResource("m_wall")
+size = Vector3(0.04, 3.3, 4.0)
+
+[sub_resource type="BoxMesh" id="r24"]
+material = SubResource("m_dark")
+size = Vector3(3.8, 3.3, 0.04)
+
+[sub_resource type="BoxMesh" id="r25"]
+material = SubResource("m_dark")
+size = Vector3(3.8, 0.02, 4.0)
+
+[sub_resource type="BoxMesh" id="r26"]
+material = SubResource("m_wall")
+size = Vector3(3.8, 0.4, 0.04)
+
+[sub_resource type="BoxMesh" id="r27"]
+material = SubResource("m_rail")
+size = Vector3(0.04, 1.0, 0.04)
+
+[sub_resource type="BoxMesh" id="r28"]
+material = SubResource("m_rail")
+size = Vector3(0.04, 1.0, 0.04)
+
+[sub_resource type="BoxMesh" id="r29"]
+material = SubResource("m_rail")
+size = Vector3(0.04, 1.0, 0.04)
+
+[sub_resource type="BoxMesh" id="r30"]
+material = SubResource("m_rail")
+size = Vector3(0.04, 1.0, 0.04)
+
+[sub_resource type="BoxMesh" id="r31"]
+material = SubResource("m_rail")
+size = Vector3(0.05, 0.05, 3.9)
+
+[sub_resource type="BoxMesh" id="r32"]
+material = SubResource("m_rail")
+size = Vector3(0.03, 0.03, 3.9)
+
+[sub_resource type="BoxShape3D" id="r33"]
+size = Vector3(3.8, 1.2, 4.0)
+
+[node name="StairDown" type="StaticBody3D"]
+collision_layer = 16
+collision_mask = 0
+
+[node name="Step0" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.837, -0.25)
+mesh = SubResource("r6")
+
+[node name="Nose0" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.365, -0.03)
+mesh = SubResource("r7")
+
+[node name="Step1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.025, -0.75)
+mesh = SubResource("r8")
+
+[node name="Nose1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.74, -0.53)
+mesh = SubResource("r9")
+
+[node name="Step2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.212, -1.25)
+mesh = SubResource("r10")
+
+[node name="Nose2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.115, -1.03)
+mesh = SubResource("r11")
+
+[node name="Step3" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.4, -1.75)
+mesh = SubResource("r12")
+
+[node name="Nose3" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.49, -1.53)
+mesh = SubResource("r13")
+
+[node name="Step4" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.587, -2.25)
+mesh = SubResource("r14")
+
+[node name="Nose4" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.865, -2.03)
+mesh = SubResource("r15")
+
+[node name="Step5" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.775, -2.75)
+mesh = SubResource("r16")
+
+[node name="Nose5" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.24, -2.53)
+mesh = SubResource("r17")
+
+[node name="Step6" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.962, -3.25)
+mesh = SubResource("r18")
+
+[node name="Nose6" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.615, -3.03)
+mesh = SubResource("r19")
+
+[node name="Step7" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -3.15, -3.75)
+mesh = SubResource("r20")
+
+[node name="Nose7" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.99, -3.53)
+mesh = SubResource("r21")
+
+[node name="Side-1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.92, -1.65, -2.0)
+mesh = SubResource("r22")
+
+[node name="Side1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.92, -1.65, -2.0)
+mesh = SubResource("r23")
+
+[node name="Back" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.65, -4.0)
+mesh = SubResource("r24")
+
+[node name="Bottom" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -3.3, -2.0)
+mesh = SubResource("r25")
+
+[node name="FrontLip" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0.0)
+mesh = SubResource("r26")
+
+[node name="Post0" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.85, 0.5, -0.1)
+mesh = SubResource("r27")
+
+[node name="Post1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.85, 0.5, -1.4)
+mesh = SubResource("r28")
+
+[node name="Post2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.85, 0.5, -2.7)
+mesh = SubResource("r29")
+
+[node name="Post3" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.85, 0.5, -3.9)
+mesh = SubResource("r30")
+
+[node name="Rail" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.85, 1.0, -2.0)
+mesh = SubResource("r31")
+
+[node name="Rail2" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.85, 0.55, -2.0)
+mesh = SubResource("r32")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, -2.0)
+shape = SubResource("r33")

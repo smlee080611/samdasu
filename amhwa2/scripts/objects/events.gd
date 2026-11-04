@@ -32,7 +32,8 @@ func _late() -> void:
 	level = get_tree().get_first_node_in_group("level")
 
 func _process(dt: float) -> void:
-	if level == null or GameState.is_frozen():
+	# 1층 사건들이다. 플레이어가 다른 층에 있으면 멈춘다 (1층이 트리에서 떨어져 있음)
+	if level == null or not level.is_inside_tree() or GameState.is_frozen():
 		return
 	var pt := level.to_tile(player.global_position)
 	_door_event(dt)

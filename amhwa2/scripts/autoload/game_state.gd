@@ -13,6 +13,7 @@ const LAYER_INTERACT := 4
 const LAYER_PLAYER := 8
 
 var need_rescue := 3
+var floor_no := 1          # 플레이어가 있는 층 (main.gd가 바꿈)
 var rescued := 0
 var curtains_total := 0
 var curtains_open := 0
@@ -29,6 +30,7 @@ var intro_seen := false    # 시작 연출은 처음 한 번만 (F9로 다시 �
 
 func reset() -> void:
 	rescued = 0
+	floor_no = 1
 	curtains_total = 0
 	curtains_open = 0
 	game_over = false
