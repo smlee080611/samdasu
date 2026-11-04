@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/objects/level.gd" id="level"]
+[ext_resource type="Script" path="res://scripts/objects/events.gd" id="events"]
 [ext_resource type="Script" path="res://scripts/objects/clock.gd" id="clock"]
 [ext_resource type="PackedScene" path="res://scenes/person.tscn" id="person"]
 [ext_resource type="PackedScene" path="res://scenes/door.tscn" id="door"]
@@ -360,6 +361,9 @@ transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 39, 2.7, 3)
 
 [node name="비상등_2" parent="Lights" instance=ExtResource("elight")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 73, 2.7, 9)
+
+[node name="Events" type="Node" parent="."]
+script = ExtResource("events")
 
 [node name="StairsW" parent="." instance=ExtResource("stairs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 6.6)

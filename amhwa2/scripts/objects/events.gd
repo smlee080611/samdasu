@@ -5,6 +5,7 @@ extends Node
 ##  3) 사람을 구한 뒤 홀에 돌아오면 멈춘 엘리베이터 표시등이 한 번 깜빡인다 (비상발전기 떡밥)
 ##  4) 홀에 두 명 이상 모인 뒤 오래 떠나 있으면, 한 명이 누군가를 찾으러 어둠 속으로 가 버린다
 ## 각 사건은 숫자만 바꿔 쉽게 조절할 수 있다.
+## 1층 씬(level_1f.tscn) 안에 있는 노드다. 다른 층에 사건을 넣으려면 그 층 씬에 이 노드를 하나 더 두고 칸 범위를 바꾼다.
 
 @export var door_interval := Vector2(45, 80)   # 문 사건 사이 간격(초)
 @export var max_door_events := 3
@@ -28,8 +29,13 @@ func _ready() -> void:
 	_late.call_deferred()
 
 func _late() -> void:
+	if not is_inside_tree():   # 다른 층에서 시작해서 이 층이 떼어져 있다: 이 층에 처음 올 때 마저 한다
+		tree_entered.connect(func(): _late.call_deferred(), CONNECT_ONE_SHOT)
+		return
 	player = get_tree().get_first_node_in_group("player")
-	level = get_tree().get_first_node_in_group("level")
+	level = get_parent() as Level   # 층 씬 안에 둔다: 그 층의 사건. 플레이어가 다른 층에 가면 같이 멈춘다
+	if level == null:
+		level = get_tree().get_first_node_in_group("level")
 
 func _process(dt: float) -> void:
 	# 1층 사건들이다. 플레이어가 다른 층에 있으면 멈춘다 (1층이 트리에서 떨어져 있음)

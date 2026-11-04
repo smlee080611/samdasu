@@ -1,15 +1,14 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/objects/main.gd" id="1"]
-[ext_resource type="PackedScene" path="res://scenes/level_1f.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/floors/level_1f.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="3"]
 [ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="4"]
 [ext_resource type="AudioStream" path="res://sounds/ambience.wav" id="5"]
-[ext_resource type="Script" path="res://scripts/objects/events.gd" id="6"]
 [ext_resource type="Texture2D" path="res://textures/sky.png" id="7"]
 [ext_resource type="Shader" path="res://shaders/dawn_sky.gdshader" id="8"]
 [ext_resource type="Script" path="res://scripts/objects/night.gd" id="9"]
-[ext_resource type="PackedScene" path="res://scenes/level_2f.tscn" id="10"]
+[ext_resource type="PackedScene" path="res://scenes/floors/level_2f.tscn" id="10"]
 
 [sub_resource type="ShaderMaterial" id="skymat"]
 shader = ExtResource("8")
@@ -35,12 +34,16 @@ fog_sky_affect = 0.0
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1")
-upper_floors = Array[PackedScene]([ExtResource("10")])
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." groups=["world_env"]]
 environment = SubResource("env")
 
-[node name="Level1F" parent="." instance=ExtResource("2")]
+[node name="Floors" type="Node3D" parent="."]
+
+[node name="Level1F" parent="Floors" instance=ExtResource("2")]
+
+[node name="Level2F" parent="Floors" instance=ExtResource("10")]
+visible = false
 
 [node name="Player" parent="." instance=ExtResource("3")]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 37, 0, 7)
@@ -51,9 +54,6 @@ transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 37, 0, 7)
 stream = ExtResource("5")
 volume_db = -14.0
 autoplay = true
-
-[node name="Events" type="Node" parent="."]
-script = ExtResource("6")
 
 [node name="Night" type="Node" parent="."]
 script = ExtResource("9")

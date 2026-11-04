@@ -29,6 +29,10 @@ Sfx="*res://scripts/autoload/sfx.gd"
 window/size/viewport_width=1280
 window/size/viewport_height=720
 
+[gui]
+
+theme/custom_font="res://fonts/Pretendard-Regular.otf"
+
 [input]
 
 move_forward={
@@ -115,7 +119,3 @@ restart={
 textures/canvas_textures/default_texture_filter=0
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
-
-[gui]
-
-theme/custom_font="res://fonts/Pretendard-Regular.otf"

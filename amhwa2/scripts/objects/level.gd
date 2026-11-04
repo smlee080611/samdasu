@@ -1,21 +1,29 @@
+@tool
 extends Node3D
 class_name Level
-## 레벨: 벽 배치(글자 지도)와 칸 단위 길찾기를 담당한다.
+## 레벨(층 하나): 벽 배치(글자 지도)와 칸 단위 길찾기를 담당한다.
+## 에디터에서도 돈다(@tool): 층 씬을 열면 지도대로 벽·바닥·천장이 보이고, Wall Map을 고치면 바로 다시 그린다.
+##   에디터에서 그린 벽은 씬 파일에 저장되지 않는다(실행할 때마다 지도에서 새로 만듦). 충돌·길찾기는 게임에서만 만든다.
 ## 석상·문·차광막 같은 오브젝트는 씬 안에 직접 배치한다(에디터에서 끌어다 놓기).
 ## 지도 문자: # 벽, W 창문이 있는 벽(차광막 씬이 창 구멍을 그림), , 야외(천장 없음, 달빛),
 ##           v 아래층으로 내려가는 계단 구멍(바닥 없음, 못 걸어감), 나머지는 실내 바닥.
-## 층이 여럿이면 main.gd가 층마다 Level 하나씩 들고 있고, 플레이어가 있는 층만 씬 트리에 붙인다.
+## 층이 여럿이면 main.tscn의 Floors 아래에 층 씬을 다 넣어 두고, 게임에서는 main.gd가 플레이어가 있는 층만 트리에 붙인다.
+## 층 씬은 scenes/floors/에 둔다. 층의 원점은 늘 (0, 0, 0)이다 (층마다 같은 좌표를 쓴다).
 
 const TS := 2.0
 const WALL_H := 3.0
 
-@export_multiline var wall_map := ""
-@export var floor_no := 1                      ## 몇 층인가 (main.gd가 층을 찾을 때 씀)
+@export_multiline var wall_map := "":
+	set(v):
+		wall_map = v
+		if Engine.is_editor_hint() and is_inside_tree():
+			_editor_preview()   # 에디터에서 지도를 고치면 바로 다시 그린다
+@export var floor_no := 1                      ## 몇 층인가. 1 = 1층, 2 = 2층, -1 = 지하 1층 (main.gd가 층을 찾을 때 씀)
 @export var entrance_tile := Vector2i(4, 16)   ## 플레이어가 쉬는 곳(엘리베이터 홀). 몸이 풀리고 배터리가 찬다. (-1, -1)이면 이 층엔 쉴 곳이 없음
-@export var exit_tile := Vector2i(-1, -1)      ## 구한 사람이 나가는 곳(현관 밖). 없으면 entrance_tile
-@export var exit_tile_alt := Vector2i(-1, -1)  ## 두 번째 출구(반대쪽 비상계단 등). 구한 사람은 가까운 쪽으로 간다
-## 위층: 출구가 아래로 내려가는 계단이다. 구한 사람이 출구에 닿으면 계단으로 내려가 아래층에 나타난다(main.gd)
-@export var exit_down := false
+@export var exit_tile := Vector2i(-1, -1)      ## 구한 사람이 건물 밖으로 나가는 곳(1층 현관 밖). 없으면 entrance_tile
+## 0이 아니면: 이 층에는 바깥 출구가 없고, 구한 사람은 그 층으로 가는 비상계단(가까운 쪽)으로 걸어가 그 층에 나타난다.
+## 2층·3층·지하는 1로 둔다. 출구 칸은 계단(stairs.tscn)의 Arrive Tile에서 알아서 찾는다.
+@export var exit_floor := 0
 ## 처음 이 층에 올라왔을 때 주인공이 하는 생각 (비우면 없음)
 @export_multiline var arrive_thought := ""
 ## 배터리 총량(이 층에서 쓸 수 있는 헤드램프 배터리 전부) = 처음 100 + hall_reserve + 예비 배터리 개수 × battery_amount.
@@ -35,22 +43,53 @@ var size := Vector2i.ZERO
 var astar := AStarGrid2D.new()
 
 func _ready() -> void:
+	if Engine.is_editor_hint():
+		_editor_preview()
+		return
 	add_to_group("level")
-	# Windows에서 git으로 받으면 줄바꿈이 \r\n이 되므로 \r을 지우고 나눈다 (안 지우면 줄 길이가 1 늘어나 범위 밖 오류)
-	rows = wall_map.replace("\r", "").strip_edges().split("\n")
-	size = Vector2i(rows[0].length(), rows.size())
+	_parse()
 	_build_walls()
 	refresh_nav.call_deferred()
 
+func _parse() -> void:
+	# Windows에서 git으로 받으면 줄바꿈이 \r\n이 되므로 \r을 지우고 나눈다 (안 지우면 줄 길이가 1 늘어나 범위 밖 오류)
+	rows = wall_map.replace("\r", "").strip_edges().split("\n")
+	size = Vector2i(rows[0].length(), rows.size())
+
+## 에디터 미리보기: 전에 그린 벽을 지우고 지도대로 다시 그린다 (씬에 저장되지 않는 노드들)
+var _preview: Array[Node] = []
+func _editor_preview() -> void:
+	for n in _preview:
+		if is_instance_valid(n):
+			n.free()
+	_preview.clear()
+	if wall_map.strip_edges() == "":
+		return
+	_parse()
+	var before := get_child_count()
+	_build_walls()
+	for i in range(before, get_child_count()):
+		_preview.append(get_child(i))
+
+## 이 층의 계단들 (stairs.tscn). 층 씬 바로 아래에 둔다
+func stairs() -> Array:
+	var out := []
+	for c in get_children():
+		if c.get("arrive_tile") != null and c.get("to_floor") != null:
+			out.append(c)
+	return out
+
 func _build_walls() -> void:
-	# 충돌: 벽 칸마다 상자 하나
+	# 충돌: 벽 칸마다 상자 하나 (게임에서만. 에디터 미리보기는 겉모습만)
+	var editor := Engine.is_editor_hint()
 	var shape := BoxShape3D.new()
 	shape.size = Vector3(TS, WALL_H, TS)
 	var walls := StaticBody3D.new()
-	walls.name = "Walls"
-	walls.collision_layer = GameState.LAYER_WALL
-	walls.collision_mask = 0
-	add_child(walls)
+	if not editor:
+		walls.name = "Walls"
+		walls.collision_layer = GameState.LAYER_WALL
+		walls.collision_mask = 0
+		add_child(walls)
 	# 그래픽: 바닥 쪽으로 드러난 벽 면만 사각형으로 만든다 (텍스처가 면마다 한 장씩 정확히 붙음)
 	var wall_st := SurfaceTool.new()
 	var floor_st := SurfaceTool.new()
@@ -76,10 +115,11 @@ func _build_walls() -> void:
 				_quad(floor_st, Vector3(x0, 0, z0), Vector3(x1, 0, z0), Vector3(x1, 0, z1), Vector3(x0, 0, z1), Vector3.UP)
 				_quad(ceil_st, Vector3(x0, WALL_H, z1), Vector3(x1, WALL_H, z1), Vector3(x1, WALL_H, z0), Vector3(x0, WALL_H, z0), Vector3.DOWN)
 				continue
-			var cs := CollisionShape3D.new()
-			cs.shape = shape
-			cs.position = tile_center(Vector2i(x, y), WALL_H * 0.5)
-			walls.add_child(cs)
+			if not editor:
+				var cs := CollisionShape3D.new()
+				cs.shape = shape
+				cs.position = tile_center(Vector2i(x, y), WALL_H * 0.5)
+				walls.add_child(cs)
 			if c == "W":
 				continue   # 창문 벽: 면은 차광막 씬(curtain.gd)이 창 구멍과 함께 그린다
 			var h := WALL_H
@@ -92,6 +132,8 @@ func _build_walls() -> void:
 				_quad(_side(x + 1, y, wall_st, facade_st), Vector3(x1, h, z1), Vector3(x1, h, z0), Vector3(x1, 0, z0), Vector3(x1, 0, z1), Vector3.RIGHT)
 			if _open(x - 1, y):  # 서쪽 면
 				_quad(_side(x - 1, y, wall_st, facade_st), Vector3(x0, h, z0), Vector3(x0, h, z1), Vector3(x0, 0, z1), Vector3(x0, 0, z0), Vector3.LEFT)
+	if editor:
+		walls.free()   # 에디터에서는 충돌이 필요 없다
 	for pair in [[wall_st, wall_material, "WallMesh"], [floor_st, floor_material, "FloorMesh"], [ceil_st, ceiling_material, "CeilingMesh"],
 			[facade_st, facade_material, "FacadeMesh"], [ground_st, outdoor_material, "GroundMesh"]]:
 		if pair[1] == null:
@@ -123,12 +165,16 @@ func draw_hall_charge(want: float) -> float:
 	hall_reserve -= got
 	return got
 
-## 구한 사람이 가는 곳. from을 주면 출구가 둘일 때 가까운 쪽
+## 구한 사람이 가는 곳. 바깥 출구가 없는 층(exit_floor)이면 exit_floor로 가는 계단 중 from에서 가까운 쪽
 func rescue_tile(from := Vector2i(-1, -1)) -> Vector2i:
-	var a := exit_tile if exit_tile.x >= 0 else entrance_tile
-	if exit_tile_alt.x >= 0 and from.x >= 0 and from.distance_to(exit_tile_alt) < from.distance_to(a):
-		return exit_tile_alt
-	return a
+	if exit_floor != 0:
+		var best := Vector2i(-1, -1)
+		for s in stairs():
+			if s.to_floor == exit_floor and (best.x < 0 or from.x < 0 or from.distance_to(s.arrive_tile) < from.distance_to(best)):
+				best = s.arrive_tile
+		if best.x >= 0:
+			return best
+	return exit_tile if exit_tile.x >= 0 else entrance_tile
 
 ## 이 층에 쉴 곳(몸이 풀리고 충전되는 엘리베이터 홀)이 있나
 func has_rest() -> bool:

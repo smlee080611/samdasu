@@ -1,3 +1,4 @@
+@tool
 extends StaticBody3D
 class_name SurgicalLight
 ## 수술등(무영등)·중환자실 천장등. 정전으로 꺼져 있다.
@@ -8,6 +9,7 @@ class_name SurgicalLight
 ##    대신 헤드램프가 어두워지고, 깨어난 광인은 빛을 피해 문으로 달아난다. 문을 닫아 두면 빛 속에 남는다.
 ## 2층(창이 없는 층)의 핵심 선택: 배터리를 내 헤드램프에 쓸 것인가, 이 방의 등에 꽂을 것인가.
 ## 빛 판정은 다른 빛과 같은 약속("light_source" 그룹 + light_value)으로 한다.
+## 에디터에서도 돈다(@tool): 층 씬을 열면 fixtures 자리에 등갓이 보인다 (켜진 모습은 게임에서만).
 
 @export var fixtures: PackedVector3Array = PackedVector3Array()  ## 등이 달린 곳 (층 기준 좌표). 보통 천장 바로 아래 y = 2.75
 @export var reach := 3.4             ## 등 하나가 비추는 범위 (등 바로 아래에서 바닥을 따라 잰 거리, m)
@@ -29,8 +31,11 @@ var _led_mat: StandardMaterial3D
 var _flick := 1.0
 
 func _ready() -> void:
-	add_to_group("light_source")
-	add_to_group("surgical_light")
+	if not Engine.is_editor_hint():
+		add_to_group("light_source")
+		add_to_group("surgical_light")
+	else:
+		set_process(false)
 	_head_mat = StandardMaterial3D.new()
 	_head_mat.albedo_color = Color(0.8, 0.82, 0.8)
 	_head_mat.roughness = 0.4
@@ -117,6 +122,8 @@ func get_hint() -> String:
 	return "E 길게 · 배터리 옮겨 꽂기"
 
 func _process(dt: float) -> void:
+	if Engine.is_editor_hint():
+		return
 	if charge > 0.0 and not GameState.is_frozen():
 		charge = maxf(0.0, charge - drain_per_sec * dt)
 	var on := charge > 0.0

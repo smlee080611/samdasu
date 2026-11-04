@@ -78,9 +78,7 @@ wall_map = "######################################
 ######################################"
 floor_no = 2
 entrance_tile = Vector2i(-1, -1)
-exit_tile = Vector2i(2, 4)
-exit_tile_alt = Vector2i(36, 4)
-exit_down = true
+exit_floor = 1
 arrive_thought = "창이 하나도 없다. 여기는 달빛도 들지 않는다."
 hall_reserve = 0.0
 wall_material = SubResource("wall")

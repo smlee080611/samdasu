@@ -1,3 +1,4 @@
+@tool
 extends StaticBody3D
 ## 창문과 차광막. E를 길게 눌러 걷으면 창밖(마당, 밤하늘)이 보이고 Moonlight(자식 OmniLight3D)가 켜진다.
 ## 창이 있는 벽 칸은 지도에서 W로 표시하고, 이 씬이 창 구멍이 난 벽면(안쪽·바깥쪽)과 창틀을 직접 그린다.
@@ -14,6 +15,9 @@ var progress := 0.0
 var sun_tiles: Array[Vector2i] = []   # 이 창으로 햇빛이 드는 방의 칸들 (걷을 때 채움)
 
 func _ready() -> void:
+	if Engine.is_editor_hint():
+		_build_wall.call_deferred()   # 에디터에서도 창 구멍 난 벽이 보이게 (씬에 저장되지는 않음)
+		return
 	add_to_group("curtain")
 	GameState.curtains_total += 1
 	moon.set_active(false)

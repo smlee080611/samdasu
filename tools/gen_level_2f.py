@@ -1,4 +1,4 @@
-# 2층 수술·중환자동 생성기 → amhwa2/scenes/level_2f.tscn
+# 2층 수술·중환자동 생성기 → amhwa2/scenes/floors/level_2f.tscn
 # 실행: python3 tools/gen_level_2f.py   (다시 돌리면 level_2f.tscn을 통째로 새로 씀. 에디터에서 손본 게 있으면 사라지니 주의)
 #
 # 1층과 같은 골격(가운데 엘리베이터 홀·막힌 중앙 계단, 양 끝 비상계단, 남북 복도 두 줄)을 그대로 쌓았다.
@@ -10,7 +10,7 @@
 import math, os
 from collections import deque
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "amhwa2")
-OUT = os.path.join(ROOT, "scenes", "level_2f.tscn")
+OUT = os.path.join(ROOT, "scenes", "floors", "level_2f.tscn")
 W, H = 38, 19
 g = [["#"] * W for _ in range(H)]
 def carve(x0, x1, y0, y1, c="."):
@@ -46,7 +46,7 @@ carve(5, 15, 14, 17); door(10, 13)                   # 제1중환자실
 carve(17, 21, 14, 17); carve(18, 20, 13, 13)         # 보호자 대기실 (남쪽 복도에서 트임)
 carve(23, 33, 14, 17); door(28, 13)                  # 제2중환자실
 carve(35, 36, 14, 17); door(35, 13)                  # 린넨실
-EXIT_W = (2, 4)    # 구한 사람이 내려가는 곳 (서쪽 계단참)
+EXIT_W = (2, 4)    # 서쪽 계단참: 계단으로 도착하는 칸이자 구한 사람이 내려가는 곳 (Level.exit_floor = 1이 계단에서 찾음)
 EXIT_E = (36, 4)   # 동쪽 계단참
 MAP = ["".join(r) for r in g]
 
@@ -282,7 +282,7 @@ o.append("")
 for mid, tex, rough in (("wall", "wall", 0.95), ("floor", "floor", 0.8), ("ceil", "ceiling", 1.0)):
     o.append(f'[sub_resource type="StandardMaterial3D" id="{mid}"]\nalbedo_texture = ExtResource("t_{tex}")\nroughness = {rough}\ncull_mode = 2\ntexture_filter = 4\n')
 o.append('[node name="Level2F" type="Node3D"]\nscript = ExtResource("level")\nwall_map = "' + "\n".join(MAP) +
-         f'"\nfloor_no = 2\nentrance_tile = Vector2i(-1, -1)\nexit_tile = Vector2i({EXIT_W[0]}, {EXIT_W[1]})\nexit_tile_alt = Vector2i({EXIT_E[0]}, {EXIT_E[1]})\nexit_down = true\n'
+         f'"\nfloor_no = 2\nentrance_tile = Vector2i(-1, -1)\nexit_floor = 1\n'
          'arrive_thought = "창이 하나도 없다. 여기는 달빛도 들지 않는다."\n'
          'hall_reserve = 0.0\nwall_material = SubResource("wall")\nfloor_material = SubResource("floor")\nceiling_material = SubResource("ceil")\n')
 for grp in ("People", "Doors", "Lights", "Lamps", "Props", "Signs", "Notes", "Clocks"):

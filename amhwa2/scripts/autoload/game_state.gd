@@ -72,3 +72,7 @@ func relay_happened() -> void:
 
 func can_leave() -> bool:
 	return rescued >= need_rescue and curtains_open >= curtains_total
+
+## 층 이름: 1 → "1F", -1 → "B1" (지하 1층)
+func floor_label(n: int) -> String:
+	return "B%d" % -n if n < 0 else "%dF" % n

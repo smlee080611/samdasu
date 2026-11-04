@@ -580,17 +580,17 @@ func _cured(dt: float) -> void:
 			wander_target = tile        # 길이 막혔으면(문이 닫힘 등) 그 자리에서 굳는다
 		return
 	var goal := level.rescue_tile(tile)
-	if tile == goal and level.exit_down:
-		# 위층: 계단에 닿으면 아래층으로 내려간다. 아래층에서 다시 현관 밖까지 걸어가야 구출로 센다
-		GameState.speak(global_position, "내려가면... 되는 거죠?")
-		get_tree().get_first_node_in_group("main").send_down(self, level)
+	if tile == goal and level.exit_floor != 0:
+		# 바깥 출구가 없는 층: 계단에 닿으면 출구 층(1층)으로 간다. 거기서 다시 현관 밖까지 걸어가야 구출로 센다
+		GameState.speak(global_position, "내려가면... 되는 거죠?" if level.exit_floor < level.floor_no else "올라가면... 되는 거죠?")
+		get_tree().get_first_node_in_group("main").send_to(self, level, level.exit_floor)
 		set_process(false)
 		return
 	if not leaving:
 		var path := level.astar.get_id_path(tile, goal)
 		if path.size() > 0 and path.size() - 1 <= auto_exit_steps:
 			leaving = true
-			if not level.exit_down and not counted:
+			if level.exit_floor == 0 and not counted:
 				counted = true
 				GameState.add_rescued(person_name)
 	if tile == goal or (leaving and level.is_outdoor(tile)):   # 현관 문만 나서면 됐다: 마당 자리로 가서 기다림

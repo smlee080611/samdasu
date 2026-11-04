@@ -41,7 +41,7 @@ func _run() -> void:
 	print("TEST door open=", door.open, " walkable=", level.is_walkable(level.to_tile(door.global_position)))
 	door.interact(player)   # 활짝 → 닫힘
 	print("TEST door open=", door.open)
-	var c = get_node("/root/Main/Level1F/Curtains").get_child(0)
+	var c = get_node("/root/Main/Floors/Level1F/Curtains").get_child(0)
 	c.hold(2.0)
 	print("TEST curtain open=", c.open, " curtains_open=", GameState.curtains_open)
 	var front := level.to_tile(c.global_position + c.global_transform.basis.z * 2.0)
@@ -77,7 +77,7 @@ func _run() -> void:
 	print("TEST relay statue at=", me[0].tile if me.size() > 0 else "none", " state=", me[0].state if me.size() > 0 else -1)
 	await _wait(400)
 	print("TEST after relay ui_blocking=", GameState.ui_blocking)
-	var ev = get_node("/root/Main/Events")
+	var ev = get_node("/root/Main/Floors/Level1F/Events")
 	ev.door_t = 0.0
 	player.global_position = level.tile_center(Vector2i(18, 3))
 	player.rotation.y = 0.0
@@ -180,7 +180,7 @@ func _run() -> void:
 	await _wait(100)
 	_check("baton recovered after ~1.5s", player.recover_t == 0.0 and player.move_mult() == 1.0, "recover=%.2f" % player.recover_t)
 	# 문: E를 누를 때마다 살짝 열림(틈) → 활짝 → 닫힘. 틈이면 빛은 통과, 사람은 못 지나감
-	var d2 = get_node("/root/Main/Level1F/Doors").get_children().filter(func(d): return d.amount < 0.05)[0]
+	var d2 = get_node("/root/Main/Floors/Level1F/Doors").get_children().filter(func(d): return d.amount < 0.05)[0]
 	var dt2: Vector2i = level.to_tile(d2.global_position)
 	d2.interact(player)
 	await _wait(2)
@@ -194,7 +194,7 @@ func _run() -> void:
 	_check("door press 3 close", d2.amount == 0.0 and not level.is_walkable(dt2) and (d2.collision_layer & 1) == 1, "amount=%.2f" % d2.amount)
 	_check("door no hold", not d2.has_method("hold"))
 	# 뒤지기
-	var lockers = get_node("/root/Main/Level1F/Props").get_children().filter(func(q): return q.get("loot") == "battery")
+	var lockers = get_node("/root/Main/Floors/Level1F/Props").get_children().filter(func(q): return q.get("loot") == "battery")
 	player.headlamp.battery = 20.0
 	var lk = lockers[0]
 	lk.hold(0.5); var done: bool = lk.hold(1.5)
@@ -213,7 +213,7 @@ func _new_tests(level: Level, player) -> void:
 	GameState.ui_blocking = false
 	player.stiff = 0.0
 	# 배터리 총량: 처음 100 + 홀 축전지 + 예비 배터리
-	var packs = get_node("/root/Main/Level1F/Props").get_children().filter(func(q): return q.get("loot") == "battery" and not q.searched)
+	var packs = get_node("/root/Main/Floors/Level1F/Props").get_children().filter(func(q): return q.get("loot") == "battery" and not q.searched)
 	var total: float = 100.0 + level.hall_reserve + (packs.size() + 1) * level.battery_amount   # +1: 위 점검에서 하나 뒤짐
 	_check("battery budget", total <= 900.0 and packs.size() + 1 <= 7, "total=%d packs=%d hall=%d amount=%d" % [total, packs.size() + 1, level.hall_reserve, level.battery_amount])
 	# 홀 충전은 축전지가 바닥나면 멈춘다
@@ -248,7 +248,7 @@ func _new_tests(level: Level, player) -> void:
 	_check("night 25min (1F+2F)", absf(night.night_seconds - 1500.0) < 1.0, "night=%ds" % night.night_seconds)
 	night.set_progress(0.5)
 	await _wait(2)
-	var clocks = get_node("/root/Main/Level1F/Clocks").get_children()
+	var clocks = get_node("/root/Main/Floors/Level1F/Clocks").get_children()
 	var want_min: float = -TAU * fmod(GameState.clock_minutes, 60.0) / 60.0
 	_check("wall clocks", clocks.size() == 2 and absf(clocks[0].minute_hand.rotation.z - want_min) < 0.01, "count=%d time=%d:%02d" % [clocks.size(), int(GameState.clock_minutes) / 60, int(GameState.clock_minutes) % 60])
 	var sky_half: float = night.sky_mat.get_shader_parameter("dawn")
@@ -260,7 +260,7 @@ func _new_tests(level: Level, player) -> void:
 	var clock_txt := "%d:%02d" % [int(GameState.clock_minutes) / 60, int(GameState.clock_minutes) % 60]
 	_check("no time on HUD", not (hud.center.text + hud.subtitle.text + hud.hint.text).contains(clock_txt))
 	# 해돋이: 차광막을 걷은 방의 석상은 깨어나고, 닫힌 방의 석상은 그대로. 결과 화면
-	var c = get_node("/root/Main/Level1F/Curtains").get_child(0)
+	var c = get_node("/root/Main/Floors/Level1F/Curtains").get_child(0)
 	var room: Array[Vector2i] = c.room_tiles()
 	_check("sunlit room tiles", room.size() >= 6 and room.size() <= 30, "tiles=%d" % room.size())
 	var statues = get_tree().get_nodes_in_group("person").filter(func(q): return q.state == 0 and not q.waiting)
@@ -294,6 +294,13 @@ func _floors(level1: Level, player) -> void:
 	_check("2F exists", l2 != null and not l2.is_inside_tree() and not l2.has_rest(), "")
 	if l2 == null:
 		return
+	# 층 구조: main.tscn의 Floors 아래 층 씬들, 시작 층만 붙음. 출구는 계단에서 알아서 찾음
+	_check("floors layout", main.floors_root.get_child_count() == 1 and main.floors_root.get_child(0) == level1 and main.levels.size() >= 2
+			and l2.get_parent() == null, "floors=%d levels=%s" % [main.floors_root.get_child_count(), main.levels.keys()])
+	_check("2F exits from stairs", l2.rescue_tile(Vector2i(30, 6)) == Vector2i(36, 4) and l2.rescue_tile(Vector2i(5, 6)) == Vector2i(2, 4),
+			"%s %s" % [l2.rescue_tile(Vector2i(30, 6)), l2.rescue_tile(Vector2i(5, 6))])
+	_check("stairs pairing", main.find_stairs(l2, "E", 1).arrive_tile == Vector2i(36, 4) and main.find_stairs(level1, "W", 2).arrive_tile == Vector2i(2, 4)
+			and GameState.floor_label(-1) == "B1" and GameState.floor_label(2) == "2F", "")
 	var p2 := 0
 	var packs := 0
 	for pr in l2.get_node("Props").get_children():

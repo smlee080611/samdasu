@@ -185,7 +185,7 @@ func _process(dt: float) -> void:
 	status.show_counts = tab
 	var cm := int(GameState.clock_minutes)
 	var lv = get_tree().get_first_node_in_group("level")
-	status.counts_text = ("%dF   " % GameState.floor_no) + "구출 %d/%d   차광막 %d/%d   케미 %d   초점 %d%%   %d:%02d   홀 충전 %d" % [GameState.rescued, GameState.need_rescue, GameState.curtains_open, GameState.curtains_total, player.chemlights, int(lamp.zoom * 100), cm / 60, cm % 60, int(lv.hall_reserve) if lv else 0]
+	status.counts_text = (GameState.floor_label(GameState.floor_no) + "   ") + "구출 %d/%d   차광막 %d/%d   케미 %d   초점 %d%%   %d:%02d   홀 충전 %d" % [GameState.rescued, GameState.need_rescue, GameState.curtains_open, GameState.curtains_total, player.chemlights, int(lamp.zoom * 100), cm / 60, cm % 60, int(lv.hall_reserve) if lv else 0]
 
 	var t: Node = player.looking_at()
 	hint.text = t.get_hint() if t and t.has_method("get_hint") and not GameState.ui_blocking else ""
