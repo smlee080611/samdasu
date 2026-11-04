@@ -2,14 +2,28 @@ extends Node3D
 class_name Level
 ## 레벨: 벽 배치(글자 지도)와 칸 단위 길찾기를 담당한다.
 ## 석상·문·차광막 같은 오브젝트는 씬 안에 직접 배치한다(에디터에서 끌어다 놓기).
-## 지도 문자: # 벽, W 창문이 있는 벽(차광막 씬이 창 구멍을 그림), , 야외(천장 없음, 달빛), 나머지는 실내 바닥.
+## 지도 문자: # 벽, W 창문이 있는 벽(차광막 씬이 창 구멍을 그림), , 야외(천장 없음, 달빛),
+##           v 아래층으로 내려가는 계단 구멍(바닥 없음, 못 걸어감), 나머지는 실내 바닥.
+## 층이 여럿이면 main.gd가 층마다 Level 하나씩 들고 있고, 플레이어가 있는 층만 씬 트리에 붙인다.
 
 const TS := 2.0
 const WALL_H := 3.0
 
 @export_multiline var wall_map := ""
-@export var entrance_tile := Vector2i(4, 16)   ## 플레이어가 쉬는 곳(엘리베이터 홀). 몸이 풀리고 배터리가 찬다
+@export var floor_no := 1                      ## 몇 층인가 (main.gd가 층을 찾을 때 씀)
+@export var entrance_tile := Vector2i(4, 16)   ## 플레이어가 쉬는 곳(엘리베이터 홀). 몸이 풀리고 배터리가 찬다. (-1, -1)이면 이 층엔 쉴 곳이 없음
 @export var exit_tile := Vector2i(-1, -1)      ## 구한 사람이 나가는 곳(현관 밖). 없으면 entrance_tile
+@export var exit_tile_alt := Vector2i(-1, -1)  ## 두 번째 출구(반대쪽 비상계단 등). 구한 사람은 가까운 쪽으로 간다
+## 위층: 출구가 아래로 내려가는 계단이다. 구한 사람이 출구에 닿으면 계단으로 내려가 아래층에 나타난다(main.gd)
+@export var exit_down := false
+## 처음 이 층에 올라왔을 때 주인공이 하는 생각 (비우면 없음)
+@export_multiline var arrive_thought := ""
+## 배터리 총량(이 층에서 쓸 수 있는 헤드램프 배터리 전부) = 처음 100 + hall_reserve + 예비 배터리 개수 × battery_amount.
+## 한 사람 구하는 데 약 100이 든다고 보고(풀기 50 + 오가는 길 50) 27명 중 6~8명만 구할 수 있게 맞췄다.
+## 엘리베이터 홀의 충전은 정전 뒤 엘리베이터 비상 축전지에 남은 전기라 끝이 있다.
+@export var hall_reserve := 300.0          ## 홀 충전에 남은 양 (배터리 %로 셈)
+@export var hall_charge_rate := 12.0       ## 홀에서 쉴 때 초당 차는 양
+@export var battery_amount := 60.0         ## 뒤져서 찾는 예비 배터리 하나가 채우는 양 (loot = "battery"인 소품 6곳)
 @export var wall_material: StandardMaterial3D     ## 벽 한 면(2m × 3m)에 한 장씩 붙는 텍스처
 @export var floor_material: StandardMaterial3D    ## 바닥 한 칸에 한 장
 @export var ceiling_material: StandardMaterial3D  ## 천장 한 칸에 한 장
@@ -22,7 +36,8 @@ var astar := AStarGrid2D.new()
 
 func _ready() -> void:
 	add_to_group("level")
-	rows = wall_map.strip_edges().split("\n")
+	# Windows에서 git으로 받으면 줄바꿈이 \r\n이 되므로 \r을 지우고 나눈다 (안 지우면 줄 길이가 1 늘어나 범위 밖 오류)
+	rows = wall_map.replace("\r", "").strip_edges().split("\n")
 	size = Vector2i(rows[0].length(), rows.size())
 	_build_walls()
 	refresh_nav.call_deferred()
@@ -53,6 +68,9 @@ func _build_walls() -> void:
 			var c := rows[y][x]
 			if c == ",":
 				_quad(ground_st, Vector3(x0, 0, z0), Vector3(x1, 0, z0), Vector3(x1, 0, z1), Vector3(x0, 0, z1), Vector3.UP)
+				continue
+			if c == "v":   # 계단 구멍: 바닥 없이 천장만 (구멍 안은 stair_down 소품이 그림)
+				_quad(ceil_st, Vector3(x0, WALL_H, z1), Vector3(x1, WALL_H, z1), Vector3(x1, WALL_H, z0), Vector3(x0, WALL_H, z0), Vector3.DOWN)
 				continue
 			if c != "#" and c != "W":
 				_quad(floor_st, Vector3(x0, 0, z0), Vector3(x1, 0, z0), Vector3(x1, 0, z1), Vector3(x0, 0, z1), Vector3.UP)
@@ -99,8 +117,26 @@ func _quad(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3, n: V
 		st.set_uv(uv[i])
 		st.add_vertex(v[i])
 
-func rescue_tile() -> Vector2i:
-	return exit_tile if exit_tile.x >= 0 else entrance_tile
+## 홀에서 쉬며 충전: 비상 축전지에서 꺼내 준 만큼 돌려준다. 다 쓰면 0
+func draw_hall_charge(want: float) -> float:
+	var got := minf(want, hall_reserve)
+	hall_reserve -= got
+	return got
+
+## 구한 사람이 가는 곳. from을 주면 출구가 둘일 때 가까운 쪽
+func rescue_tile(from := Vector2i(-1, -1)) -> Vector2i:
+	var a := exit_tile if exit_tile.x >= 0 else entrance_tile
+	if exit_tile_alt.x >= 0 and from.x >= 0 and from.distance_to(exit_tile_alt) < from.distance_to(a):
+		return exit_tile_alt
+	return a
+
+## 이 층에 쉴 곳(몸이 풀리고 충전되는 엘리베이터 홀)이 있나
+func has_rest() -> bool:
+	return entrance_tile.x >= 0
+
+## 구한 사람이 "출구 근처"로 여기는 곳: 쉴 곳이 있으면 거기, 없으면 가까운 출구
+func home_tile(from := Vector2i(-1, -1)) -> Vector2i:
+	return entrance_tile if has_rest() else rescue_tile(from)
 
 ## 야외 칸(지도의 ,)인가
 func is_outdoor(t: Vector2i) -> bool:
@@ -119,14 +155,17 @@ func take_wait_spot() -> Vector3:
 	if spots and _used_spots < spots.get_child_count():
 		_used_spots += 1
 		return spots.get_child(_used_spots - 1).global_position
+	# 자리가 다 찼으면 출구 바깥 마당에 줄지어 선다 (예전엔 엘리베이터 홀로 돌아가는 버그가 있었음)
+	var extra := _used_spots - (spots.get_child_count() if spots else 0)
 	_used_spots += 1
-	return tile_center(entrance_tile) + Vector3(randf_range(-0.8, 0.8), 0, randf_range(-0.8, 0.8))
+	var base := tile_center(rescue_tile())
+	return base + Vector3(3.0 + (extra % 6) * 1.3 + randf_range(-0.2, 0.2), 0, 3.0 + (extra / 6) * 1.3 + randf_range(-0.2, 0.2))
 
 ## 지나갈 수 있는 칸인가: 벽이 아니고, "blocker" 그룹(석상, 닫힌 문 등)이 서 있지 않은 칸
 func is_walkable(t: Vector2i) -> bool:
 	if t.x < 0 or t.y < 0 or t.x >= size.x or t.y >= size.y:
 		return false
-	if rows[t.y][t.x] == "#" or rows[t.y][t.x] == "W":
+	if rows[t.y][t.x] == "#" or rows[t.y][t.x] == "W" or rows[t.y][t.x] == "v":
 		return false
 	for b in get_tree().get_nodes_in_group("blocker"):
 		if to_tile(b.global_position) == t:
@@ -135,6 +174,8 @@ func is_walkable(t: Vector2i) -> bool:
 
 ## 석상이 생기거나 문이 열리고 닫힐 때 호출
 func refresh_nav() -> void:
+	if not is_inside_tree():
+		return   # 플레이어가 없는 층: 돌아올 때 main.gd가 다시 부른다
 	astar.region = Rect2i(Vector2i.ZERO, size)
 	astar.diagonal_mode = AStarGrid2D.DIAGONAL_MODE_NEVER
 	astar.update()

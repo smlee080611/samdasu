@@ -10,20 +10,24 @@ enum State { STATUE, MAD, CURED }
 @export var person_name := "환자"
 @export var state: State = State.STATUE
 @export var wake_speed := 0.7        # 빛을 받을 때 몸이 풀리는 속도
-@export var sanity_speed := 0.3      # 빛 속에서 정신이 돌아오는 속도
-@export var petrify_after := 6.5     # 어둠 속에서 이 시간이 지나면 다시 굳음
+@export var sanity_speed := 0.1      # 빛 속에서 정신이 돌아오는 속도 (센 빛으로 약 10초)
+## 어둠 속에서 다시 완전히 굳는 데 걸리는 시간은 풀린 정도에 비례한다:
+## 막 깨어났으면 petrify_min초, 거의 다 풀렸으면 petrify_max초
+@export var petrify_min := 5.0
+@export var petrify_max := 25.0
+@export var hear_run_range := 16     ## 플레이어가 달리면 이 칸 수 안의 광인이 소리를 듣고 몰려온다
 @export var chase_range := 10        # 이 칸 수 안의 플레이어를 쫓아감
 ## 광인의 속도는 몸이 얼마나 풀렸는지(sanity 0~1)에 따라 변한다.
 ## 막 깨어난 광인은 뻣뻣하고 느리다. 빛을 받아 풀릴수록 매끄럽고 빨라진다(플레이어 3.2보다 빠름).
 ## 그래서 반쯤 비추다 놓치면 오히려 가장 위험한 광인이 된다. 끝까지 비추면 정신이 돌아온다.
 @export var chase_speed_stiff := 1.6
 @export var chase_speed_loose := 4.6
-@export var flee_speed_stiff := 0.7
-@export var flee_speed_loose := 2.6
-@export var rush_range := 5          # 이 칸 수 안에 들어오면 달려들기(돌진·멈춤 반복)
+@export var flee_speed_stiff := 2.4
+@export var flee_speed_loose := 4.4
+@export var rush_range := 7          # 이 칸 수 안에 들어오면 달려들기(돌진·멈춤 반복)
 @export var escape_search := 90       # 숨을 곳을 찾을 때 살펴볼 칸 수
 @export var lunge_speed := 4.8        # 빛에 갇혔을 때 돌발적으로 달려드는 속도
-@export var lunge_cooldown := 5.0
+@export var lunge_cooldown := 3.5
 @export var walk_out_speed := 1.5
 @export var skin: StandardMaterial3D   ## 사람 피부·옷 재질 (models/patient_skin.tres). 사람마다 복제해서 색을 바꾼다
 
@@ -58,6 +62,7 @@ var stuck_t := 0.0                    # 빛 속에서 도망칠 곳이 없던 �
 var lunge_t := 0.0                    # 돌발 돌진 중
 var lunge_cd := 0.0
 var retreat_t := 0.0                  # 붙잡은 뒤 뒷걸음질
+var hit_flash := 0.0                  # 경광봉에 맞았을 때 붉게 번쩍
 var held_by: Node = null              # (회복한 사람) 나를 붙잡은 광인
 var held_t := 0.0                     # 붙잡혀 굳어 가는 정도(초). hold_petrify가 되면 석상
 var victim: Node = null               # (광인) 내가 붙잡고 있는 사람
@@ -81,6 +86,12 @@ var statue_pose := {}               # 석상일 때 굳은 자세
 var wander := false                 # 홀에서 기다리다 어둠 속으로 걸어 나감 (사건)
 var wander_target := Vector2i.ZERO
 var waiting := false          # 구출되어 엘리베이터 홀에서 기다리는 중
+var came_down := false        # 위층에서 구해져 계단으로 내려온 사람 (main.gd send_down)
+## 출구(현관 밖, 위층은 비상계단)까지 이 칸 수 안으로 오면 알아서 나간다: 플레이어를 따라오거나 헤매지 않고 곧장 걸어 나감.
+## 1층에서는 이때 바로 구출로 센다 (현관 로비쯤). 나가다 광인에게 붙잡혀 굳으면 다시 뺀다
+@export var auto_exit_steps := 7
+var leaving := false
+var counted := false
 var wait_pos := Vector3.ZERO
 
 const CURED_LINES := ["...간호사님?", "여기가... 어디예요?", "몸이... 움직여요.", "불, 불 좀 켜 주세요...", "우리 애는요? 우리 애...", "추워요... 너무 추워요."]
@@ -100,13 +111,21 @@ func _ready() -> void:
 	lunge_speed *= m
 	walk_out_speed *= randf_range(0.85, 1.15)
 	rush_range += randi_range(-1, 1)
-	petrify_after *= randf_range(0.85, 1.2)
+	var pm := randf_range(0.85, 1.2)
+	petrify_min *= pm
+	petrify_max *= pm
 	_random_statue_pose()
 	_set_state(state)
 	_late_ready.call_deferred()
 
 func _late_ready() -> void:
-	level = get_tree().get_first_node_in_group("level")
+	if not is_inside_tree():
+		# 플레이어가 다른 층으로 간 직후라 이 층이 트리에서 떨어져 있다 (교대로 굳은 나 등): 돌아오면 마저 한다
+		tree_entered.connect(func(): _late_ready.call_deferred(), CONNECT_ONE_SHOT)
+		return
+	level = get_parent().get_parent() as Level   # People의 부모 = 내가 속한 층
+	if level == null:
+		level = get_tree().get_first_node_in_group("level")
 	player = get_tree().get_first_node_in_group("player")
 	tile = level.to_tile(global_position)
 	target = tile
@@ -114,10 +133,8 @@ func _late_ready() -> void:
 
 func _set_state(s: State) -> void:
 	state = s
-	if s == State.STATUE:
-		add_to_group("blocker")
-	else:
-		remove_from_group("blocker")
+	# 석상은 길을 완전히 막지 않는다 (복도 폭 2m에 사람 하나 서 있는 정도라 옆으로 비켜 지나감).
+	# 예전엔 석상이 칸을 통째로 막아서, 복도에 석상 하나만 있어도 구한 사람이 밖으로 못 나갔다.
 	# 정신이 돌아온 사람은 빛을 가리지 않고, 좁은 복도에서 플레이어와 엉키지 않게 통과된다
 	collision_layer = 0 if s == State.CURED else GameState.LAYER_PERSON
 	var tint := Color(0.72, 0.74, 0.77) if s == State.STATUE else (MAD_TINT if s == State.MAD else Color.WHITE)
@@ -149,6 +166,11 @@ func _process(dt: float) -> void:
 			_mad(dt, ex)
 		State.CURED:
 			_cured(dt)
+	if hit_flash > 0.0:
+		hit_flash = maxf(0.0, hit_flash - dt)
+		mats[0].emission_enabled = hit_flash > 0.0 or state == State.STATUE
+		mats[0].emission = Color(1.0, 0.15, 0.08)
+		mats[0].emission_energy_multiplier = hit_flash * 5.0
 	if state != State.STATUE:
 		_coast(dt)
 	else:
@@ -235,6 +257,7 @@ func _statue(dt: float, ex: Array[RID]) -> void:
 	var lv := LightSystem.light_at(global_position, ex)
 	if lv > LightSystem.LIT_THRESHOLD:
 		body_t += dt * (0.4 + lv) * wake_speed
+		_drain_lamp(ex)
 	else:
 		body_t = max(0.0, body_t - dt * 0.15)
 	for m in mats:
@@ -244,6 +267,12 @@ func _statue(dt: float, ex: Array[RID]) -> void:
 		dark_t = 0.0
 		_set_state(State.MAD)
 		Sfx.play_at("stone_crack", global_position + Vector3.UP)
+
+## 헤드램프로 사람을 풀고 있으면 배터리가 크게 닳는다 (headlamp.wake_drain_per_sec)
+func _drain_lamp(ex: Array[RID]) -> void:
+	var lamp = player.headlamp
+	if lamp.is_on() and lamp.lights_person(global_position, ex):
+		lamp.mark_waking()
 
 ## 광인의 행동
 ##  빛 속: 플레이어 시야 밖의 어두운 곳을 찾아 그곳까지 도망친다(벽 뒤, 모퉁이 너머, 문 안쪽).
@@ -256,12 +285,15 @@ func _mad(dt: float, ex: Array[RID]) -> void:
 	if lit:
 		dark_t = 0.0
 		sanity += dt * sanity_speed * min(1.0, lv * 1.6)
+		_drain_lamp(ex)
 		if not was_lit and lunge_t <= 0.0:
 			flinch_t = 0.45            # 빛을 맞는 순간 움찔하며 멈춤
 			twitch_t = 0.0
+	elif LightSystem.in_neutral(global_position, ex):
+		pass                           # 경광봉의 빨간 빛: 풀리지도 굳지도 않음
 	else:
 		dark_t += dt
-		sanity = max(0.0, sanity - dt * 0.03)
+		sanity = max(0.0, sanity - dt * 0.02)
 		if fled:                       # 숨는 데 성공: 잠시 엿본다
 			fled = false
 			lurk_t = randf_range(1.5, 3.5)
@@ -271,7 +303,8 @@ func _mad(dt: float, ex: Array[RID]) -> void:
 	lunge_cd = maxf(0.0, lunge_cd - dt)
 	retreat_t = maxf(0.0, retreat_t - dt)
 	# 어둠 속에 있을수록 다시 굳어 간다: 느려지고, 뚝뚝 끊기고, 회색으로 변하다가 돌이 된다
-	var harden := clampf(dark_t / petrify_after, 0.0, 1.0)
+	var petrify_time := lerpf(petrify_min, petrify_max, clampf(sanity, 0.0, 1.0))
+	var harden := clampf(dark_t / petrify_time, 0.0, 1.0)
 	var loose := pow(clampf(sanity, 0.0, 1.0), 0.8) * (1.0 - 0.75 * harden)
 	loose_now = loose
 	mats[0].albedo_color = MAD_TINT.lerp(STONE_TINT, harden * harden)
@@ -296,20 +329,25 @@ func _mad(dt: float, ex: Array[RID]) -> void:
 			_face(victim.global_position)
 			move_mode = 0
 			if player.global_position.distance_to(global_position) < 0.95 and player.grab_cooldown <= 0.0:
-				player.grabbed(person_name)
+				if player.grabbed(person_name):
+					_repelled()
 			return
 
 	# 어둠 속에서 가까우면 돌진했다 멈췄다를 반복. 뻣뻣할수록 오래 멈춘다
+	# 플레이어가 달리면 발소리를 듣고 숨어 있던 광인도 몰려온다
+	var heard: bool = player.sprinting and not lit and tile.distance_to(player_tile) <= hear_run_range
+	if heard:
+		lurk_t = 0.0
 	var rushing := not lit and dist <= rush_range and lurk_t <= 0.0
 	if rushing:
 		if rush_t > 0.0:
 			rush_t -= dt
 			if rush_t <= 0.0:
-				pause_t = lerpf(0.9, 0.25, loose) * randf_range(0.7, 1.3)
+				pause_t = lerpf(0.6, 0.15, loose) * randf_range(0.7, 1.3)
 		elif pause_t > 0.0:
 			pause_t -= dt
 		else:
-			rush_t = lerpf(0.5, 1.1, loose) * randf_range(0.8, 1.2)
+			rush_t = lerpf(0.6, 1.3, loose) * randf_range(0.8, 1.2)
 	flinch_t = maxf(0.0, flinch_t - dt)
 
 	var speed := 0.0
@@ -361,7 +399,7 @@ func _mad(dt: float, ex: Array[RID]) -> void:
 				fled = true
 			else:
 				next = _darkest_neighbor(lv, ex)
-		elif dist < chase_range and (lurk_t <= 0.0 or dist <= 2):
+		elif (dist < chase_range or heard) and (lurk_t <= 0.0 or dist <= 2):
 			next = level.next_step(tile, prey_tile)
 		if next != null and (not _taken(next) or lunge_t > 0.0 or next == prey_tile):
 			target = next
@@ -380,7 +418,8 @@ func _mad(dt: float, ex: Array[RID]) -> void:
 				break
 	if (not lit or lunge_t > 0.0) and retreat_t <= 0.0 and global_position.distance_to(player.global_position) < 0.95:
 		if player.grab_cooldown <= 0.0:
-			player.grabbed(person_name)
+			if player.grabbed(person_name):
+				_repelled()
 			lunge_t = 0.0
 			retreat_t = 1.4    # 붙잡은 뒤에는 뒷걸음질쳐 물러서서 플레이어에게 틈을 준다
 			rush_t = 0.0
@@ -390,7 +429,7 @@ func _mad(dt: float, ex: Array[RID]) -> void:
 		_set_state(State.CURED)
 		Sfx.play_at("cured", global_position + Vector3.UP, -4.0)
 		GameState.speak(global_position, CURED_LINES.pick_random())
-	elif dark_t > petrify_after and tile != player_tile and _arrived():
+	elif dark_t > petrify_time and tile != player_tile and _arrived():
 		_face(player.global_position)   # 다시 굳을 때는 플레이어 쪽을 보고 굳는다
 		body_t = 0.0
 		_set_state(State.STATUE)
@@ -432,6 +471,51 @@ func _plan_escape(ex: Array[RID]) -> bool:
 			prev[n] = cur
 			queue.append(n)
 	return false
+
+## 경광봉에 맞았을 때 (1 휘두르기, 2 밀치기): 움찔하고 물러난다. 밀치기는 몸이 뒤로 밀리고 잡고 있던 사람도 놓는다
+func struck(by: Node3D, kind: int) -> void:
+	if state != State.MAD:
+		return
+	lunge_t = 0.0
+	rush_t = 0.0
+	pause_t = 1.0
+	twitch_t = 0.0
+	flinch_t = 0.0
+	retreat_t = 1.3 if kind == 1 else 2.4
+	target = tile
+	# 맞은 쪽 반대로 밀려남 (휘두르기 0.6m, 밀치기 1.2m)
+	var away := global_position - by.global_position
+	away.y = 0
+	away = away.normalized()
+	var dest := global_position + away * (0.6 if kind == 1 else 1.2)
+	var dt_ := level.to_tile(dest)
+	if level.is_walkable(dt_) or dt_ == tile:
+		global_position = dest
+		tile = dt_
+		target = tile
+	vel = Vector3.ZERO
+	if kind == 2:
+		if victim and is_instance_valid(victim) and victim.held_by == self:
+			victim.held_by = null
+		victim = null
+	# 고개가 확 꺾이고 몸이 뒤로 젖혀진 채 잠깐 멈춤, 몸이 붉게 번쩍
+	var side := 1.0 if randf() < 0.5 else -1.0
+	twitch = Vector3(-0.9, 0.6 * side, 0.9 * side) * (1.0 if kind == 1 else 1.4)
+	twitch_t = 0.35
+	pose_t = 0.0
+	hit_flash = 0.3
+	_face(by.global_position)
+	Sfx.play_at("shriek", global_position + Vector3.UP * 1.5, -6.0 if kind == 1 else -2.0, 0.2)
+
+## (예전) 붙잡기가 막혔을 때: 크게 움찔하고, 잡고 있던 사람도 놓고 물러난다
+func _repelled() -> void:
+	flinch_t = 0.0
+	retreat_t = 2.4
+	twitch_t = 0.0
+	if victim and is_instance_valid(victim) and victim.held_by == self:
+		victim.held_by = null
+	victim = null
+	Sfx.play_at("shriek", global_position + Vector3.UP * 1.5, -6.0, 0.15)
 
 ## 플레이어에게서 멀어지는 이웃 칸 (붙잡은 뒤 물러설 때)
 func _away_from_player() -> Variant:
@@ -492,10 +576,27 @@ func _cured(dt: float) -> void:
 		var nx: Variant = level.next_step(tile, wander_target)
 		if nx != null:
 			target = nx
+		elif not level.is_outdoor(tile):
+			wander_target = tile        # 길이 막혔으면(문이 닫힘 등) 그 자리에서 굳는다
 		return
-	var goal := level.rescue_tile()
-	if tile == goal:
-		GameState.add_rescued(person_name)
+	var goal := level.rescue_tile(tile)
+	if tile == goal and level.exit_down:
+		# 위층: 계단에 닿으면 아래층으로 내려간다. 아래층에서 다시 현관 밖까지 걸어가야 구출로 센다
+		GameState.speak(global_position, "내려가면... 되는 거죠?")
+		get_tree().get_first_node_in_group("main").send_down(self, level)
+		set_process(false)
+		return
+	if not leaving:
+		var path := level.astar.get_id_path(tile, goal)
+		if path.size() > 0 and path.size() - 1 <= auto_exit_steps:
+			leaving = true
+			if not level.exit_down and not counted:
+				counted = true
+				GameState.add_rescued(person_name)
+	if tile == goal or (leaving and level.is_outdoor(tile)):   # 현관 문만 나서면 됐다: 마당 자리로 가서 기다림
+		if not counted:
+			counted = true
+			GameState.add_rescued(person_name)
 		waiting = true
 		wait_pos = level.take_wait_spot()
 		tile = Vector2i(-100, -100)   # 다른 사람 길을 막지 않게 칸에서 빠짐
@@ -506,10 +607,18 @@ func _cured(dt: float) -> void:
 	#  - 혼자일 때는 가끔 엉뚱한 길로 빠지거나 멈춰서 두리번거린다
 	var ptile := level.to_tile(player.global_position)
 	var pd := tile.distance_to(ptile)
-	if pd < 2.0 and not level.is_outdoor(tile):
+	# 플레이어가 출구 근처(홀·로비·마당)에 있으면 따라가지 않고 곧장 밖으로 나간다
+	# (전에는 홀에서 쉬는 플레이어 옆, 엘리베이터 앞에 멈춰 서 있었다)
+	var home := level.home_tile(tile)
+	var player_near_exit := ptile.distance_to(home) <= 5.0 or level.is_outdoor(ptile) \
+			or tile.distance_to(home) <= 4.0
+	var follow := pd <= 5.0 and not player_near_exit and not level.is_outdoor(tile) and not leaving
+	if follow and pd < 2.0:
 		return
-	if pd <= 5.0 and not level.is_outdoor(tile):
+	if follow:
 		goal = ptile
+	elif leaving:
+		pass                      # 출구가 코앞: 헤매지 않고 곧장
 	elif randf() < 0.07:
 		idle_t = randf_range(1.5, 3.0)
 		GameState.speak(global_position, LOST_LINES.pick_random())
@@ -553,6 +662,10 @@ func _held(dt: float) -> void:
 	mats[0].albedo_color = Color.WHITE.lerp(STONE_TINT, clampf(held_t / hold_petrify, 0.0, 1.0))
 	if held_t >= hold_petrify:
 		held_t = 0.0
+		if counted:               # 나가던 길에 붙잡혀 굳었다: 구출에서 뺀다
+			counted = false
+			GameState.rescued -= 1
+		leaving = false
 		if held_by:
 			held_by.victim = null
 		held_by = null
@@ -574,6 +687,8 @@ func wander_off(to: Vector2i) -> void:
 	target = tile
 	set_process(true)
 	GameState.rescued -= 1
+	counted = false
+	leaving = false
 
 ## 엘리베이터 홀의 빈자리로 걸어가서 홀 가운데를 보고 선다
 func _wait_in_hall(dt: float) -> void:
@@ -593,9 +708,22 @@ func _wait_in_hall(dt: float) -> void:
 			look_at(c, Vector3.UP)
 		set_process(false)
 
-## 칸 안에서 내가 서는 자리: 칸 중앙 + 내 줄(lane)
+## 칸 안에서 내가 서는 자리: 칸 중앙 + 내 줄(lane). 그 칸에 석상이 서 있으면 옆으로 비켜 선다
 func _point(t: Vector2i) -> Vector3:
-	return level.tile_center(t) + lane
+	var p := level.tile_center(t) + lane
+	for q in get_tree().get_nodes_in_group("person"):
+		if q == self or q.state != State.STATUE or level.to_tile(q.global_position) != t:
+			continue
+		var away: Vector3 = p - q.global_position
+		away.y = 0
+		if away.length() < 0.85:
+			if away.length() < 0.05:
+				away = Vector3(lane.z, 0, -lane.x) if lane.length() > 0.05 else Vector3.RIGHT
+			p = q.global_position + away.normalized() * 0.85
+			var c := level.tile_center(t)
+			p.x = clampf(p.x, c.x - 0.72, c.x + 0.72)
+			p.z = clampf(p.z, c.z - 0.72, c.z + 0.72)
+	return p
 
 ## 목표 칸에 거의 다 왔으면(0.45m) 미리 다음 칸을 정한다 → 칸 중앙에서 멈추지 않고 모퉁이를 둥글게 돈다
 func _arrived() -> bool:

@@ -1,6 +1,6 @@
 extends Node
 ## 스크린샷: godot --path . -- shot <파일명> <x> <y> <각도> [pitch] [freeze]
-## 추가 옵션(어디든): battery=15, rescued=3, stiff=70 (굳음 고정), note (첫 쪽지 열기), intro (시작 연출 찍기), grab (붙잡힘)
+## 추가 옵션(어디든): floor=2 (그 층에서 찍기), lamps (그 층 수술등을 모두 켜기), dawn=0.9 (밤이 그만큼 지난 하늘·시계), battery=15, rescued=3, stiff=70 (굳음 고정), note (첫 쪽지 열기), intro (시작 연출 찍기), grab (붙잡힘)
 
 func _ready() -> void:
 	_run.call_deferred()
@@ -9,10 +9,17 @@ func _run() -> void:
 	var args := OS.get_cmdline_user_args()
 	var i := args.find("shot")
 	var out := args[i + 1]
-	var level: Level = get_tree().get_first_node_in_group("level")
 	var player = get_tree().get_first_node_in_group("player")
+	for a in args:
+		if a.begins_with("floor="):
+			var main = get_tree().get_first_node_in_group("main")
+			main.switch_level(main.levels[int(a.substr(6))])
 	for k in 3:
 		await get_tree().process_frame
+	var level: Level = get_tree().get_first_node_in_group("level")
+	if "lamps" in args:
+		for l in get_tree().get_nodes_in_group("surgical_light"):
+			l.charge = 60.0
 	player.global_position = level.tile_center(Vector2i(int(args[i + 2]), int(args[i + 3])))
 	player.rotation.y = deg_to_rad(float(args[i + 4]))
 	if args.size() > i + 5:
@@ -27,12 +34,28 @@ func _run() -> void:
 	if "opencurtains" in args:
 		for c in get_tree().get_nodes_in_group("level")[0].get_node("Curtains").get_children():
 			c.hold(10.0)
+	if "chem" in args:   # 앞쪽으로 케미라이트 두 개 던지기
+		player._throw_chemlight()
+		player.rotation.y += 0.25
+		player._throw_chemlight()
+		player.rotation.y -= 0.25
+	if "crack" in args:   # 가장 가까운 문을 틈만 열기
+		var best = null
+		for d in get_tree().get_nodes_in_group("level")[0].get_node("Doors").get_children():
+			if best == null or d.global_position.distance_to(player.global_position) < best.global_position.distance_to(player.global_position):
+				best = d
+		best.amount = 0.3
+		best._apply()
+	if "pocket" in args:   # 주머니 확인 (C를 누르고 있는 상태)
+		Input.action_press("check_pocket")
 	if "lampoff" in args:
 		player.headlamp.on = false
 	if "lantern" in args:   # 앞에 랜턴을 놓고 한 걸음 물러서서 찍기
 		player._toggle_lantern()
 		player.global_position += player.global_transform.basis.z * 0.9
 	for a in args:
+		if a.begins_with("dawn="):
+			get_tree().get_first_node_in_group("night").set_progress(float(a.substr(5)))
 		if a.begins_with("battery="):
 			player.headlamp.battery = float(a.substr(8))
 		if a.begins_with("rescued="):   # 구한 사람이 홀에 모인 모습
@@ -63,7 +86,7 @@ func _run() -> void:
 		if n:
 			n.interact(player)
 	var t0 := Time.get_ticks_msec()
-	while Time.get_ticks_msec() - t0 < (2200 if ("intro" in args or stiff >= 0.0) else 700):
+	while Time.get_ticks_msec() - t0 < (4000 if "chem" in args else (2200 if ("intro" in args or stiff >= 0.0) else 700)):
 		if stiff >= 0.0:
 			player.stiff = stiff
 		if "grab" in args:

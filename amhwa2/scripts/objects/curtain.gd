@@ -11,8 +11,10 @@ extends StaticBody3D
 @onready var moon = $Moonlight
 var open := false
 var progress := 0.0
+var sun_tiles: Array[Vector2i] = []   # 이 창으로 햇빛이 드는 방의 칸들 (걷을 때 채움)
 
 func _ready() -> void:
+	add_to_group("curtain")
 	GameState.curtains_total += 1
 	moon.set_active(false)
 	$DrapeL.visible = false
@@ -32,9 +34,36 @@ func hold(seconds: float) -> bool:
 	$DrapeR.visible = true
 	collision_layer = GameState.LAYER_INTERACT
 	moon.set_active(true)
+	sun_tiles = room_tiles()   # 걷을 때 미리 구해 둔다: 해 뜰 때 플레이어가 다른 층에 있으면 이 층은 트리 밖이라 못 구함
 	Sfx.play_at("curtain", global_position + Vector3(0, 1.5, 1))
 	GameState.curtain_opened()
 	return true
+
+## 이 창으로 햇빛이 드는 방의 칸들 (해돋이 때 night.gd가 씀).
+## 창 앞 칸에서 시작해 벽과 문간(문이 있는 칸, 양옆이 벽인 좁은 칸)에서 멈춘다. 복도까지 번지지 않는다.
+func room_tiles() -> Array[Vector2i]:
+	var level := get_parent().get_parent() as Level
+	var start := level.to_tile(global_position + global_transform.basis.z * 2.0)
+	var doors := {}
+	for d in get_tree().get_nodes_in_group("door"):
+		doors[level.to_tile(d.global_position)] = true
+	var out: Array[Vector2i] = []
+	var seen := {start: true}
+	var queue: Array[Vector2i] = [start]
+	while queue.size() > 0 and out.size() < 40:
+		var c: Vector2i = queue.pop_front()
+		out.append(c)
+		for dir in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
+			var n: Vector2i = c + dir
+			if seen.has(n) or doors.has(n) or not level._open(n.x, n.y) or level.is_outdoor(n):
+				continue
+			seen[n] = true
+			var narrow_x := not level._open(n.x - 1, n.y) and not level._open(n.x + 1, n.y)
+			var narrow_y := not level._open(n.x, n.y - 1) and not level._open(n.x, n.y + 1)
+			if narrow_x or narrow_y:
+				continue   # 문간·복도
+			queue.append(n)
+	return out
 
 func get_hint() -> String:
 	return "" if open else "E 길게 · 차광막 걷기"

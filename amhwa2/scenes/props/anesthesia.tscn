@@ -1,0 +1,106 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/objects/prop.gd" id="e1"]
+
+[sub_resource type="StandardMaterial3D" id="m_body"]
+albedo_color = Color(0.62, 0.66, 0.64, 1)
+roughness = 0.6
+metallic = 0.2
+
+[sub_resource type="StandardMaterial3D" id="m_top"]
+albedo_color = Color(0.75, 0.75, 0.72, 1)
+roughness = 0.5
+metallic = 0.0
+
+[sub_resource type="StandardMaterial3D" id="m_o2"]
+albedo_color = Color(0.25, 0.45, 0.3, 1)
+roughness = 0.5
+metallic = 0.3
+
+[sub_resource type="StandardMaterial3D" id="m_n2o"]
+albedo_color = Color(0.2, 0.3, 0.55, 1)
+roughness = 0.5
+metallic = 0.3
+
+[sub_resource type="BoxMesh" id="r5"]
+material = SubResource("m_body")
+size = Vector3(0.7, 1.1, 0.55)
+
+[sub_resource type="BoxMesh" id="r6"]
+material = SubResource("m_top")
+size = Vector3(0.74, 0.03, 0.58)
+
+[sub_resource type="StandardMaterial3D" id="m_panel"]
+albedo_color = Color(0.1, 0.11, 0.1, 1)
+roughness = 0.3
+metallic = 0.0
+
+[sub_resource type="BoxMesh" id="r8"]
+material = SubResource("m_panel")
+size = Vector3(0.5, 0.35, 0.04)
+
+[sub_resource type="StandardMaterial3D" id="m_bag"]
+albedo_color = Color(0.15, 0.15, 0.15, 1)
+roughness = 0.9
+metallic = 0.0
+
+[sub_resource type="CylinderMesh" id="r10"]
+material = SubResource("m_bag")
+top_radius = 0.06
+bottom_radius = 0.07
+height = 0.18
+radial_segments = 8
+rings = 1
+
+[sub_resource type="CylinderMesh" id="r11"]
+material = SubResource("m_o2")
+top_radius = 0.07
+bottom_radius = 0.07
+height = 0.75
+radial_segments = 8
+rings = 1
+
+[sub_resource type="CylinderMesh" id="r12"]
+material = SubResource("m_n2o")
+top_radius = 0.07
+bottom_radius = 0.07
+height = 0.75
+radial_segments = 8
+rings = 1
+
+[sub_resource type="BoxShape3D" id="r13"]
+size = Vector3(0.74, 1.6, 0.6)
+
+[node name="Anesthesia" type="StaticBody3D"]
+collision_layer = 1
+collision_mask = 0
+script = ExtResource("e1")
+blocks_path = true
+
+[node name="Body" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+mesh = SubResource("r5")
+
+[node name="Shelf" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.17, 0)
+mesh = SubResource("r6")
+
+[node name="Panel" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, -0.1)
+mesh = SubResource("r8")
+
+[node name="Bag" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.0, -1.0, 0, 1.0, 0.0, 0.3, 1.05, 0.3)
+mesh = SubResource("r10")
+
+[node name="TankA" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 0.45, -0.32)
+mesh = SubResource("r11")
+
+[node name="TankB" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.1, 0.45, -0.32)
+mesh = SubResource("r12")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+shape = SubResource("r13")

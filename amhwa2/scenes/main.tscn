@@ -7,9 +7,14 @@
 [ext_resource type="AudioStream" path="res://sounds/ambience.wav" id="5"]
 [ext_resource type="Script" path="res://scripts/objects/events.gd" id="6"]
 [ext_resource type="Texture2D" path="res://textures/sky.png" id="7"]
+[ext_resource type="Shader" path="res://shaders/dawn_sky.gdshader" id="8"]
+[ext_resource type="Script" path="res://scripts/objects/night.gd" id="9"]
+[ext_resource type="PackedScene" path="res://scenes/level_2f.tscn" id="10"]
 
-[sub_resource type="PanoramaSkyMaterial" id="skymat"]
-panorama = ExtResource("7")
+[sub_resource type="ShaderMaterial" id="skymat"]
+shader = ExtResource("8")
+shader_parameter/panorama = ExtResource("7")
+shader_parameter/dawn = 0.0
 
 [sub_resource type="Sky" id="sky"]
 sky_material = SubResource("skymat")
@@ -30,14 +35,15 @@ fog_sky_affect = 0.0
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1")
+upper_floors = Array[PackedScene]([ExtResource("10")])
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." groups=["world_env"]]
 environment = SubResource("env")
 
 [node name="Level1F" parent="." instance=ExtResource("2")]
 
 [node name="Player" parent="." instance=ExtResource("3")]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 5, 0, 19)
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 37, 0, 7)
 
 [node name="HUD" parent="." instance=ExtResource("4")]
 
@@ -48,3 +54,6 @@ autoplay = true
 
 [node name="Events" type="Node" parent="."]
 script = ExtResource("6")
+
+[node name="Night" type="Node" parent="."]
+script = ExtResource("9")

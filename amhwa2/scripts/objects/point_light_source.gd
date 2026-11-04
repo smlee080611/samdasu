@@ -5,6 +5,7 @@ extends OmniLight3D
 @export var power := 1.0
 @export var protects_body := true
 @export var active := true
+@export var neutral := false     ## 경광봉처럼 약한 빨간 빛: 풀어 주지도 굳게 하지도 않는다 (밝음 판정에서 빠지고, 어둠 속 굳어 가는 시간만 멈춤)
 @export var judge_range := 0.0   ## 게임 판정 거리. 0이면 보이는 빛 범위(omni_range)와 같음. 보이는 빛을 더 넓게 퍼뜨려도 밸런스는 유지
 
 func _ready() -> void:

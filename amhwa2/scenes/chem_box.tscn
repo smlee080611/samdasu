@@ -1,0 +1,44 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/objects/chem_box.gd" id="e1"]
+
+[sub_resource type="StandardMaterial3D" id="m_box"]
+albedo_color = Color(0.85, 0.85, 0.8, 1)
+roughness = 0.8
+metallic = 0.0
+
+[sub_resource type="StandardMaterial3D" id="m_label"]
+albedo_color = Color(0.3, 0.8, 0.4, 1)
+roughness = 0.6
+metallic = 0.0
+emission_enabled = true
+emission = Color(0.3, 0.9, 0.4, 1)
+emission_energy_multiplier = 0.6
+
+[sub_resource type="BoxMesh" id="r3"]
+material = SubResource("m_box")
+size = Vector3(0.28, 0.08, 0.18)
+
+[sub_resource type="BoxMesh" id="r4"]
+material = SubResource("m_label")
+size = Vector3(0.2, 0.002, 0.1)
+
+[sub_resource type="SphereShape3D" id="shape"]
+radius = 0.6
+
+[node name="ChemBox" type="Area3D"]
+collision_layer = 0
+collision_mask = 8
+script = ExtResource("e1")
+
+[node name="Box" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0)
+mesh = SubResource("r3")
+
+[node name="Label" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.081, 0)
+mesh = SubResource("r4")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("shape")

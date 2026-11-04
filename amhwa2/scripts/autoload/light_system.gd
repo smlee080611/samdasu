@@ -13,10 +13,20 @@ func light_at(pos: Vector3, exclude: Array[RID] = [], safety_only := false) -> f
 	if level and level.is_outdoor(level.to_tile(pos)):
 		best = 0.75   # 야외: 달빛 아래는 늘 밝다 (몸도 풀림)
 	for src in get_tree().get_nodes_in_group("light_source"):
+		if src.get("neutral"):
+			continue
 		if safety_only and not src.get("protects_body"):
 			continue
 		best = max(best, src.light_value(target, exclude))
 	return best
+
+## 경광봉 같은 "변화 없음" 빛이 닿는가
+func in_neutral(pos: Vector3, exclude: Array[RID] = []) -> bool:
+	var target := pos + Vector3(0, 1.0, 0)
+	for src in get_tree().get_nodes_in_group("light_source"):
+		if src.get("neutral") and src.light_value(target, exclude) > 0.0:
+			return true
+	return false
 
 func is_lit(pos: Vector3, exclude: Array[RID] = []) -> bool:
 	return light_at(pos, exclude) > LIT_THRESHOLD
