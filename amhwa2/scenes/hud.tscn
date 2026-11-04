@@ -1,9 +1,10 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://scripts/objects/hud.gd" id="1"]
 [ext_resource type="Shader" path="res://shaders/stone_screen.gdshader" id="2"]
 [ext_resource type="Script" path="res://scripts/ui/crack_overlay.gd" id="3"]
 [ext_resource type="Script" path="res://scripts/ui/status_icons.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/ui/stamina_bar.gd" id="5"]
 
 [sub_resource type="FastNoiseLite" id="noise"]
 frequency = 0.02
@@ -126,7 +127,7 @@ offset_top = -44.0
 offset_bottom = -18.0
 grow_horizontal = 2
 grow_vertical = 0
-text = "WASD 이동 · 마우스 둘러보기 · F/우클릭 헤드램프 · 휠 초점 · 좌클릭/V 휘두르기 · Space 밀치기 · Q 랜턴 · G 케미라이트(C 확인) · E(길게) 문·뒤지기 · Shift 달리기 · F9 다시"
+text = "WASD 이동 · 마우스 둘러보기 · F/우클릭 헤드램프 · 휠 초점 · 좌클릭/V 휘두르기 · Space 밀치기 · Q 랜턴 · G 케미라이트(C 확인, C 길게 붕대) · E(길게) 문·뒤지기 · Shift 달리기 · F9 다시"
 label_settings = SubResource("small_ls")
 horizontal_alignment = 1
 
@@ -137,12 +138,25 @@ anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 28.0
-offset_top = -100.0
+offset_top = -150.0
 offset_right = 330.0
-offset_bottom = -24.0
+offset_bottom = -74.0
 grow_vertical = 0
 mouse_filter = 2
 script = ExtResource("4")
+
+[node name="StaminaBar" type="Control" parent="Root"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 30.0
+offset_top = -58.0
+offset_right = 330.0
+offset_bottom = -46.0
+grow_vertical = 0
+mouse_filter = 2
+script = ExtResource("5")
 
 [node name="Center" type="Label" parent="Root"]
 layout_mode = 1

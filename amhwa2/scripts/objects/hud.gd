@@ -3,6 +3,7 @@ extends CanvasLayer
 ##  - 굳음: 화면 가장자리가 돌로 변하고(Screen 셰이더) 금이 자란다(Cracks)
 ##  - 붙잡힘: 가장자리가 붉게 번진다
 ##  - 배터리: 숫자 없음. 헤드램프 빛이 누레지고 짧아진다(headlamp.gd)
+##  - 스태미나: 왼쪽 아래 막대 하나(PEAK식). 굳음·부상이 최대치를 오른쪽 끝부터 깎는다(stamina_bar.gd). 붕대 개수도 옆에
 ##  - 구출 수·차광막 수: 숫자 없음. 구한 사람은 엘리베이터 홀에 모이고, 목표는 간호사실 현황판에
 ##  - 메시지: 주인공의 생각과 들리는 말만 아래쪽 자막으로 / 상호작용: 조준점 아래 작은 글씨
 ##  - 개발용: F1을 누르는 동안 왼쪽 아래에 배터리·랜턴·구출·차광막 (에디터 실행 때만)
@@ -18,7 +19,7 @@ const INTRO := [
 	"헤드램프 하나, 랜턴 둘.",
 ]
 const GOAL := "사람들을 깨워 현관 밖으로 내보내야 한다. 먼저 간호사실로 가 보자."
-const CONTROLS := "WASD 이동 · 마우스 둘러보기 · F/우클릭 헤드램프 · 휠 초점 · 좌클릭/V 휘두르기 · Space 밀치기 · Q 랜턴 · G 케미라이트(C 확인) · E 문(누를 때마다 틈→활짝→닫힘) · E 길게 뒤지기 · Shift 달리기 · F9 다시"
+const CONTROLS := "WASD 이동 · 마우스 둘러보기 · F/우클릭 헤드램프 · 휠 초점 · 좌클릭/V 휘두르기 · Space 밀치기 · Q 랜턴 · G 케미라이트(C 확인, C 길게 붕대) · E 문(누를 때마다 틈→활짝→닫힘) · E 길게 뒤지기 · Shift 달리기 · F9 다시"
 
 @onready var screen_mat: ShaderMaterial = $Root/Screen.material
 @onready var cracks = $Root/Cracks
@@ -26,6 +27,7 @@ const CONTROLS := "WASD 이동 · 마우스 둘러보기 · F/우클릭 헤드�
 @onready var subtitle: Label = $Root/Subtitle
 @onready var controls: Label = $Root/Controls
 @onready var status = $Root/Status
+@onready var stamina_bar = $Root/StaminaBar
 @onready var center: Label = $Root/Center
 @onready var note: Control = $Root/Note
 @onready var note_title: Label = $Root/Note/Margin/VBox/Title
@@ -173,6 +175,15 @@ func _process(dt: float) -> void:
 	screen_mat.set_shader_parameter("grab", clampf(player.grab_cooldown / 1.2, 0.0, 1.0))
 	screen_mat.set_shader_parameter("aspect", get_viewport().get_visible_rect().size.aspect())
 	cracks.amount = stiff_shown
+	# 스태미나 막대 (PEAK식): 최대치를 굳음·부상이 깎는다
+	stamina_bar.stamina = player.stamina
+	stamina_bar.max_stamina = player.max_stamina()
+	stamina_bar.stiff_part = player.stiff * player.stiff_to_max
+	stamina_bar.injury = player.injury
+	stamina_bar.winded = player.winded
+	stamina_bar.bandages = player.bandages
+	stamina_bar.bandage_k = player.bandage_t / player.bandage_seconds
+	stamina_bar.visible = not GameState.ui_blocking   # 시작 연출·쪽지 읽는 동안은 숨김
 
 	# 개발용 상태 표시 (F1, 에디터에서 실행할 때만). 플레이어에게는 숫자를 보여주지 않는다
 	var lamp = player.headlamp

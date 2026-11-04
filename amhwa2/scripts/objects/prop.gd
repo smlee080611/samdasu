@@ -3,10 +3,10 @@ extends StaticBody3D
 ## blocks_path를 켜면 그 칸은 광인·구출된 사람이 지나가지 못한다(길찾기에서 막힘).
 ## 소품은 벽 레이어라 빛을 가리고 그림자를 만든다.
 ## loot가 비어 있지 않으면 E를 길게 눌러 뒤질 수 있다 (뒤지는 동안 움직일 수 없음):
-##   "battery" 헤드램프 배터리, "chem" 케미라이트 2개, "empty" 아무것도 없음
+##   "battery" 헤드램프 배터리, "chem" 케미라이트 2개, "bandage" 붕대 1개, "empty" 아무것도 없음
 
 @export var blocks_path := false
-@export var loot := ""   ## "", "empty", "battery", "chem"
+@export var loot := ""   ## "", "empty", "battery", "chem", "bandage"
 @export var search_seconds := 1.4
 var searched := false
 var _rummage_played := false
@@ -37,6 +37,10 @@ func hold(seconds: float) -> bool:
 			p._update_hand_stick()
 			Sfx.play("snap", -10.0)
 			GameState.say("케미라이트 두 개.")
+		"bandage":
+			p.bandages += 1
+			Sfx.play("rummage", -8.0)
+			GameState.say("붕대 한 롤. (C를 길게 눌러 감기)")
 		_:
 			GameState.say("아무것도 없다.")
 	return true

@@ -344,7 +344,7 @@ loot = "empty"
 
 [node name="cart_3" parent="Props" instance=ExtResource("p_cart")]
 transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 10.27, 0.0, 9.0)
-loot = "empty"
+loot = "bandage"
 
 [node name="shelf_1" parent="Props" instance=ExtResource("p_shelf")]
 transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 10.27, 0.0, 3.0)
@@ -441,7 +441,7 @@ loot = "chem"
 
 [node name="shelf_7" parent="Props" instance=ExtResource("p_shelf")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 23.0, 0.0, 16.27)
-loot = "empty"
+loot = "bandage"
 
 [node name="shelf_8" parent="Props" instance=ExtResource("p_shelf")]
 transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 18.27, 0.0, 19.0)
@@ -457,7 +457,7 @@ loot = "empty"
 
 [node name="locker_1" parent="Props" instance=ExtResource("p_locker")]
 transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 27.0, 0.0, 21.76)
-loot = "empty"
+loot = "chem"
 
 [node name="locker_2" parent="Props" instance=ExtResource("p_locker")]
 transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 29.0, 0.0, 21.76)
@@ -465,7 +465,7 @@ loot = "chem"
 
 [node name="locker_3" parent="Props" instance=ExtResource("p_locker")]
 transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 31.0, 0.0, 21.76)
-loot = "chem"
+loot = "empty"
 
 [node name="locker_4" parent="Props" instance=ExtResource("p_locker")]
 transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 26.24, 0.0, 19.0)
@@ -623,7 +623,7 @@ transform = Transform3D(0.93969, 0, 0.34202, 0, 1, 0, -0.34202, 0, 0.93969, 11, 
 
 [node name="cart_8" parent="Props" instance=ExtResource("p_cart")]
 transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 31.73, 0.0, 29.0)
-loot = "empty"
+loot = "bandage"
 
 [node name="bench_2" parent="Props" instance=ExtResource("p_bench")]
 transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 34.27, 0.0, 31.0)

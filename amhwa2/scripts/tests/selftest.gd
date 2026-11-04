@@ -241,6 +241,7 @@ func _new_tests(level: Level, player) -> void:
 	_check("wake drains lamp", drop > 3.5, "1초에 %.1f 닳음 (평소 %.1f) body_t=%.2f" % [drop, player.headlamp.drain_per_sec, stat.body_t])
 	stat._set_state(0); stat.body_t = 0.0
 	player.headlamp.on = false
+	await _stamina(level, player)
 	await _floors(level, player)
 	level = get_tree().get_first_node_in_group("level")
 	# 하룻밤: 시계와 하늘. 시간은 HUD에 숫자로 안 나온다
@@ -438,3 +439,64 @@ func _floors(level1: Level, player) -> void:
 	_check("lobby auto exit counts", lob.leaving and GameState.rescued == r0 + 1, "leaving=%s rescued %d->%d" % [lob.leaving, r0, GameState.rescued])
 	await _wait(420)
 	_check("lobby auto exit walks out", lob.waiting and GameState.rescued == r0 + 1, "tile=%s waiting=%s rescued=%d" % [lob.tile, lob.waiting, GameState.rescued])
+
+
+## PEAK식 스태미나: 막대 하나, 굳음·부상이 최대치를 깎음, 쓰고 나서 잠깐 뒤에 회복, 굳으면 랜턴 못 놓음, 붕대
+func _stamina(level: Level, player) -> void:
+	player.global_position = level.tile_center(Vector2i(28, 12))
+	player.headlamp.on = true
+	player.stiff = 50.0
+	player.injury = 20.0
+	await _wait(2)
+	_check("max stamina cut by stiff+injury", absf(player.max_stamina() - 50.0) < 1.5 and player.stamina <= player.max_stamina() + 0.01,
+			"max=%.1f stamina=%.1f" % [player.max_stamina(), player.stamina])
+	_check("bar shows cuts", absf(get_node("/root/Main/HUD").stamina_bar.injury - 20.0) < 0.5 and get_node("/root/Main/HUD").stamina_bar.stiff_part > 25.0, "")
+	# 굳음 50 이상이면 랜턴을 못 놓는다 (손에 랜턴이 있고, 근처에 놓아 둔 랜턴이 없는 자리에서)
+	var held_before_test: int = player.lanterns_held
+	player.lanterns_held = 2
+	player.global_position = level.tile_center(Vector2i(30, 6))
+	var held: int = player.lanterns_held
+	player._toggle_lantern()
+	_check("lantern locked by stiffness", player.kneel_t == 0.0 and player.lanterns_held == held, "kneel=%.2f" % player.kneel_t)
+	player.stiff = 0.0
+	player.injury = 0.0
+	player.stamina = 100.0
+	# 랜턴 놓기는 스태미나 10, 쓴 직후 잠깐은 안 참
+	player._toggle_lantern()
+	var after: float = player.stamina
+	_check("lantern costs stamina", absf(after - (100.0 - player.lantern_stamina)) < 0.5 and player.kneel_t > 0.0, "stamina=%.1f" % after)
+	await _wait(30)
+	_check("regen waits", player.stamina <= after + 0.5, "0.5초 뒤 %.1f" % player.stamina)
+	await _wait(90)
+	_check("regen after delay", player.stamina > after + 3.0, "2초 뒤 %.1f" % player.stamina)
+	await _wait(30)
+	var mine = player.placed_lanterns[-1]
+	player.placed_lanterns.erase(mine)
+	mine.queue_free()
+	player.lanterns_held = held_before_test
+	# 붙잡히면 부상, 붕대로 회복 (C 길게)
+	player.grab_cooldown = 0.0
+	player.grabbed("광인")
+	_check("grab injures", player.injury >= player.grab_injury - 0.1, "injury=%.1f stiff=%.1f" % [player.injury, player.stiff])
+	player.injury = 50.0
+	player.bandages = 1
+	Input.action_press("check_pocket")
+	await _wait(int(player.bandage_seconds * 60) + 10)
+	Input.action_release("check_pocket")
+	_check("bandage heals", absf(player.injury - (50.0 - player.bandage_heal)) < 0.5 and player.bandages == 0, "injury=%.1f bandages=%d" % [player.injury, player.bandages])
+	player.injury = 100.0
+	_check("incapacitated by injury", player.incapacitated(), "")
+	player.injury = 70.0; player.stiff = 60.0
+	_check("incapacitated by both", player.incapacitated() and player.max_stamina() == 0.0, "max=%.1f" % player.max_stamina())
+	player.injury = 0.0; player.stiff = 0.0; player.stamina = 100.0; player.grab_cooldown = 0.0
+	# 뒤져서 붕대 찾기
+	var bp = null
+	for q in level.get_node("Props").get_children():
+		if q.get("loot") == "bandage" and not q.searched:
+			bp = q
+			break
+	var b0: int = player.bandages
+	if bp:
+		bp.hold(0.5); bp.hold(2.0)
+	_check("bandage loot", bp != null and player.bandages == b0 + 1, "")
+	player.headlamp.on = false

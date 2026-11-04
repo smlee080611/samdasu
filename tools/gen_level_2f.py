@@ -222,7 +222,9 @@ LIGHTS = [(3, 4), (35, 4)]   # 계단의 초록 비상 유도등만
 import random as _rnd
 _R = _rnd.Random(11)
 FIXED_LOOT = {("desk", (17, 10)): "battery", ("shelf", (31, 8)): "battery", ("desk", (29, 10)): "battery",
-              ("cart", (29, 4)): "battery", ("shelf", (9, 8)): "chem", ("locker", (14, 10)): "chem"}
+              ("cart", (29, 4)): "battery", ("shelf", (9, 8)): "chem", ("locker", (14, 10)): "chem",
+              # 붕대: 멸균물품실, 수술실 카트, 중환자실 처치 카트
+              ("shelf", (11, 8)): "bandage", ("cart", (5, 4)): "bandage", ("cart", (15, 14)): "bandage"}
 def _tile_of(x, z): return (int(x // 2), int(z // 2))
 for i, (kind, x, y, z, yaw, extra) in enumerate(props):
     if kind not in ("locker", "desk", "shelf", "cart"):

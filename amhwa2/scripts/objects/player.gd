@@ -4,11 +4,30 @@ extends CharacterBody3D
 
 @export var walk_speed := 3.2
 @export var run_speed := 5.6
-## 스태미나: 달리면 닳고(약 4.5초), 쉬면 찬다. 숫자는 안 보이고 거친 숨소리로 느낀다.
-## 다 떨어지면 숨이 고를 때까지(40) 다시 못 달린다. 달리는 발소리는 커서 근처 광인이 몰려온다.
-@export var stamina_drain := 22.0
-@export var stamina_regen := 14.0
+## 스태미나 (PEAK식 막대 하나, 화면 왼쪽 아래): 달리기·휘두르기·밀치기·랜턴·던지기가 모두 이 막대를 쓴다.
+## 막대의 최대치를 여러 가지가 깎는다:
+##   - 굳음(stiff): 몸이 굳은 만큼 (굳음 1당 stiff_to_max). 막대 오른쪽 끝이 회색 돌로 덮인다
+##   - 부상(injury): 붙잡혀 다친 만큼. 막대 오른쪽 끝이 붉게 덮인다. 붕대로 회복
+## 그래서 굳고 다칠수록 오래 못 달리고, 최대치가 밀치기 비용보다 작아지면 밀치기를 못 한다.
+## 최대치가 0이 되면(굳음 100, 부상 100, 또는 둘이 합쳐서) 행동불능 → 교대.
+## 스태미나는 마지막으로 쓴 뒤 regen_delay초가 지나야 차기 시작한다. 다 떨어지면 최대치의 40%까지 찰 때까지 못 달린다.
+@export var stamina_drain := 20.0          ## 달리기: 초당
+@export var stamina_regen := 14.0          ## 회복: 초당 (가만히 서 있으면 1.4배)
+@export var regen_delay := 1.0             ## 마지막으로 쓴 뒤 회복이 시작되기까지(초)
+@export var stiff_to_max := 0.6            ## 굳음 1이 최대 스태미나를 얼마나 깎나 (굳음 100 → 최대 -60)
+@export var lantern_stamina := 10.0        ## 랜턴 놓기
+@export var throw_stamina := 5.0           ## 케미라이트 던지기
+@export var lantern_lock_stiff := 50.0     ## 굳음이 이만큼 이상이면 손이 굳어 랜턴을 놓지 못한다 (줍기는 됨)
+@export var grab_stiff := 15.0             ## 광인에게 붙잡히면 굳음 +
+@export var grab_injury := 15.0            ## 광인에게 붙잡히면 부상 +
+## 붕대: C를 길게 누르면 감는다 (주머니 확인과 같은 키). 감는 동안 못 움직임. 뒤지기로 찾는다
+@export var bandages := 1
+@export var bandage_heal := 40.0
+@export var bandage_seconds := 1.5
 var stamina := 100.0
+var injury := 0.0          # 0~100. 부상
+var since_use := 99.0      # 마지막으로 스태미나를 쓴 뒤 지난 시간
+var bandage_t := 0.0
 var sprinting := false
 var winded := false
 var bob_t := 0.0
@@ -108,8 +127,9 @@ func _unhandled_input(e: InputEvent) -> void:
 
 func _physics_process(dt: float) -> void:
 	var searching: bool = hold_target != null and is_instance_valid(hold_target) and hold_target.get("loot") != null and hold_target.loot != ""
-	if GameState.is_frozen() or kneel_t > 0.0 or searching or (swing_kind == 2 and swing_t > 0.0):
+	if GameState.is_frozen() or kneel_t > 0.0 or searching or bandage_t > 0.0 or (swing_kind == 2 and swing_t > 0.0):
 		velocity = Vector3.ZERO
+		_regen(dt, false)
 		return
 	var input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	var dir := (transform.basis * Vector3(input.x, 0, input.y)).normalized()
@@ -117,13 +137,14 @@ func _physics_process(dt: float) -> void:
 	# 달리기와 스태미나
 	if stamina <= 0.0:
 		winded = true
-	elif winded and stamina >= 40.0:
+	elif winded and stamina >= max_stamina() * 0.4:
 		winded = false
 	sprinting = moving and input.y < 0.3 and Input.is_action_pressed("sprint") and not winded and recover_t <= 0.0
 	if sprinting:
 		stamina = maxf(0.0, stamina - stamina_drain * dt)
+		since_use = 0.0
 	else:
-		stamina = minf(100.0, stamina + stamina_regen * (1.4 if not moving else 1.0) * (1.0 - stiff / 200.0) * dt)
+		_regen(dt, moving)
 	var base := run_speed if sprinting else walk_speed
 	var speed := base * (1.0 - stiff / 100.0 * 0.5) * move_mult()
 	velocity = Vector3(dir.x * speed, 0, dir.z * speed)
@@ -186,7 +207,7 @@ func _process(dt: float) -> void:
 			kneel_k = sin(PI * (1.0 - kneel_t / kneel_total))
 	var bob := sin(bob_t) * (0.055 if sprinting else 0.025) if velocity.length() > 0.5 else 0.0
 	head.position.y = lerpf(head.position.y, HEAD_Y - 0.55 * kneel_k + bob, minf(1.0, dt * 12.0))
-	# 숨이 찰수록 거친 숨소리가 커진다 (스태미나는 숫자로 보여주지 않음)
+	# 숨이 찰수록 거친 숨소리가 커진다 (막대와 함께)
 	var tired := 1.0 - stamina / 100.0
 	pant.volume_db = lerpf(-40.0, -6.0, clampf(tired * 1.3, 0.0, 1.0)) if tired > 0.15 else -60.0
 	pant.pitch_scale = 0.9 + tired * 0.35
@@ -215,7 +236,8 @@ func _process(dt: float) -> void:
 	else:
 		stiff += (0.6 if headlamp.is_on() else 2.0) * dt
 	_update_heartbeat()
-	if stiff >= 100.0:
+	_bandage(dt)
+	if incapacitated():
 		var heir := _find_heir()
 		if heir:
 			_relay(heir)
@@ -284,6 +306,10 @@ func _relay(heir: Node) -> void:
 	head.rotation.x = 0.0
 	heir.queue_free()
 	stiff = 0.0
+	injury = 0.0
+	stamina = 100.0
+	bandages = 0           # 다음 사람은 붕대 없이 들어온다
+	bandage_t = 0.0
 	grab_cooldown = 2.0
 	level.refresh_nav()
 	Sfx.play("petrify", -2.0, 0.0)
@@ -319,7 +345,8 @@ func grabbed(by_name: String) -> bool:
 	if grab_cooldown > 0.0:
 		return false
 	grab_cooldown = 1.2
-	stiff += 25.0
+	stiff += grab_stiff
+	injury = minf(100.0, injury + grab_injury)   # 손톱·이빨 자국. 최대 스태미나를 깎고 붕대로만 낫는다
 	Sfx.play("grab", 0.0, 0.0)
 	shake = 1.0
 	if kneel_t > 0.0:            # 랜턴을 놓거나 줍다가 붙잡히면 취소
@@ -331,6 +358,8 @@ func grabbed(by_name: String) -> bool:
 func _throw_chemlight() -> void:
 	if chemlights <= 0:
 		GameState.say("케미라이트가 없다.")
+		return
+	if not spend(throw_stamina):
 		return
 	chemlights -= 1
 	for i in hand_stick.get_child_count():
@@ -437,6 +466,7 @@ func _baton_attack(kind: int) -> void:
 		GameState.say("숨이 차서 팔이 안 올라간다.")
 		return
 	stamina = maxf(0.0, stamina - cost)
+	since_use = 0.0
 	swing_kind = kind
 	swing_t = 0.3 if kind == 1 else 0.45
 	recover_t = swing_t + baton_recover
@@ -460,6 +490,28 @@ func _baton_attack(kind: int) -> void:
 		shake = maxf(shake, 0.7 if kind == 2 else 0.55)
 		head.rotation.x += 0.035                 # 손에 걸리는 반동
 		_hit_stop(0.07 if kind == 1 else 0.1)
+
+## 지금 최대 스태미나: 100에서 굳음·부상만큼 깎인다
+func max_stamina() -> float:
+	return clampf(100.0 - stiff * stiff_to_max - injury, 0.0, 100.0)
+
+## 행동불능: 완전히 굳었거나, 크게 다쳤거나, 둘이 합쳐 최대 스태미나가 바닥남 → 교대
+func incapacitated() -> bool:
+	return stiff >= 100.0 or injury >= 100.0 or max_stamina() <= 0.0
+
+## 스태미나를 쓴다. 모자라면 false (쓰지 않음)
+func spend(amount: float) -> bool:
+	if stamina < amount:
+		return false
+	stamina -= amount
+	since_use = 0.0
+	return true
+
+func _regen(dt: float, moving: bool) -> void:
+	since_use += dt
+	if since_use >= regen_delay:
+		stamina += stamina_regen * (1.0 if moving else 1.4) * dt
+	stamina = clampf(stamina, 0.0, max_stamina())
 
 ## 휘두른 뒤 무방비 동안 이동·시점이 둔해지는 배율 (1이면 보통)
 func move_mult() -> float:
@@ -492,6 +544,12 @@ func _toggle_lantern() -> void:
 	if lanterns_held <= 0:
 		GameState.say("랜턴이 없다.")
 		return
+	if stiff >= lantern_lock_stiff:
+		GameState.say("손이 굳어서 랜턴 손잡이를 쥘 수가 없다.")
+		return
+	if not spend(lantern_stamina):
+		GameState.say("숨이 차서 무릎을 꿇을 수가 없다.")
+		return
 	_kneel(0.8, _place)
 
 func _kneel(seconds: float, action: Callable) -> void:
@@ -515,6 +573,20 @@ func _pick_up(l: Node3D) -> void:
 	l.put_out()
 	lanterns_held += 1
 	Sfx.play("lantern", -6.0)
+
+## 붕대 감기: C를 길게 누르고 있으면(다쳤고 붕대가 있을 때) bandage_seconds 뒤 부상이 줄어든다
+func _bandage(dt: float) -> void:
+	if Input.is_action_pressed("check_pocket") and bandages > 0 and injury > 0.5 and kneel_t <= 0.0:
+		if bandage_t == 0.0:
+			Sfx.play("rummage", -8.0)
+		bandage_t += dt
+		if bandage_t >= bandage_seconds:
+			bandage_t = 0.0
+			bandages -= 1
+			injury = maxf(0.0, injury - bandage_heal)
+			GameState.say("붕대를 감았다." if bandages > 0 else "마지막 붕대를 감았다.")
+	else:
+		bandage_t = 0.0
 
 ## 어둠 속 광인이 가까울수록, 몸이 굳을수록 심장이 크고 빨리 뛴다
 func _update_heartbeat() -> void:

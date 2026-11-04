@@ -988,7 +988,7 @@ transform = Transform3D(-0.86603, 0, 0.5, 0, 1, 0, -0.5, 0, -0.86603, 42.7, 0.0,
 
 [node name="cart_1" parent="Props" instance=ExtResource("p_cart")]
 transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 43.73, 0.0, 17.0)
-loot = "empty"
+loot = "bandage"
 
 [node name="bench_2" parent="Props" instance=ExtResource("p_bench")]
 transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 34.27, 0.0, 31.0)
@@ -1013,7 +1013,7 @@ transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 10.945, 0.0, 21.0)
 
 [node name="cart_2" parent="Props" instance=ExtResource("p_cart")]
 transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 15.73, 0.0, 21.0)
-loot = "empty"
+loot = "bandage"
 
 [node name="extinguisher_1" parent="Props" instance=ExtResource("p_extinguisher")]
 transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 15.88, 0.0, 17.0)
@@ -1024,7 +1024,7 @@ loot = "chem"
 
 [node name="shelf_3" parent="Props" instance=ExtResource("p_shelf")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 23.0, 0.0, 16.27)
-loot = "empty"
+loot = "bandage"
 
 [node name="shelf_4" parent="Props" instance=ExtResource("p_shelf")]
 transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 18.27, 0.0, 19.0)
