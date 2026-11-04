@@ -87,6 +87,11 @@ var wander := false                 # 홀에서 기다리다 어둠 속으로 �
 var wander_target := Vector2i.ZERO
 var waiting := false          # 구출되어 엘리베이터 홀에서 기다리는 중
 var came_down := false        # 위층에서 구해져 계단으로 내려온 사람 (main.gd send_down)
+## 출구(현관 밖, 위층은 비상계단)까지 이 칸 수 안으로 오면 알아서 나간다: 플레이어를 따라오거나 헤매지 않고 곧장 걸어 나감.
+## 1층에서는 이때 바로 구출로 센다 (현관 로비쯤). 나가다 광인에게 붙잡혀 굳으면 다시 뺀다
+@export var auto_exit_steps := 7
+var leaving := false
+var counted := false
 var wait_pos := Vector3.ZERO
 
 const CURED_LINES := ["...간호사님?", "여기가... 어디예요?", "몸이... 움직여요.", "불, 불 좀 켜 주세요...", "우리 애는요? 우리 애...", "추워요... 너무 추워요."]
@@ -581,8 +586,17 @@ func _cured(dt: float) -> void:
 		get_tree().get_first_node_in_group("main").send_down(self, level)
 		set_process(false)
 		return
-	if tile == goal:
-		GameState.add_rescued(person_name)
+	if not leaving:
+		var path := level.astar.get_id_path(tile, goal)
+		if path.size() > 0 and path.size() - 1 <= auto_exit_steps:
+			leaving = true
+			if not level.exit_down and not counted:
+				counted = true
+				GameState.add_rescued(person_name)
+	if tile == goal or (leaving and level.is_outdoor(tile)):   # 현관 문만 나서면 됐다: 마당 자리로 가서 기다림
+		if not counted:
+			counted = true
+			GameState.add_rescued(person_name)
 		waiting = true
 		wait_pos = level.take_wait_spot()
 		tile = Vector2i(-100, -100)   # 다른 사람 길을 막지 않게 칸에서 빠짐
@@ -598,11 +612,13 @@ func _cured(dt: float) -> void:
 	var home := level.home_tile(tile)
 	var player_near_exit := ptile.distance_to(home) <= 5.0 or level.is_outdoor(ptile) \
 			or tile.distance_to(home) <= 4.0
-	var follow := pd <= 5.0 and not player_near_exit and not level.is_outdoor(tile)
+	var follow := pd <= 5.0 and not player_near_exit and not level.is_outdoor(tile) and not leaving
 	if follow and pd < 2.0:
 		return
 	if follow:
 		goal = ptile
+	elif leaving:
+		pass                      # 출구가 코앞: 헤매지 않고 곧장
 	elif randf() < 0.07:
 		idle_t = randf_range(1.5, 3.0)
 		GameState.speak(global_position, LOST_LINES.pick_random())
@@ -646,6 +662,10 @@ func _held(dt: float) -> void:
 	mats[0].albedo_color = Color.WHITE.lerp(STONE_TINT, clampf(held_t / hold_petrify, 0.0, 1.0))
 	if held_t >= hold_petrify:
 		held_t = 0.0
+		if counted:               # 나가던 길에 붙잡혀 굳었다: 구출에서 뺀다
+			counted = false
+			GameState.rescued -= 1
+		leaving = false
 		if held_by:
 			held_by.victim = null
 		held_by = null
@@ -667,6 +687,8 @@ func wander_off(to: Vector2i) -> void:
 	target = tile
 	set_process(true)
 	GameState.rescued -= 1
+	counted = false
+	leaving = false
 
 ## 엘리베이터 홀의 빈자리로 걸어가서 홀 가운데를 보고 선다
 func _wait_in_hall(dt: float) -> void:

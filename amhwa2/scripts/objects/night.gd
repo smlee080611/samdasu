@@ -86,7 +86,7 @@ func sunrise() -> void:
 		var live: bool = level.is_inside_tree()
 		var ppl: Array = main.people_of(level) if main else get_tree().get_nodes_in_group("person")
 		for p in ppl:
-			if p.waiting or p.is_queued_for_deletion():
+			if p.waiting or p.get("counted") or p.is_queued_for_deletion():   # 이미 구출로 센 사람(현관 앞에서 나가던 중 포함)
 				continue
 			var in_sun: bool = sun.has(p.tile) or level.is_outdoor(p.tile)
 			if p.state == p.State.CURED:

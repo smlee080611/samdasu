@@ -416,3 +416,18 @@ func _floors(level1: Level, player) -> void:
 	await _wait(240)   # 교대 안내 화면
 	GameState.ui_blocking = false
 	player.headlamp.on = false
+	# 현관 로비까지 온 사람은 플레이어가 바로 옆에 있어도 따라오지 않고 알아서 나간다 (바로 구출로 셈)
+	var lob = null
+	for q in level1.get_node("People").get_children():
+		if q.state == 0 and not q.waiting:
+			lob = q
+			break
+	lob.global_position = level1.tile_center(Vector2i(19, 15))
+	lob.tile = Vector2i(19, 15); lob.target = lob.tile
+	lob._set_state(2)
+	player.global_position = level1.tile_center(Vector2i(19, 14))   # 바로 옆 (예전엔 여기서 멈춰 기다렸음)
+	var r0 := GameState.rescued
+	await _wait(30)
+	_check("lobby auto exit counts", lob.leaving and GameState.rescued == r0 + 1, "leaving=%s rescued %d->%d" % [lob.leaving, r0, GameState.rescued])
+	await _wait(420)
+	_check("lobby auto exit walks out", lob.waiting and GameState.rescued == r0 + 1, "tile=%s waiting=%s rescued=%d" % [lob.tile, lob.waiting, GameState.rescued])
