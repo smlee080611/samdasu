@@ -10,10 +10,10 @@ extends CharacterBody3D
 ##   - 부상(injury): 붙잡혀 다친 만큼. 막대 오른쪽 끝이 붉게 덮인다. 붕대로 회복
 ## 그래서 굳고 다칠수록 오래 못 달리고, 최대치가 밀치기 비용보다 작아지면 밀치기를 못 한다.
 ## 최대치가 0이 되면(굳음 100, 부상 100, 또는 둘이 합쳐서) 행동불능 → 교대.
-## 스태미나는 마지막으로 쓴 뒤 regen_delay초가 지나야 차기 시작한다. 다 떨어지면 최대치의 40%까지 찰 때까지 못 달린다.
+## 스태미나는 마지막으로 쓴 뒤 regen_delay초(2초)가 지나야 차기 시작한다. 다 떨어지면 최대치의 40%까지 찰 때까지 못 달린다.
 @export var stamina_drain := 20.0          ## 달리기: 초당
 @export var stamina_regen := 14.0          ## 회복: 초당 (가만히 서 있으면 1.4배)
-@export var regen_delay := 1.0             ## 마지막으로 쓴 뒤 회복이 시작되기까지(초)
+@export var regen_delay := 2.0             ## 마지막으로 쓴 뒤 회복이 시작되기까지(초). 짧으면 랜턴·휘두르기 비용이 금방 메워져 의미가 없다
 @export var stiff_to_max := 0.6            ## 굳음 1이 최대 스태미나를 얼마나 깎나 (굳음 100 → 최대 -60)
 @export var lantern_stamina := 10.0        ## 랜턴 놓기
 @export var throw_stamina := 5.0           ## 케미라이트 던지기

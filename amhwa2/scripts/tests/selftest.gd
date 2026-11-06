@@ -144,6 +144,7 @@ func _run() -> void:
 	player.global_position = level.tile_center(Vector2i(10, 6))
 	player.rotation.y = -PI * 0.5
 	player.chemlights = 2
+	player.stamina = 100.0   # 앞 달리기 점검에서 바닥난 채라 던지기(스태미나 5)가 안 됨
 	var before_nodes := get_tree().get_nodes_in_group("light_source").size()
 	player._throw_chemlight()
 	await _wait(150)
@@ -467,8 +468,10 @@ func _stamina(level: Level, player) -> void:
 	_check("lantern costs stamina", absf(after - (100.0 - player.lantern_stamina)) < 0.5 and player.kneel_t > 0.0, "stamina=%.1f" % after)
 	await _wait(30)
 	_check("regen waits", player.stamina <= after + 0.5, "0.5초 뒤 %.1f" % player.stamina)
-	await _wait(90)
-	_check("regen after delay", player.stamina > after + 3.0, "2초 뒤 %.1f" % player.stamina)
+	await _wait(80)
+	_check("regen waits 2s", player.stamina <= after + 0.5, "1.8초 뒤 %.1f" % player.stamina)
+	await _wait(60)
+	_check("regen after delay", player.stamina > after + 3.0, "2.8초 뒤 %.1f" % player.stamina)
 	await _wait(30)
 	var mine = player.placed_lanterns[-1]
 	player.placed_lanterns.erase(mine)

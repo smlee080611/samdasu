@@ -6,7 +6,7 @@ extends Control
 ## 스태미나가 가득 차 있고 깎인 것도 없으면 흐리게 둔다 (화면을 덜 가리게).
 ## 값은 hud.gd가 플레이어에서 읽어 넣는다. 게임 로직은 모른다.
 
-@export var bar_size := Vector2(300, 12)
+@export var bar_size := Vector2(450, 18)
 @export var fill_color := Color(0.95, 0.92, 0.78)
 @export var winded_color := Color(1.0, 0.55, 0.25)
 @export var stone_color := Color(0.5, 0.52, 0.55)
@@ -59,9 +59,9 @@ func _draw() -> void:
 	draw_rect(Rect2(0, 0, w, h), Color(0.95, 0.92, 0.85, 0.5), false, 1.0)
 	# 붕대 감는 중
 	if bandage_k > 0.0:
-		draw_rect(Rect2(0, -7, w * bandage_k, 3), Color(1, 1, 1, 0.9))
+		draw_rect(Rect2(0, -9, w * bandage_k, 4), Color(1, 1, 1, 0.9))
 	# 붕대 개수: 작은 흰 십자
 	for i in bandages:
-		var c := Vector2(w + 16 + i * 16, h * 0.5)
-		draw_rect(Rect2(c.x - 5, c.y - 1.5, 10, 3), Color(0.95, 0.95, 0.92))
-		draw_rect(Rect2(c.x - 1.5, c.y - 5, 3, 10), Color(0.95, 0.95, 0.92))
+		var c := Vector2(w + 20 + i * 22, h * 0.5)
+		draw_rect(Rect2(c.x - 7, c.y - 2, 14, 4), Color(0.95, 0.95, 0.92))
+		draw_rect(Rect2(c.x - 2, c.y - 7, 4, 14), Color(0.95, 0.95, 0.92))
