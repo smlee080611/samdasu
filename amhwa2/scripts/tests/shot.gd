@@ -1,6 +1,6 @@
 extends Node
 ## 스크린샷: godot --path . -- shot <파일명> <x> <y> <각도> [pitch] [freeze]
-## 추가 옵션(어디든): injury=30 stamina=40 bandages=2 (스태미나 막대), floor=2 (그 층에서 찍기), lamps (그 층 수술등을 모두 켜기), dawn=0.9 (밤이 그만큼 지난 하늘·시계), battery=15, rescued=3, stiff=70 (굳음 고정), note (첫 쪽지 열기), intro (시작 연출 찍기), grab (붙잡힘)
+## 추가 옵션(어디든): power (그 층에 불), crank (발전기 돌리는 중), ending (발전기 엔딩 기사), injury=30 stamina=40 bandages=2 (스태미나 막대), floor=2 (그 층에서 찍기), lamps (그 층 수술등을 모두 켜기), dawn=0.9 (밤이 그만큼 지난 하늘·시계), battery=15, rescued=3, stiff=70 (굳음 고정), note (첫 쪽지 열기), intro (시작 연출 찍기), grab (붙잡힘)
 
 func _ready() -> void:
 	_run.call_deferred()
@@ -24,6 +24,15 @@ func _run() -> void:
 	for k in 3:
 		await get_tree().process_frame
 	var level: Level = get_tree().get_first_node_in_group("level")
+	if "power" in args:      # 그 층에 불이 들어온 모습
+		get_tree().get_first_node_in_group("main").power_floor(level.floor_no)
+	if "crank" in args:      # 발전기를 돌리는 중 (전구가 껌뻑임)
+		for gnode in get_tree().get_nodes_in_group("generator"):
+			gnode.cranking = true
+			gnode.set_process(false)
+	if "ending" in args:     # 발전기 엔딩 기사
+		GameState.rescued = 9
+		get_tree().get_first_node_in_group("main").power_ending()
 	if "lamps" in args:
 		for l in get_tree().get_nodes_in_group("surgical_light"):
 			l.charge = 60.0
@@ -101,7 +110,7 @@ func _run() -> void:
 		if n:
 			n.interact(player)
 	var t0 := Time.get_ticks_msec()
-	while Time.get_ticks_msec() - t0 < (4000 if "chem" in args else (2200 if ("intro" in args or stiff >= 0.0) else 700)):
+	while Time.get_ticks_msec() - t0 < (6000 if "ending" in args else (4000 if "chem" in args else (2200 if ("intro" in args or stiff >= 0.0) else 700))):
 		if stiff >= 0.0:
 			player.stiff = stiff
 		if "grab" in args:

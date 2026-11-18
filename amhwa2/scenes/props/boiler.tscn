@@ -1,0 +1,87 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/objects/prop.gd" id="e1"]
+
+[sub_resource type="StandardMaterial3D" id="m_rust"]
+albedo_color = Color(0.4, 0.27, 0.2, 1)
+roughness = 0.9
+metallic = 0.2
+
+[sub_resource type="StandardMaterial3D" id="m_pipe"]
+albedo_color = Color(0.45, 0.46, 0.45, 1)
+roughness = 0.5
+metallic = 0.6
+
+[sub_resource type="CylinderMesh" id="r3"]
+material = SubResource("m_rust")
+top_radius = 0.75
+bottom_radius = 0.75
+height = 2.1
+radial_segments = 12
+rings = 1
+
+[sub_resource type="CylinderMesh" id="r4"]
+material = SubResource("m_pipe")
+top_radius = 0.5
+bottom_radius = 0.75
+height = 0.25
+radial_segments = 12
+rings = 1
+
+[sub_resource type="StandardMaterial3D" id="m_door"]
+albedo_color = Color(0.12, 0.12, 0.12, 1)
+roughness = 0.8
+metallic = 0.0
+
+[sub_resource type="BoxMesh" id="r6"]
+material = SubResource("m_door")
+size = Vector3(0.5, 0.4, 0.06)
+
+[sub_resource type="CylinderMesh" id="r7"]
+material = SubResource("m_pipe")
+top_radius = 0.07
+bottom_radius = 0.07
+height = 1.0
+radial_segments = 6
+rings = 1
+
+[sub_resource type="CylinderMesh" id="r8"]
+material = SubResource("m_pipe")
+top_radius = 0.07
+bottom_radius = 0.07
+height = 1.6
+radial_segments = 6
+rings = 1
+
+[sub_resource type="BoxShape3D" id="r9"]
+size = Vector3(1.5, 2.4, 1.5)
+
+[node name="Boiler" type="StaticBody3D"]
+collision_layer = 1
+collision_mask = 0
+script = ExtResource("e1")
+blocks_path = true
+
+[node name="Body" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, 0)
+mesh = SubResource("r3")
+
+[node name="Cap" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, 0)
+mesh = SubResource("r4")
+
+[node name="Door" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0.76)
+mesh = SubResource("r6")
+
+[node name="PipeA" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 2.5, 0)
+mesh = SubResource("r7")
+
+[node name="PipeB" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.0, -1.0, 0, 1.0, 0.0, -0.3, 2.0, -0.6)
+mesh = SubResource("r8")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
+shape = SubResource("r9")

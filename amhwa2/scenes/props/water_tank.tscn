@@ -1,0 +1,71 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/objects/prop.gd" id="e1"]
+
+[sub_resource type="StandardMaterial3D" id="m_tank"]
+albedo_color = Color(0.3, 0.38, 0.45, 1)
+roughness = 0.6
+metallic = 0.4
+
+[sub_resource type="StandardMaterial3D" id="m_leg"]
+albedo_color = Color(0.2, 0.2, 0.2, 1)
+roughness = 0.8
+metallic = 0.0
+
+[sub_resource type="CylinderMesh" id="r3"]
+material = SubResource("m_tank")
+top_radius = 0.8
+bottom_radius = 0.8
+height = 1.8
+radial_segments = 12
+rings = 1
+
+[sub_resource type="BoxMesh" id="r4"]
+material = SubResource("m_leg")
+size = Vector3(1.4, 0.4, 0.15)
+
+[sub_resource type="BoxMesh" id="r5"]
+material = SubResource("m_leg")
+size = Vector3(1.4, 0.4, 0.15)
+
+[sub_resource type="StandardMaterial3D" id="m_valve"]
+albedo_color = Color(0.7, 0.15, 0.1, 1)
+roughness = 0.6
+metallic = 0.0
+
+[sub_resource type="CylinderMesh" id="r7"]
+material = SubResource("m_valve")
+top_radius = 0.12
+bottom_radius = 0.12
+height = 0.04
+radial_segments = 8
+rings = 1
+
+[sub_resource type="BoxShape3D" id="r8"]
+size = Vector3(1.6, 2.0, 1.8)
+
+[node name="WaterTank" type="StaticBody3D"]
+collision_layer = 1
+collision_mask = 0
+script = ExtResource("e1")
+blocks_path = true
+
+[node name="Tank" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.0, -1.0, 0, 1.0, 0.0, 0, 1.15, 0)
+mesh = SubResource("r3")
+
+[node name="Saddle0" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, -0.6)
+mesh = SubResource("r4")
+
+[node name="Saddle1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0.6)
+mesh = SubResource("r5")
+
+[node name="Valve" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.0, -1.0, 0, 1.0, 0.0, 0, 1.15, 0.93)
+mesh = SubResource("r7")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, 0)
+shape = SubResource("r8")

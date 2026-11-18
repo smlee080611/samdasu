@@ -1,0 +1,485 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/objects/level.gd" id="level"]
+[ext_resource type="Script" path="res://scripts/objects/flicker_light.gd" id="flicker"]
+[ext_resource type="PackedScene" path="res://scenes/person.tscn" id="person"]
+[ext_resource type="PackedScene" path="res://scenes/door.tscn" id="door"]
+[ext_resource type="PackedScene" path="res://scenes/emergency_light.tscn" id="elight"]
+[ext_resource type="PackedScene" path="res://scenes/stairs.tscn" id="stairs"]
+[ext_resource type="PackedScene" path="res://scenes/generator.tscn" id="generator"]
+[ext_resource type="PackedScene" path="res://scenes/breaker.tscn" id="breaker"]
+[ext_resource type="Texture2D" path="res://textures/wall.png" id="t_wall"]
+[ext_resource type="Texture2D" path="res://textures/floor.png" id="t_floor"]
+[ext_resource type="Texture2D" path="res://textures/ceiling.png" id="t_ceiling"]
+[ext_resource type="PackedScene" path="res://scenes/props/bench.tscn" id="p_bench"]
+[ext_resource type="PackedScene" path="res://scenes/props/boiler.tscn" id="p_boiler"]
+[ext_resource type="PackedScene" path="res://scenes/props/cart.tscn" id="p_cart"]
+[ext_resource type="PackedScene" path="res://scenes/props/chair.tscn" id="p_chair"]
+[ext_resource type="PackedScene" path="res://scenes/props/desk.tscn" id="p_desk"]
+[ext_resource type="PackedScene" path="res://scenes/props/extinguisher.tscn" id="p_extinguisher"]
+[ext_resource type="PackedScene" path="res://scenes/props/locker.tscn" id="p_locker"]
+[ext_resource type="PackedScene" path="res://scenes/props/nav_block.tscn" id="p_nav_block"]
+[ext_resource type="PackedScene" path="res://scenes/props/note.tscn" id="p_note"]
+[ext_resource type="PackedScene" path="res://scenes/props/shelf.tscn" id="p_shelf"]
+[ext_resource type="PackedScene" path="res://scenes/props/sign.tscn" id="p_sign"]
+[ext_resource type="PackedScene" path="res://scenes/props/stair_flight.tscn" id="p_stair_flight"]
+[ext_resource type="PackedScene" path="res://scenes/props/table.tscn" id="p_table"]
+[ext_resource type="PackedScene" path="res://scenes/props/washer.tscn" id="p_washer"]
+[ext_resource type="PackedScene" path="res://scenes/props/water_tank.tscn" id="p_water_tank"]
+[ext_resource type="PackedScene" path="res://scenes/props/wheelchair.tscn" id="p_wheelchair"]
+
+[sub_resource type="StandardMaterial3D" id="wall"]
+albedo_color = Color(0.62, 0.6, 0.55, 1)
+albedo_texture = ExtResource("t_wall")
+roughness = 0.95
+cull_mode = 2
+texture_filter = 4
+
+[sub_resource type="StandardMaterial3D" id="floor"]
+albedo_color = Color(0.5, 0.5, 0.48, 1)
+albedo_texture = ExtResource("t_floor")
+roughness = 0.85
+cull_mode = 2
+texture_filter = 4
+
+[sub_resource type="StandardMaterial3D" id="ceil"]
+albedo_color = Color(0.5, 0.5, 0.5, 1)
+albedo_texture = ExtResource("t_ceiling")
+roughness = 1.0
+cull_mode = 2
+texture_filter = 4
+
+[node name="LevelB1" type="Node3D"]
+script = ExtResource("level")
+wall_map = "############################
+#...#......#....#.....#....#
+#...#......#....#.....#....#
+#...#......#....#.....#....#
+#...#......#....#.....#....#
+##.####.#####.#####.####.###
+#..........................#
+###.#########.#########.####
+#......#............#......#
+#......#............#......#
+#......#............#......#
+#......#............#......#
+#......#............#......#
+#......#............#......#
+############################"
+floor_no = -1
+entrance_tile = Vector2i(-1, -1)
+exit_floor = 1
+arrive_thought = "기름 냄새가 난다. 여기는 빛이라곤 없다."
+hall_reserve = 0.0
+statue_grab_ratio = 0.4
+wall_material = SubResource("wall")
+floor_material = SubResource("floor")
+ceiling_material = SubResource("ceil")
+
+[node name="People" type="Node3D" parent="."]
+
+[node name="Doors" type="Node3D" parent="."]
+
+[node name="Lights" type="Node3D" parent="."]
+
+[node name="Flickers" type="Node3D" parent="."]
+
+[node name="Machines" type="Node3D" parent="."]
+
+[node name="Props" type="Node3D" parent="."]
+
+[node name="Signs" type="Node3D" parent="."]
+
+[node name="Notes" type="Node3D" parent="."]
+
+[node name="시설_기사_곽동식" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 37, 0, 7)
+person_name = "시설 기사 곽동식"
+gift = "key"
+
+[node name="시설_기사_변순덕" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 15, 0, 7)
+person_name = "시설 기사 변순덕"
+gift = "bandage"
+
+[node name="환자_지창호" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 21, 0, 5)
+person_name = "환자 지창호"
+
+[node name="경비_설미자" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 29, 0, 7)
+person_name = "경비 설미자"
+gift = "key"
+
+[node name="연구원_모영수" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 49, 0, 5)
+person_name = "연구원 모영수"
+
+[node name="연구원_천복희" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 51, 0, 7)
+person_name = "연구원 천복희"
+
+[node name="환자_방기철" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 9, 0, 19)
+person_name = "환자 방기철"
+
+[node name="환자_여춘자" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 11, 0, 25)
+person_name = "환자 여춘자"
+
+[node name="보호자_석대현" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 45, 0, 21)
+person_name = "보호자 석대현"
+
+[node name="환자_선우정" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 51, 0, 23)
+person_name = "환자 선우정"
+
+[node name="환자_편성태" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 47, 0, 25)
+person_name = "환자 편성태"
+
+[node name="환자_옥진숙" parent="People" instance=ExtResource("person")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 31, 0, 13)
+person_name = "환자 옥진숙"
+
+[node name="문_7_5" parent="Doors" instance=ExtResource("door")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 15, 0, 11)
+open = true
+
+[node name="문_13_5" parent="Doors" instance=ExtResource("door")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 27, 0, 11)
+
+[node name="문_19_5" parent="Doors" instance=ExtResource("door")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 39, 0, 11)
+open = true
+
+[node name="문_24_5" parent="Doors" instance=ExtResource("door")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 49, 0, 11)
+locked = true
+
+[node name="문_3_7" parent="Doors" instance=ExtResource("door")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 7, 0, 15)
+open = true
+
+[node name="문_13_7" parent="Doors" instance=ExtResource("door")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 27, 0, 15)
+locked = true
+
+[node name="문_23_7" parent="Doors" instance=ExtResource("door")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 47, 0, 15)
+open = true
+
+[node name="비상등_0" parent="Lights" instance=ExtResource("elight")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 7, 2.7, 7)
+
+[node name="전구_0" type="Node3D" parent="Flickers"]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 9, 2.55, 13)
+script = ExtResource("flicker")
+
+[node name="전구_1" type="Node3D" parent="Flickers"]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 21, 2.55, 13)
+script = ExtResource("flicker")
+
+[node name="전구_2" type="Node3D" parent="Flickers"]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 33, 2.55, 13)
+script = ExtResource("flicker")
+
+[node name="전구_3" type="Node3D" parent="Flickers"]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 45, 2.55, 13)
+script = ExtResource("flicker")
+
+[node name="전구_4" type="Node3D" parent="Flickers"]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 17, 2.55, 7)
+script = ExtResource("flicker")
+
+[node name="전구_5" type="Node3D" parent="Flickers"]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 39, 2.55, 5)
+script = ExtResource("flicker")
+
+[node name="전구_6" type="Node3D" parent="Flickers"]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 9, 2.55, 21)
+script = ExtResource("flicker")
+
+[node name="전구_7" type="Node3D" parent="Flickers"]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 47, 2.55, 21)
+script = ExtResource("flicker")
+
+[node name="전구_8" type="Node3D" parent="Flickers"]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 21, 2.55, 19)
+script = ExtResource("flicker")
+
+[node name="전구_9" type="Node3D" parent="Flickers"]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 35, 2.55, 25)
+script = ExtResource("flicker")
+
+[node name="발전기" parent="Machines" instance=ExtResource("generator")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 28.0, 0, 22.0)
+crank_tiles = Array[Vector2i]([Vector2i(12, 10), Vector2i(12, 11), Vector2i(11, 10)])
+
+[node name="차단기_B1" parent="Machines" instance=ExtResource("breaker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 39.99, 0, 19)
+floor_no = -1
+
+[node name="차단기_1F" parent="Machines" instance=ExtResource("breaker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 39.99, 0, 21)
+floor_no = 1
+
+[node name="차단기_2F" parent="Machines" instance=ExtResource("breaker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 39.99, 0, 23)
+floor_no = 2
+
+[node name="StairsB" parent="." instance=ExtResource("stairs")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 4, 0, 6.6)
+side = "B"
+to_floor = 1
+arrive_tile = Vector2i(2, 4)
+
+[node name="stair_flight_1" parent="Props" instance=ExtResource("p_stair_flight")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 4, 0.0, 6)
+
+[node name="nav_block_1" parent="Props" instance=ExtResource("p_nav_block")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 3, 0.0, 3)
+
+[node name="nav_block_2" parent="Props" instance=ExtResource("p_nav_block")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 5, 0.0, 3)
+
+[node name="nav_block_3" parent="Props" instance=ExtResource("p_nav_block")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 3, 0.0, 5)
+
+[node name="nav_block_4" parent="Props" instance=ExtResource("p_nav_block")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 5, 0.0, 5)
+
+[node name="boiler_1" parent="Props" instance=ExtResource("p_boiler")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 13.0, 0.0, 4.2)
+
+[node name="nav_block_5" parent="Props" instance=ExtResource("p_nav_block")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 11, 0.0, 3)
+
+[node name="boiler_2" parent="Props" instance=ExtResource("p_boiler")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 18.6, 0.0, 4.2)
+
+[node name="nav_block_6" parent="Props" instance=ExtResource("p_nav_block")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 17, 0.0, 3)
+
+[node name="shelf_1" parent="Props" instance=ExtResource("p_shelf")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 21.73, 0.0, 9.0)
+loot = "empty"
+
+[node name="shelf_2" parent="Props" instance=ExtResource("p_shelf")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 25.0, 0.0, 2.27)
+loot = "empty"
+
+[node name="shelf_3" parent="Props" instance=ExtResource("p_shelf")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 29.0, 0.0, 2.27)
+loot = "battery"
+
+[node name="shelf_4" parent="Props" instance=ExtResource("p_shelf")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 31.73, 0.0, 7.0)
+loot = "empty"
+
+[node name="shelf_5" parent="Props" instance=ExtResource("p_shelf")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 31.73, 0.0, 9.0)
+loot = "empty"
+
+[node name="shelf_6" parent="Props" instance=ExtResource("p_shelf")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 24.27, 0.0, 7.0)
+loot = "chem"
+
+[node name="desk_1" parent="Props" instance=ExtResource("p_desk")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 35.0, 0.0, 2.345)
+loot = "empty"
+
+[node name="chair_1" parent="Props" instance=ExtResource("p_chair")]
+transform = Transform3D(0.98481, 0, 0.17365, 0, 1, 0, -0.17365, 0, 0.98481, 35, 0.0, 3.4)
+
+[node name="desk_2" parent="Props" instance=ExtResource("p_desk")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 43.0, 0.0, 2.345)
+loot = "battery"
+
+[node name="locker_1" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 34.24, 0.0, 9.0)
+loot = "empty"
+
+[node name="locker_2" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 43.76, 0.0, 7.0)
+loot = "empty"
+
+[node name="bench_1" parent="Props" instance=ExtResource("p_bench")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 43.73, 0.0, 9.0)
+
+[node name="desk_3" parent="Props" instance=ExtResource("p_desk")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 53.0, 0.0, 2.345)
+loot = "empty"
+
+[node name="shelf_7" parent="Props" instance=ExtResource("p_shelf")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 46.27, 0.0, 3.0)
+loot = "empty"
+
+[node name="locker_3" parent="Props" instance=ExtResource("p_locker")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 53.76, 0.0, 9.0)
+loot = "chem"
+
+[node name="cart_1" parent="Props" instance=ExtResource("p_cart")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 46.27, 0.0, 9.0)
+loot = "empty"
+
+[node name="water_tank_1" parent="Props" instance=ExtResource("p_water_tank")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 4.0, 0.0, 19.0)
+
+[node name="nav_block_7" parent="Props" instance=ExtResource("p_nav_block")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 3, 0.0, 17)
+
+[node name="nav_block_8" parent="Props" instance=ExtResource("p_nav_block")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 5, 0.0, 17)
+
+[node name="water_tank_2" parent="Props" instance=ExtResource("p_water_tank")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 4.0, 0.0, 25.2)
+
+[node name="nav_block_9" parent="Props" instance=ExtResource("p_nav_block")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 3, 0.0, 27)
+
+[node name="nav_block_10" parent="Props" instance=ExtResource("p_nav_block")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 5, 0.0, 27)
+
+[node name="shelf_8" parent="Props" instance=ExtResource("p_shelf")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 13.73, 0.0, 27.0)
+loot = "empty"
+
+[node name="nav_block_11" parent="Props" instance=ExtResource("p_nav_block")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 27, 0.0, 21)
+
+[node name="nav_block_12" parent="Props" instance=ExtResource("p_nav_block")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 29, 0.0, 21)
+
+[node name="nav_block_13" parent="Props" instance=ExtResource("p_nav_block")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 27, 0.0, 23)
+
+[node name="nav_block_14" parent="Props" instance=ExtResource("p_nav_block")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 29, 0.0, 23)
+
+[node name="shelf_9" parent="Props" instance=ExtResource("p_shelf")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 16.27, 0.0, 27.0)
+loot = "empty"
+
+[node name="cart_2" parent="Props" instance=ExtResource("p_cart")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 39.73, 0.0, 27.0)
+loot = "empty"
+
+[node name="extinguisher_1" parent="Props" instance=ExtResource("p_extinguisher")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 16.12, 0.0, 17.0)
+
+[node name="washer_1" parent="Props" instance=ExtResource("p_washer")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 45.0, 0.0, 27.48)
+
+[node name="washer_2" parent="Props" instance=ExtResource("p_washer")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 49.0, 0.0, 27.48)
+
+[node name="washer_3" parent="Props" instance=ExtResource("p_washer")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 53.0, 0.0, 27.48)
+
+[node name="cart_3" parent="Props" instance=ExtResource("p_cart")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 42.27, 0.0, 19.0)
+loot = "empty"
+
+[node name="cart_4" parent="Props" instance=ExtResource("p_cart")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 53.73, 0.0, 19.0)
+loot = "bandage"
+
+[node name="table_1" parent="Props" instance=ExtResource("p_table")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 49.0, 0.0, 21.025)
+
+[node name="shelf_10" parent="Props" instance=ExtResource("p_shelf")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 42.27, 0.0, 23.0)
+loot = "empty"
+
+[node name="extinguisher_2" parent="Props" instance=ExtResource("p_extinguisher")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 21.0, 0.0, 12.12)
+
+[node name="cart_5" parent="Props" instance=ExtResource("p_cart")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 32.8, 0.0, 13.73)
+loot = "empty"
+
+[node name="wheelchair_1" parent="Props" instance=ExtResource("p_wheelchair")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 51.2, 0.0, 12.37)
+
+[node name="표지판_0" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 15.0, 2.55, 12.01)
+text = "보일러실"
+width = 0.7
+
+[node name="표지판_1" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 27.0, 2.55, 12.01)
+text = "자재 창고"
+width = 0.8
+
+[node name="표지판_2" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 39.0, 2.55, 12.01)
+text = "시설과"
+width = 0.6
+
+[node name="표지판_3" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 49.0, 2.5, 12.01)
+text = "연구 구역\n관계자 외 출입 금지"
+width = 1.1
+
+[node name="표지판_4" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 7.0, 2.5, 13.99)
+text = "물탱크실"
+width = 0.7
+
+[node name="표지판_5" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 27.0, 2.5, 13.99)
+text = "비상발전기실"
+width = 1.0
+
+[node name="표지판_6" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 47.0, 2.5, 13.99)
+text = "세탁실"
+width = 0.6
+
+[node name="표지판_7" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 5.0, 2.6, 11.95)
+text = "계단  1F ↑"
+width = 1.0
+
+[node name="표지판_8" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 39.99, 2.1, 17.0)
+text = "층별 차단기\n한 번에 하나씩"
+width = 0.9
+
+[node name="표지판_9" parent="Signs" instance=ExtResource("p_sign")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 25.0, 2.1, 16.01)
+text = "수동 시동: 3인 이상"
+width = 1.0
+
+[node name="쪽지_0" parent="Notes" instance=ExtResource("p_note")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 35.3, 0.775, 2.4)
+title = "발전기 점검 일지 — 시설과"
+body = "10/28  수동 크랭크 시동 시험: 정상.
+       셋이 붙어야 겨우 돌아감. 둘로는 압축을 못 넘김.
+
+10/30  자동 기동 릴레이 고장. 부품 주문함.
+       그때까지 정전이 나면 손으로 돌려야 함.
+
+11/1   지하 연구 구역에서 전기를 너무 끌어 씀.
+       차단기가 자꾸 떨어짐. 층별로 하나씩 올릴 것."
+
+[node name="쪽지_1" parent="Notes" instance=ExtResource("p_note")]
+transform = Transform3D(0.93969, 0, 0.34202, 0, 1, 0, -0.34202, 0, 0.93969, 53.2, 0.775, 2.4)
+title = "연구 메모 A-14"
+body = "빛이 약하거나 끊기면 몸만 풀리고 정신은 돌아오지 않는다.
+가장 위험한 상태.
+
+지하 조명은 낡아서 전압이 흔들리면 껌뻑인다.
+발전기를 돌리는 동안이 가장 위험할 것.
+
+한 번 제대로 켜지기만 하면, 다 끝난다."
+
+[node name="쪽지_2" parent="Notes" instance=ExtResource("p_note")]
+transform = Transform3D(0.76604, 0, 0.64279, 0, 1, 0, -0.64279, 0, 0.76604, 22.6, 0.01, 20.6)
+title = "벽에 긁어 쓴 글씨"
+body = "돌리다가
+손이
+
+"

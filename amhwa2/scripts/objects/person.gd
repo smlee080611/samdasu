@@ -103,6 +103,16 @@ var counted := false
 @export var statue_grab_reach := 1.3     ## 이 거리(m) 안으로 오면 붙잡는다
 @export var statue_warn_reach := 3.2     ## 이 거리 안이면 돌 갈라지는 소리로 먼저 알린다
 @export var statue_grab_rest := 8.0      ## 놓친 뒤 다시 붙잡기까지(초)
+## 발전기 크랭크를 돌리러 내려온 사람 (main.gd call_helpers). crank_tile까지 걸어가 크랭크를 잡고 돌린다.
+## 정신이 돌아온 사람이라 광인이 붙잡을 수 있다. 붙잡혀 있는 동안은 돌리지 못한다
+var helper := false
+@export var helper_hurry := 1.6    ## 크랭크를 돌리러 갈 때는 서둘러 걷는다 (평소 걸음의 배수)
+var crank_tile := Vector2i.ZERO
+var generator: Node = null
+var cranking := false
+## 발전기 소리 (generator.gd가 광인에게 넣어 준다): noise_t가 남아 있는 동안 그쪽으로 몰려간다
+var noise_tile := Vector2i.ZERO
+var noise_t := 0.0
 var grab_rest_t := 0.0
 var _grab_warned := false
 var wait_pos := Vector3.ZERO
@@ -217,6 +227,8 @@ func _process(dt: float) -> void:
 	else:
 		vel = Vector3.ZERO
 	_animate(dt)
+	if cranking and helper and held_by == null:
+		_crank_pose()
 
 ## 1안 움직임. 굳었다 풀린 몸이라 관절이 뻣뻣하다:
 ## - 뻣뻣할수록 스톱모션처럼 초당 몇 장만 보인다 (풀릴수록 매끄러움)
@@ -404,6 +416,13 @@ func _mad(dt: float, ex: Array[RID]) -> void:
 	# 어둠 속에서 가까우면 돌진했다 멈췄다를 반복. 뻣뻣할수록 오래 멈춘다
 	# 플레이어가 달리면 발소리를 듣고 숨어 있던 광인도 몰려온다
 	var heard: bool = player.sprinting and not lit and tile.distance_to(player_tile) <= hear_run_range
+	# 발전기 소리: 쫓을 사람이 가까이 없으면 소리 나는 쪽(발전기)으로 간다. 거기서 크랭크 돌리는 사람을 보게 된다
+	noise_t = maxf(0.0, noise_t - dt)
+	if noise_t > 0.0 and not lit:
+		heard = true
+		if dist > chase_range:
+			prey_tile = noise_tile
+			dist = tile.distance_to(noise_tile)
 	if heard:
 		lurk_t = 0.0
 	var rushing := not lit and dist <= rush_range and lurk_t <= 0.0
@@ -627,6 +646,9 @@ func _cured(dt: float) -> void:
 	if held_by != null or held_t > 0.0:
 		_held(dt)
 		return
+	if helper:
+		_helper(dt)
+		return
 	if idle_t > 0.0:                 # 멈춰서 두리번거리는 중
 		idle_t -= dt
 		twitch = Vector3(0, 0, sin(Time.get_ticks_msec() / 400.0) * 0.5)
@@ -759,6 +781,34 @@ func wander_off(to: Vector2i) -> void:
 	leaving = false
 
 ## 엘리베이터 홀의 빈자리로 걸어가서 홀 가운데를 보고 선다
+## 발전기 크랭크를 돌리러 온 사람: 크랭크 옆 칸까지 가서 돌린다. 발전기가 돌고 이 층에 불이 들어오면 일을 마치고 나간다
+func _helper(dt: float) -> void:
+	if generator == null or not is_instance_valid(generator) or (generator.running and level.powered):
+		helper = false
+		cranking = false
+		return
+	if not _arrived():
+		cranking = false
+		_move(walk_out_speed * helper_hurry, dt)
+		return
+	if tile != crank_tile:
+		cranking = false
+		var nx: Variant = level.next_step(tile, crank_tile)
+		if nx != null:
+			target = nx
+		return
+	_face(generator.global_position)
+	cranking = not generator.running
+
+## 크랭크 돌리는 자세 (_animate 뒤에 덮어쓴다)
+func _crank_pose() -> void:
+	var ph := Time.get_ticks_msec() / 1000.0 * 5.0 + float(hash(person_name) % 7)
+	for k in ["ArmXp", "ArmXn"]:
+		if parts.has(k):
+			parts[k].rotation = Vector3(1.1 + sin(ph) * 0.35, 0, 0)
+	if parts.has("Torso"):
+		parts["Torso"].rotation = Vector3(0.25 + sin(ph) * 0.12, 0, 0)
+
 func _wait_in_hall(dt: float) -> void:
 	var to := wait_pos - global_position
 	to.y = 0

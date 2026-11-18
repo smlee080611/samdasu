@@ -41,6 +41,13 @@ const WALL_H := 3.0
 
 var rows: PackedStringArray
 var size := Vector2i.ZERO
+## 발전기가 돌고 이 층의 차단기를 올리면 true. 층 전체가 밝아진다: 실내 어디든 빛 판정이 켜지고(석상이 깨어나고
+## 광인은 정신이 돌아온다), 플레이어의 몸도 굳지 않는다. 빛 약속("light_source" 그룹 + light_value)은 다른 빛과 같다.
+var powered := false
+var protects_body := true
+@export var power_light_value := 0.85      ## 불이 들어온 층의 빛 판정값
+@export var power_lamp_energy := 1.3       ## 천장등 하나의 밝기 (화면에 보이는 것만)
+var _power_lamps: Array[Node] = []
 var astar := AStarGrid2D.new()
 
 func _ready() -> void:
@@ -71,6 +78,44 @@ func _editor_preview() -> void:
 	_build_walls()
 	for i in range(before, get_child_count()):
 		_preview.append(get_child(i))
+
+## 차단기를 올렸다: 이 층에 불이 들어온다 (main.gd power_floor)
+func power_on() -> void:
+	if powered:
+		return
+	powered = true
+	add_to_group("light_source")
+	# 천장등: 가벼운 렌더러라 그림자 없는 등 몇 개만 복도·방에 띄엄띄엄 단다. 전체 밝기는 main.gd가 주변광으로 올린다
+	var n := 0
+	for y in range(1, size.y - 1, 3):
+		for x in range(2, size.x - 1, 5):
+			var t := Vector2i(x, y)
+			if n >= 14 or rows[y][x] == "#" or rows[y][x] == "W" or rows[y][x] == "," :
+				continue
+			var l := OmniLight3D.new()
+			l.light_color = Color(0.95, 1.0, 0.95)
+			l.omni_range = 9.0
+			l.light_energy = power_lamp_energy
+			l.shadow_enabled = false
+			l.position = tile_center(t, WALL_H - 0.3)
+			add_child(l)
+			_power_lamps.append(l)
+			n += 1
+
+func power_off() -> void:   # 자동 점검용 (게임에서는 한 번 켜지면 안 꺼진다)
+	powered = false
+	remove_from_group("light_source")
+	for l in _power_lamps:
+		l.queue_free()
+	_power_lamps.clear()
+
+func light_value(target: Vector3, _exclude: Array[RID]) -> float:
+	if not powered:
+		return 0.0
+	var t := to_tile(target)
+	if t.x < 0 or t.y < 0 or t.x >= size.x or t.y >= size.y or rows[t.y][t.x] == "#" or rows[t.y][t.x] == "W":
+		return 0.0
+	return power_light_value
 
 ## 이 층의 계단들 (stairs.tscn). 층 씬 바로 아래에 둔다
 func stairs() -> Array:

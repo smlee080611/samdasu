@@ -155,13 +155,44 @@ func _show_subtitle(text: String, seconds := 4.0) -> void:
 
 # ---------- 해돋이 결과 ----------
 ## 그때까지 현관 밖으로 데려온 사람이 결과다. 햇빛에 깨어난 사람은 따로 적는다 (차광막을 걷은 보람)
+## 결과 화면: 1999년 신문 기사처럼 (11/18 회의). 숫자는 기사 문장 안에 들어간다.
+##  - 발전기 엔딩("power"): 전 층에 불이 들어와 모두 깨어남
+##  - 해돋이 엔딩("dawn"): 데려온 사람, 햇빛에 깨어난 사람, 아직 남은 사람
+@export var paper_name := "가 람 일 보"
 func _result_text() -> String:
-	var lines := ["날이 밝았다", "", "현관 밖으로 데려온 사람  %d명" % GameState.rescued]
-	if GameState.dawn_cured > 0:
-		lines.append("햇빛을 받고 깨어난 사람  %d명" % GameState.dawn_cured)
-	if GameState.dawn_left > 0:
-		lines.append("아직 어둠 속에 남은 사람  %d명" % GameState.dawn_left)
-	lines.append_array(["", "F9로 다시 시작"])
+	var out: int = GameState.rescued
+	var woke: int = GameState.dawn_cured
+	var left: int = GameState.dawn_left
+	var lines: Array[String] = [paper_name, "1999년 11월 3일 수요일", "────────────────────", ""]
+	if GameState.ending == "power":
+		lines.append_array([
+			"정전 병원 ‘암흑의 밤’… %d명 모두 깨어났다" % (out + woke),
+			"간호사들이 지하 발전기를 손으로 돌려 불을 켰다",
+			"",
+			"%d명은 새벽 전에 현관으로 걸어 나왔고," % out,
+			"나머지 %d명은 병원에 불이 들어온 뒤 깨어났다." % woke,
+			"",
+			"“불만 켜면 된다고 생각했어요.",
+			"그것 말고는 아무 생각도 안 났어요.”",
+			"— 야간 근무 간호사",
+		])
+	else:
+		if left > 0:
+			lines.append("병원 집단 마비… %d명 구조, %d명은 아직 병원 안에" % [out + woke, left])
+		else:
+			lines.append("병원 집단 마비… %d명 모두 구조" % (out + woke))
+		lines.append("정전 3시간 30분, 헤드램프 하나로 버틴 밤")
+		lines.append("")
+		lines.append("밤사이 현관으로 걸어 나온 사람은 %d명." % out)
+		if woke > 0:
+			lines.append("해가 뜨자 %d명이 햇빛 속에서 스스로 깨어났다." % woke)
+		if left > 0:
+			lines.append("빛이 닿지 않은 곳의 %d명은 아직 굳은 채 남아 있다." % left)
+			lines.append_array(["", "“창을 가린 막만 걷었어도…", "계속 그 생각을 해요.”"])
+		else:
+			lines.append_array(["", "“해가 뜨는 걸 그렇게 기다려 본 적이 없어요.”"])
+		lines.append("— 야간 근무 간호사")
+	lines.append_array(["", "", "F9로 다시 시작"])
 	return "\n".join(lines)
 
 # ---------- 매 프레임 ----------
@@ -187,7 +218,7 @@ func _process(dt: float) -> void:
 		items.append("열쇠")
 	stamina_bar.items_text = "  ·  ".join(items)
 	stamina_bar.bandage_k = player.bandage_t / player.bandage_seconds
-	stamina_bar.visible = not GameState.ui_blocking   # 시작 연출·쪽지 읽는 동안은 숨김
+	stamina_bar.visible = not GameState.ui_blocking and not GameState.night_over   # 시작 연출·쪽지·결과 화면에서는 숨김
 
 	# 개발용 상태 표시 (F1, 에디터에서 실행할 때만). 플레이어에게는 숫자를 보여주지 않는다
 	var lamp = player.headlamp
@@ -209,6 +240,7 @@ func _process(dt: float) -> void:
 		result_t += dt
 		center.text = _result_text()
 		center.modulate.a = clampf((result_t - 2.0) / 1.5, 0.0, 1.0)
+		fader.modulate.a = center.modulate.a * 0.82   # 기사 글씨가 읽히게 뒤를 어둡게 덮는다
 	elif GameState.game_over:
 		center.text = "몸이 움직이지 않는다\n\n무전기에서 누군가 부르지만\n마당에는 들어올 직원이 없다\n\nF9로 다시 시작"
 	elif GameState.won:

@@ -251,9 +251,11 @@ func _new_tests(level: Level, player) -> void:
 	await _stamina(level, player)
 	await _floors(level, player)
 	level = get_tree().get_first_node_in_group("level")
+	await _basement(level, player)
+	level = get_tree().get_first_node_in_group("level")
 	# 하룻밤: 시계와 하늘. 시간은 HUD에 숫자로 안 나온다
 	var night = get_tree().get_first_node_in_group("night")
-	_check("night 25min (1F+2F)", absf(night.night_seconds - 1500.0) < 1.0, "night=%ds" % night.night_seconds)
+	_check("night 35min (1F+2F+B1)", absf(night.night_seconds - 2100.0) < 1.0, "night=%ds" % night.night_seconds)
 	night.set_progress(0.5)
 	await _wait(2)
 	var clocks = get_node("/root/Main/Floors/Level1F/Clocks").get_children()
@@ -285,13 +287,13 @@ func _new_tests(level: Level, player) -> void:
 				dark_p = q
 				break
 	var rescued_before := GameState.rescued
-	night.set_progress(0.99995)
-	await _wait(6)
+	night.set_progress(0.99999)
+	await _wait(12)
 	_check("sunrise", GameState.night_over and GameState.is_frozen(), "night_k=%.3f clock=%d" % [GameState.night_k, GameState.clock_minutes])
 	_check("sunlit statue cured", sun_p.state == 2, "state=%d" % sun_p.state)
 	_check("dark statue stays", dark_p != null and dark_p.state == 0, "state=%d" % (dark_p.state if dark_p else -1))
 	await _wait(240)
-	_check("result screen", hud.center.text.contains("날이 밝았다") and hud.center.text.contains("%d명" % rescued_before) and hud.center.modulate.a > 0.9,
+	_check("result screen", hud.center.text.contains(hud.paper_name) and hud.center.text.contains("나온 사람은 %d명" % rescued_before) and hud.center.modulate.a > 0.9,
 			hud.center.text.replace("\n", " / "))
 
 
@@ -608,3 +610,137 @@ func _supplies(level: Level, player) -> void:
 	player.keys = 0
 	player.bandages = 1
 	player.global_position = home
+
+
+## 지하 1층: 기계실 계단, 잠긴 발전기실, 셋이 돌리는 크랭크, 껌뻑이는 전구에 깨어나는 석상, 층별 차단기, 엔딩 기사
+func _basement(level1: Level, player) -> void:
+	var main = get_tree().get_first_node_in_group("main")
+	var hud = get_node("/root/Main/HUD")
+	var b1: Level = main.levels.get(-1)
+	_check("B1 exists", b1 != null and not b1.is_inside_tree() and not b1.has_rest() and b1.exit_floor == 1, "")
+	if b1 == null:
+		return
+	var gen = b1.get_node("Machines/발전기")
+	_check("B1 contents", b1.get_node("People").get_child_count() == 12 and b1.get_node("Flickers").get_child_count() >= 8
+			and gen.crank_tiles.size() == 3 and b1.get_node("Machines").get_child_count() == 4, "people=%d" % b1.get_node("People").get_child_count())
+	# 1층 기계실 계단(옛 상담실)으로 내려간다
+	_check("1F basement stair room", not level1.is_walkable(Vector2i(28, 9)) and level1.is_walkable(Vector2i(28, 8)) and level1.rows[9][28] == "v", "")
+	player.headlamp.on = true
+	player.global_position = Vector3(58, 0, 17.6)
+	await _wait(100)
+	_check("stairs down to B1", GameState.floor_no == -1 and b1.is_inside_tree() and b1.to_tile(player.global_position) == Vector2i(2, 4)
+			and GameState.floor_label(GameState.floor_no) == "B1", "floor=%d tile=%s" % [GameState.floor_no, b1.to_tile(player.global_position)])
+	for q in b1.get_node("People").get_children():   # 이 점검에서는 석상이 붙잡지 않게
+		q.grabber = 0
+	_check("B1 dark", not LightSystem.is_lit(b1.tile_center(Vector2i(15, 6)) + Vector3(0.6, 0, 0)), "")
+	# 발전기실은 잠겨 있다
+	var gdoor = null
+	for d in b1.get_node("Doors").get_children():
+		if b1.to_tile(d.global_position) == Vector2i(13, 7):
+			gdoor = d
+	player.keys = 0
+	gdoor.interact(player)
+	_check("generator room locked", gdoor.locked, "")
+	player.keys = 1
+	gdoor.interact(player)   # 열쇠로 열림 (틈)
+	gdoor.interact(player)   # 활짝
+	await _wait(60)
+	b1.refresh_nav()
+	_check("generator room opens with key", not gdoor.locked and b1.is_walkable(Vector2i(13, 7)), "amount=%.2f" % gdoor.amount)
+	# 마당에 구해 둔 사람이 없으면 혼자서는 안 돌아간다
+	for q in level1.get_node("People").get_children():
+		q.waiting = false
+	player.global_position = b1.tile_center(Vector2i(11, 11))
+	gen.hold(0.1)
+	await _wait(30)
+	_check("alone: no crank", gen.crankers() <= 1 and not gen.cranking and gen.progress == 0.0, "crankers=%d" % gen.crankers())
+	# 마당에 네 명(환자 셋, 간호사 하나)이 있으면: 환자 셋이 내려오고 직원은 교대용으로 남는다
+	var yard := []
+	for q in level1.get_node("People").get_children():
+		if q.state == 0 and yard.size() < 4:
+			q.state = 2
+			q.waiting = true
+			q.person_name = ("간호사 마당" if yard.size() == 0 else "환자 마당%d" % yard.size())
+			yard.append(q)
+	var rescued0: int = GameState.rescued
+	gen._recall_t = 0.0
+	gen.hold(0.2)
+	await _wait(5)
+	var helpers: Array = gen._helpers()
+	_check("helpers come down", helpers.size() == 3 and main.staff_waiting() == 1 and GameState.rescued == rescued0, "helpers=%d staff_left=%d" % [helpers.size(), main.staff_waiting()])
+	player.global_position = b1.tile_center(Vector2i(17, 9))   # 비켜서 지켜본다
+	await _wait(1300)
+	var at_post := 0
+	for h in helpers:
+		if is_instance_valid(h) and h.cranking:
+			at_post += 1
+	_check("helpers reach the crank", at_post == 3, "%d/3  %s" % [at_post, helpers.map(func(h): return h.tile if is_instance_valid(h) else Vector2i(-1, -1))])
+	await _wait(240)
+	_check("three people crank", gen.cranking and gen.progress > 0.02, "progress=%.3f" % gen.progress)
+	# 돌리는 동안 전구가 껌뻑이고, 복도의 석상이 풀리기 시작한다
+	var blink := false
+	var thaw := 0.0
+	var hall = null
+	for q in b1.get_node("People").get_children():
+		if q.tile == Vector2i(15, 6):
+			hall = q
+	for i in 600:
+		await get_tree().physics_frame
+		for f in b1.get_node("Flickers").get_children():
+			if f.lit:
+				blink = true
+		if hall and is_instance_valid(hall):
+			thaw = maxf(thaw, hall.body_t if hall.state == 0 else 1.0)
+	_check("bulbs flicker while cranking", blink, "")
+	_check("flicker thaws statues", thaw > 0.15, "복도 석상 풀린 정도 %.2f" % thaw)
+	# 광인은 발전기 소리를 듣는다
+	var heard := 0
+	for q in b1.get_node("People").get_children():
+		if q.state == 1 and q.noise_t > 0.0:
+			heard += 1
+	var mads := b1.get_node("People").get_children().filter(func(q): return q.state == 1).size()
+	_check("mads hear the generator", mads == 0 or heard == mads, "광인 %d 들은 수 %d" % [mads, heard])
+	# 차단기는 발전기가 돌기 전에는 안 올라간다
+	var br := {}
+	for m in b1.get_node("Machines").get_children():
+		if m.is_in_group("breaker"):
+			br[m.floor_no] = m
+	br[-1].interact(player)
+	_check("breaker dead before start", not br[-1].on and not b1.powered, "")
+	gen.progress = 0.999
+	await _wait(30)
+	_check("generator starts", gen.running and not gen.cranking, "progress=%.2f" % gen.progress)
+	br[-1].interact(player)
+	await _wait(5)
+	_check("B1 breaker lights B1", br[-1].on and b1.powered and LightSystem.is_lit(b1.tile_center(Vector2i(20, 6)))
+			and LightSystem.light_at(player.global_position, [player.get_rid()], true) > 0.25, "")
+	br[1].interact(player)
+	_check("one breaker at a time", not br[1].on and not level1.powered and gen.settle_t > 0.0, "settle=%.1f" % gen.settle_t)
+	gen.settle_t = 0.0
+	br[1].interact(player)
+	_check("1F breaker", br[1].on and level1.powered and not main.all_powered(), "")
+	# 엔딩 기사 (실제 엔딩은 게임을 멈추니 글만 확인하고 되돌린다)
+	GameState.ending = "power"
+	var keep := [GameState.dawn_cured, GameState.rescued]
+	GameState.dawn_cured = 40
+	var txt: String = hud._result_text()
+	_check("power ending article", txt.contains(hud.paper_name) and txt.contains("발전기") and txt.contains("%d명 모두" % (GameState.rescued + 40)), txt.replace("\n", " / ").left(120))
+	GameState.ending = "dawn"
+	GameState.dawn_cured = keep[0]
+	# 뒷정리: 불을 끄고 1층으로 올라간다 (뒤의 해돋이 점검이 정전 상태를 가정함)
+	b1.power_off()
+	level1.power_off()
+	main._apply_env()
+	for h in helpers:
+		if is_instance_valid(h):
+			h.queue_free()
+	for q in b1.get_node("People").get_children():
+		if q.state == 1:
+			q._set_state(0)
+	player.global_position = Vector3(4, 0, 6.9)
+	await _wait(100)
+	_check("stairs back up to 1F", GameState.floor_no == 1 and level1.is_inside_tree() and level1.to_tile(player.global_position) == Vector2i(27, 9), "floor=%d tile=%s" % [GameState.floor_no, level1.to_tile(player.global_position)])
+	player.keys = 0
+	player.stiff = 0.0
+	player.injury = 0.0
+	player.headlamp.on = false

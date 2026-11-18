@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://scripts/objects/level.gd" id="level"]
 [ext_resource type="Script" path="res://scripts/objects/events.gd" id="events"]
 [ext_resource type="PackedScene" path="res://scenes/supply_shelf.tscn" id="supply"]
+[ext_resource type="PackedScene" path="res://scenes/props/stair_down.tscn" id="p_stair_down"]
 [ext_resource type="Script" path="res://scripts/objects/clock.gd" id="clock"]
 [ext_resource type="PackedScene" path="res://scenes/person.tscn" id="person"]
 [ext_resource type="PackedScene" path="res://scenes/door.tscn" id="door"]
@@ -120,8 +121,8 @@ wall_map = "######################################
 #....................................#
 #...##.#######.###...#######.######..#
 #...#...#...#...#.....#...#...#...#..#
-#...#...#...#...#.....#...#...#...#..#
-#...#...#...#...#.....#...#...#...#..#
+#...#...#...#...#.....#...#.vv#...#..#
+#...#...#...#...#.....#...#.vv#...#..#
 #...######.#############.#######.##..#
 #....................................#
 ##.###.###.###.###...###.###.###.##.##
@@ -372,6 +373,17 @@ transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 73, 2.7, 9)
 
 [node name="보급선반" parent="." instance=ExtResource("supply")]
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 34.26, 0, 9.4)
+
+[node name="지하계단" parent="Props" instance=ExtResource("p_stair_down")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 58, 0, 18)
+
+[node name="StairsB" parent="." instance=ExtResource("stairs")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 58, 0, 17.75)
+side = "B"
+to_floor = -1
+arrive_tile = Vector2i(27, 9)
+arrive_yaw = 0.0
+zone = Vector3(3.8, 1, 0.5)
 
 [node name="Events" type="Node" parent="."]
 script = ExtResource("events")
@@ -1081,18 +1093,6 @@ loot = "empty"
 transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 51.73, 0.0, 21.0)
 loot = "empty"
 
-[node name="table_1" parent="Props" instance=ExtResource("p_table")]
-transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 57.0, 0.0, 19.025)
-
-[node name="chair_3" parent="Props" instance=ExtResource("p_chair")]
-transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 56.2, 0.0, 19)
-
-[node name="chair_4" parent="Props" instance=ExtResource("p_chair")]
-transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 57.8, 0.0, 19)
-
-[node name="bench_6" parent="Props" instance=ExtResource("p_bench")]
-transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 54.6, 0.0, 21.73)
-
 [node name="shelf_10" parent="Props" instance=ExtResource("p_shelf")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 63.0, 0.0, 16.27)
 loot = "battery"
@@ -1538,8 +1538,8 @@ width = 0.6
 
 [node name="표지판_14" parent="Signs" instance=ExtResource("p_sign")]
 transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 57.0, 2.5, 13.99)
-text = "상담실"
-width = 0.6
+text = "기계실 계단\n지하 1층 ↓"
+width = 1.0
 
 [node name="표지판_15" parent="Signs" instance=ExtResource("p_sign")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 21.0, 2.5, 24.01)

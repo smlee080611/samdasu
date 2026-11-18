@@ -19,6 +19,11 @@ var levels := {}        # 층 번호 → Level
 var current := 1
 var moving := false     # 층을 옮기는 중 (계단에 다시 걸리지 않게)
 var visited := {}
+@export var power_ending_delay := 7.0   ## 모든 층에 불이 들어온 뒤 엔딩 화면까지
+var _env_dark := {}                     # 정전 때의 주변광·안개 (층에 불이 들어오면 바꿨다가, 어두운 층으로 가면 되돌림)
+@export var powered_ambient := Color(0.9, 0.95, 0.9)
+@export var powered_ambient_energy := 0.55
+@export var powered_fog := 0.004
 
 func _enter_tree() -> void:
 	add_to_group("main")
@@ -120,6 +125,7 @@ func switch_level(lv: Level) -> void:
 	current = lv.floor_no
 	GameState.floor_no = current
 	lv.refresh_nav()
+	_apply_env()
 	GameState.state_changed.emit()
 
 ## lv 층에서 side 쪽이면서 leads_to 층으로 이어지는 계단. 못 찾으면 side만 맞는 계단
@@ -158,6 +164,88 @@ func send_to(p: Node, from_level: Level, to_floor: int) -> void:
 	n.position = dest.tile_center(t)   # 층의 원점은 (0,0,0)이라 position = 전역 위치
 	p.queue_free()
 	from_level.refresh_nav()
+
+## 지금 층에 불이 들어와 있으면 화면 전체를 밝게(주변광), 아니면 정전 때 그대로
+func _apply_env() -> void:
+	var we := get_tree().get_first_node_in_group("world_env") as WorldEnvironment
+	if we == null or we.environment == null:
+		return
+	var e := we.environment
+	if _env_dark.is_empty():
+		_env_dark = {"c": e.ambient_light_color, "e": e.ambient_light_energy, "f": e.fog_density}
+	var on: bool = levels[current].powered
+	e.ambient_light_color = powered_ambient if on else _env_dark["c"]
+	e.ambient_light_energy = powered_ambient_energy if on else _env_dark["e"]
+	e.fog_density = powered_fog if on else _env_dark["f"]
+
+## 차단기를 올렸다 (breaker.gd): 그 층에 불이 들어온다. 모든 층이 켜지면 잠시 뒤 엔딩
+func power_floor(floor_no: int) -> void:
+	if not levels.has(floor_no) or levels[floor_no].powered:
+		return
+	levels[floor_no].power_on()
+	_apply_env()
+	GameState.say("%s에 불이 들어온다." % GameState.floor_label(floor_no))
+	if all_powered():
+		get_tree().create_timer(power_ending_delay).timeout.connect(power_ending)
+
+func all_powered() -> bool:
+	for f in levels:
+		if not levels[f].powered:
+			return false
+	return true
+
+## 엔딩(발전기): 병원 전체에 불이 들어왔다. 아직 안에 있는 사람은 모두 빛을 받아 깨어난다
+func power_ending() -> void:
+	if GameState.night_over:
+		return
+	var woke := 0
+	for f in levels:
+		for p in people_of(levels[f]):
+			if is_instance_valid(p) and not p.is_queued_for_deletion() and not p.waiting and not p.get("counted"):
+				woke += 1
+	GameState.dawn_cured = woke
+	GameState.dawn_left = 0
+	GameState.ending = "power"
+	GameState.night_over = true
+	var night := get_tree().get_first_node_in_group("night")
+	if night:
+		night.dawned = true
+
+## 발전기를 돌릴 사람 부르기 (generator.gd): 1층 마당에서 기다리던 사람 중 최대 n명이 그 층 계단으로 내려온다.
+## 교대할 직원은 되도록 남겨 둔다(환자·보호자부터 부른다). 내려온 사람은 구출 수에 그대로 들어 있고,
+## 붙잡혀 굳으면 그때 빠진다. 돌아오는 값: 실제로 온 사람 수
+func call_helpers(to_level: Level, n: int, tiles: Array[Vector2i], gen: Node) -> int:
+	if n <= 0:
+		return 0
+	var pool := []
+	for f in levels:
+		for p in people_of(levels[f]):
+			if is_instance_valid(p) and not p.is_queued_for_deletion() and p.waiting:
+				pool.append(p)
+	pool.sort_custom(func(a, b): return int(a.is_staff()) < int(b.is_staff()))
+	var staff_left := staff_waiting()
+	var arrive := to_level.rescue_tile()
+	var came := 0
+	for p in pool:
+		if came >= n:
+			break
+		if p.is_staff() and staff_left <= 1:
+			continue   # 마지막 직원은 교대를 위해 마당에 남는다
+		if p.is_staff():
+			staff_left -= 1
+		var h := PERSON_SCENE.instantiate()
+		h.person_name = p.person_name
+		h.state = h.State.CURED
+		h.helper = true
+		h.counted = true
+		h.crank_tile = tiles[came]
+		h.generator = gen
+		to_level.get_node("People").add_child(h)
+		h.position = to_level.tile_center(arrive) + Vector3(randf_range(-0.5, 0.5), 0, randf_range(-0.5, 0.5))
+		p.get_parent().remove_child(p)
+		p.queue_free()
+		came += 1
+	return came
 
 ## 교대할 사람: 구출되어 마당에서 기다리는 직원 (간호사·의사·경비). 환자·보호자는 다시 들어오지 않는다
 func find_heir() -> Node:

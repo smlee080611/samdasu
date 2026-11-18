@@ -68,6 +68,7 @@ ol.steps li,ul li{margin-bottom:6px}
     <a href="#events">7-3. 공포 사건</a>
     <a href="#night">7-4. 하룻밤 · 배터리 총량</a>
     <a href="#meeting1118">7-45. 보급품 · 보상 · 교대 · 석상</a>
+    <a href="#basement">7-47. 지하 · 발전기 · 엔딩</a>
     <a href="#floors">7-5. 2층 · 층 이동 · 수술등</a>
     <a href="#main">8. Main</a>
     <a href="#extend">확장하는 법</a>
@@ -109,7 +110,8 @@ ol.steps li,ul li{margin-bottom:6px}
 │  ├ main.tscn             <span class="c">시작 씬: 환경 + 레벨 + 플레이어 + HUD</span>
 │  ├ floors/               <span class="c">층 씬은 전부 여기. 새 층도 여기에 (level_b1.tscn, level_3f.tscn …)</span>
 │  │  ├ level_1f.tscn      <span class="c">1층: 벽 지도 + 배치된 오브젝트 + 1층 공포 사건(Events)</span>
-│  │  └ level_2f.tscn      <span class="c">2층 수술·중환자동 (tools/gen_level_2f.py로 생성)</span>
+│  │  ├ level_2f.tscn      <span class="c">2층 수술·중환자동 (tools/gen_level_2f.py로 생성)</span>
+│  │  └ level_b1.tscn      <span class="c">지하 1층 기계실·발전기실 (tools/gen_level_b1.py로 생성)</span>
 │  ├ surgical_light.tscn   <span class="c">수술등·중환자실 천장등의 비상 배터리함 (등은 스크립트가 만듦)</span>
 │  ├ player.tscn
 │  ├ person.tscn           <span class="c">석상 / 광인 / 회복한 사람 (한 씬이 상태를 바꿈)</span>
@@ -407,7 +409,7 @@ ol.steps li,ul li{margin-bottom:6px}
     <div class="tw"><table>
       <thead><tr><th>값 (인스펙터)</th><th>기본</th><th>뜻</th></tr></thead>
       <tbody>
-        <tr><td><code>Night.night_seconds</code></td><td>1500</td><td>하룻밤 실제 길이(초). 25분 (1층 15~20분 + 2층). 지하가 생기면 40~50분으로</td></tr>
+        <tr><td><code>Night.night_seconds</code></td><td>2100</td><td>하룻밤 실제 길이(초). 35분 (1층 + 2층 + 지하)</td></tr>
         <tr><td><code>Night.clock_start</code> / <code>clock_dawn</code></td><td>130 / 340</td><td>벽시계 시각(자정부터 분). 02:10 → 05:40</td></tr>
         <tr><td><code>Night.sky_curve</code></td><td>2.2</td><td>클수록 밤 내내 어둡다가 끝에 몰아서 밝아짐</td></tr>
         <tr><td><code>Level.hall_reserve</code></td><td>300</td><td>엘리베이터 홀 충전에 남은 양. 정전 뒤 엘리베이터 비상 축전지라 끝이 있음</td></tr>
@@ -429,6 +431,33 @@ ol.steps li,ul li{margin-bottom:6px}
         <tr><td>잠긴 방</td><td>문 인스펙터의 <b>Locked</b>. 열쇠가 하나라도 있으면 E로 열리고, 한 번 열면 계속 열려 있습니다. 1층 약품실·동쪽 창고, 2층 혈액·약품실·장비 창고. 층마다 예비 배터리 2개와 붕대가 잠긴 방 안에 있습니다</td><td><code>door.gd</code> <code>locked</code></td></tr>
         <tr><td>직원만 교대</td><td>행동불능이 되면 마당에서 기다리던 직원(이름이 간호사·의사·마취과 의사·경비로 시작)만 이어받습니다. 설정: 주인공은 경비실 무전기를 차고 들어갔고, 마당의 직원이 듣다가 대답이 없으면 들어옵니다. 무전기에 게임 기능은 없습니다. 마당에 직원이 없으면 게임 끝</td><td><code>person.gd</code> <code>is_staff()</code>, <code>main.gd</code> <code>find_heir()</code>, 문구는 <code>game_state.gd</code> <code>relay_happened()</code></td></tr>
         <tr><td>석상 붙잡기</td><td>헤드램프를 끈 채 일부 석상에 1.3m 안으로 다가가면 굳은 팔로 붙잡습니다. 3.2m에서 돌 갈라지는 소리로 먼저 알립니다. 붙잡히면 못 움직이고 랜턴도 못 놓으며 굳음 6/초 · 부상 4/초. <b>헤드램프를 켜면 놓습니다</b>(그 석상은 빛을 받아 깨어나기 시작). 밀치기로도 풀립니다. 놓친 석상은 8초 뒤에 다시 붙잡을 수 있습니다</td><td>층의 <b>Statue Grab Ratio</b>(0.3 = 석상 열 중 셋), 사람의 <b>Grabber</b>(-1 자동 / 0 / 1), <code>player.gd</code> <code>statue_hold_stiff</code> / <code>statue_hold_injury</code></td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="basement">7-47. 지하 1층 · 발전기 · 층별 차단기 · 엔딩</h2>
+    <p>1층의 "기계실 계단"(옛 상담실, 북쪽 복도 동쪽)으로 내려갑니다. 빛이 전혀 없고 쉴 곳도 없는 층입니다. 석상 12명, 예비 배터리 2곳(시설과 책상, 자재 창고 선반).</p>
+    <pre> 계단↑│ 보일러실 │자재 창고│ 시설과 │연구 구역 전실(잠김)
+ ──────────────── 복도 ────────────────
+ 물탱크실 │   비상발전기실 (잠김)   │ 세탁실</pre>
+    <ol class="steps">
+      <li><b>발전기실 문은 잠겨 있습니다.</b> 직원 열쇠가 필요합니다. 지하의 시설 기사(시설과 사무실)와 경비(자재 창고)도 열쇠를 줍니다.</li>
+      <li><b>크랭크에 E를 길게.</b> 셋이 함께 돌려야 돌아갑니다. 처음 잡으면 마당에서 기다리던 사람 중 최대 3명이 계단으로 내려와 크랭크를 잡습니다(환자·보호자부터 부르고, 마지막 직원 한 명은 교대용으로 마당에 남습니다). 플레이어도 E를 누르는 동안은 한 명으로 셉니다. 그래서 구해 둔 사람이 둘뿐이면 플레이어가 직접 돌려야 하고, 그동안은 아무도 지키지 못합니다.</li>
+      <li><b>70초 동안 버팁니다.</b> 돌리는 동안 발전기 소리에 이 층의 광인이 몰려오고, 낡은 전구가 껌뻑이면서 어둠 속 석상들이 가까운 전구 밑부터 하나둘 광인으로 깨어납니다(끊기는 빛이라 몸만 풀리고 정신은 안 돌아옴). 광인이 돌리는 사람을 붙잡으면 사람이 모자라 멈춥니다. 빛과 경광봉으로 떼어 내야 합니다. 붙잡힌 채 5초가 지나면 그 사람은 다시 굳고 구출 수에서 빠집니다. 사람이 모자라면 크랭크를 다시 잡을 때 마당에 남은 사람을 더 부릅니다.</li>
+      <li><b>시동이 걸리면 차단기를 층별로 하나씩.</b> 발전기실 동쪽 벽의 B1 · 1F · 2F. 하나 올리면 20초 기다려야 다음 것을 올릴 수 있습니다. 올린 층은 전체가 밝아져 석상이 깨어나고(한동안 광인으로 날뛴 뒤 정신이 돌아옴) 플레이어의 몸도 굳지 않습니다. 지하부터 켜서 돌리던 사람들을 지킬지, 사람이 많은 층부터 켤지는 선택입니다.</li>
+      <li><b>세 층이 다 켜지면 엔딩.</b> 남아 있던 사람은 모두 깨어난 것으로 셉니다. 그 전에 해가 뜨면 해돋이 엔딩입니다(불이 들어온 층의 사람은 깨어난 것으로 셈).</li>
+    </ol>
+    <div class="tw"><table>
+      <thead><tr><th>값 (인스펙터)</th><th>기본</th><th>뜻</th></tr></thead>
+      <tbody>
+        <tr><td><code>generator.need_people</code></td><td>3</td><td>함께 돌려야 하는 사람 수</td></tr>
+        <tr><td><code>generator.crank_seconds</code></td><td>70</td><td>다 채워진 채 돌려야 하는 시간. 손을 놓으면 4분의 1 속도로 식음</td></tr>
+        <tr><td><code>generator.settle_seconds</code></td><td>20</td><td>차단기 하나를 올린 뒤 다음 것까지</td></tr>
+        <tr><td><code>flicker_light</code> <code>gap_min</code> / <code>gap_max</code> / <code>on_time</code></td><td>1.2 / 2.6 / 0.7</td><td>전구 깜빡임. 간격이 짧을수록 석상이 빨리 깨어남 (지금은 복도 석상이 20초쯤)</td></tr>
+        <tr><td><code>person.helper_hurry</code></td><td>1.6</td><td>내려온 사람이 크랭크까지 서둘러 걷는 속도 배수</td></tr>
+        <tr><td><code>Level.power_light_value</code></td><td>0.85</td><td>불이 들어온 층의 빛 판정값</td></tr>
+        <tr><td><code>Main.powered_ambient_energy</code></td><td>0.55</td><td>불이 들어온 층의 화면 밝기</td></tr>
+        <tr><td><code>Main.power_ending_delay</code></td><td>7</td><td>마지막 차단기를 올린 뒤 엔딩 화면까지(초)</td></tr>
+        <tr><td><code>HUD.paper_name</code></td><td>가 람 일 보</td><td>결과 화면 신문 이름. 기사 문장은 <code>hud.gd</code> <code>_result_text()</code></td></tr>
       </tbody>
     </table></div>
 
@@ -534,7 +563,7 @@ ol.steps li,ul li{margin-bottom:6px}
     <ol class="steps">
       <li>압축을 풀고 Godot 4.3에서 <code>project.godot</code>을 엽니다.</li>
       <li>F5로 실행. 화면을 클릭하면 마우스가 잠기고, Esc로 풀립니다.</li>
-      <li>목표: 해가 뜰 때(약 25분)까지 1층과 2층에서 되도록 많은 사람을 현관 밖으로 데려오기. 2층은 양 끝 비상계단으로 올라갑니다. 배터리가 모자라 모두를 구할 수는 없다. (예전 조건인 차광막 3개 + 3명 구출 + 비상계단도 아직 남아 있음) 시작은 가운데 엘리베이터 홀. 에디터 실행 중에는 F1로 진행 상황 확인(개발용).</li>
+      <li>목표: 해가 뜰 때(약 35분)까지 1층과 2층에서 되도록 많은 사람을 현관 밖으로 데려오기. 2층은 양 끝 비상계단으로 올라갑니다. 배터리가 모자라 모두를 구할 수는 없다. (예전 조건인 차광막 3개 + 3명 구출 + 비상계단도 아직 남아 있음) 시작은 가운데 엘리베이터 홀. 에디터 실행 중에는 F1로 진행 상황 확인(개발용).</li>
     </ol>
     <p>자동 점검: 터미널에서 <code>godot --headless --path . -- selftest</code>. 석상 깨우기 → 광인 → 랜턴으로 회복 → 문 열고 닫기 → 차광막 걷기 → 상호작용 레이캐스트까지 차례로 실행하고 결과를 출력합니다. 경광봉 무방비, 배터리 총량·홀 축전지·풀기 소모, 벽시계·하늘·해돋이·결과 화면은 <code>ok</code>/<code>FAIL</code>로 찍히고 맨 끝에 "새 점검 실패 N개"가 나옵니다. 이 설명서와 함께 드린 프로젝트는 이 점검을 <span class="ok">모두 통과</span>했습니다. 다만 화면 밝기와 색감은 사람 눈으로 확인이 필요합니다.</p>
   </main>

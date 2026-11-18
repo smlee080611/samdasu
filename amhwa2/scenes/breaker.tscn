@@ -1,0 +1,63 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/objects/breaker.gd" id="e1"]
+[ext_resource type="FontFile" path="res://fonts/Pretendard-Regular.otf" id="e2"]
+
+[sub_resource type="StandardMaterial3D" id="m_case"]
+albedo_color = Color(0.55, 0.57, 0.55, 1)
+roughness = 0.6
+metallic = 0.3
+
+[sub_resource type="StandardMaterial3D" id="m_lever"]
+albedo_color = Color(0.08, 0.08, 0.08, 1)
+roughness = 0.6
+metallic = 0.0
+
+[sub_resource type="BoxMesh" id="r3"]
+material = SubResource("m_case")
+size = Vector3(0.36, 0.5, 0.12)
+
+[sub_resource type="BoxMesh" id="r4"]
+material = SubResource("m_lever")
+size = Vector3(0.06, 0.2, 0.05)
+
+[sub_resource type="BoxMesh" id="r5"]
+material = SubResource("m_case")
+size = Vector3(0.05, 0.04, 0.01)
+
+[sub_resource type="BoxShape3D" id="r6"]
+size = Vector3(0.44, 0.6, 0.2)
+
+[node name="Breaker" type="StaticBody3D"]
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("e1")
+
+[node name="Case" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0.06)
+mesh = SubResource("r3")
+
+[node name="Lever" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.32, 0.13)
+
+[node name="Handle" type="MeshInstance3D" parent="Lever"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.08, 0.02)
+mesh = SubResource("r4")
+
+[node name="Led" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.52, 0.125)
+mesh = SubResource("r5")
+
+[node name="Label" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.72, 0.07)
+text = "1F"
+font_size = 64
+pixel_size = 0.002
+modulate = Color(0.9, 0.9, 0.85, 1)
+outline_size = 0
+double_sided = false
+font = ExtResource("e2")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0.08)
+shape = SubResource("r6")

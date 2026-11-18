@@ -6,7 +6,7 @@ extends Node
 ##    그때까지 현관 밖으로 데려온 사람 수가 결과가 된다.
 ## 시작 연출·쪽지 읽는 동안(is_frozen)은 시간이 멈춘다.
 
-@export var night_seconds := 1500.0    ## 하룻밤의 실제 길이(초). 25분 (1층 15~20분 + 2층). 지하가 생기면 40~50분으로
+@export var night_seconds := 2100.0    ## 하룻밤의 실제 길이(초). 35분 (1층 + 2층 + 지하 발전기)
 @export var clock_start := 130.0       ## 시작 시각 (자정부터 분). 130 = 02:10 (시작 연출과 맞춤)
 @export var clock_dawn := 340.0        ## 해 뜨는 시각. 340 = 05:40
 @export var sky_curve := 2.2           ## 하늘이 밝아지는 모양. 클수록 밤 내내 어둡다가 끝에 몰아서 밝아짐
@@ -88,7 +88,7 @@ func sunrise() -> void:
 		for p in ppl:
 			if p.waiting or p.get("counted") or p.is_queued_for_deletion():   # 이미 구출로 센 사람(현관 앞에서 나가던 중 포함)
 				continue
-			var in_sun: bool = sun.has(p.tile) or level.is_outdoor(p.tile)
+			var in_sun: bool = sun.has(p.tile) or level.is_outdoor(p.tile) or level.powered   # 불이 들어온 층도 다 깨어난다
 			if p.state == p.State.CURED:
 				cured += 1          # 이미 정신이 돌아와 걸어 나오던 사람: 해가 떴으니 무사하다
 			elif in_sun:

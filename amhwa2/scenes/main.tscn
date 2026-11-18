@@ -9,6 +9,7 @@
 [ext_resource type="Shader" path="res://shaders/dawn_sky.gdshader" id="8"]
 [ext_resource type="Script" path="res://scripts/objects/night.gd" id="9"]
 [ext_resource type="PackedScene" path="res://scenes/floors/level_2f.tscn" id="10"]
+[ext_resource type="PackedScene" path="res://scenes/floors/level_b1.tscn" id="11"]
 
 [sub_resource type="ShaderMaterial" id="skymat"]
 shader = ExtResource("8")
@@ -43,6 +44,9 @@ environment = SubResource("env")
 [node name="Level1F" parent="Floors" instance=ExtResource("2")]
 
 [node name="Level2F" parent="Floors" instance=ExtResource("10")]
+visible = false
+
+[node name="LevelB1" parent="Floors" instance=ExtResource("11")]
 visible = false
 
 [node name="Player" parent="." instance=ExtResource("3")]
