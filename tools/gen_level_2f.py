@@ -217,12 +217,15 @@ person((6, 15)); person((9, 16)); person((12, 15)); person((14, 16), "간호사"
 person((24, 15)); person((27, 16)); person((31, 15), "간호사")    # 제2중환자실
 person((19, 15), "보호자")                                        # 보호자 대기실
 person((30, 6), "보호자")                                         # 복도
+# 구출 보상: 정신이 돌아온 직원이 건네주는 것 (person.gd gift). 열쇠는 잠긴 방(혈액·약품실, 장비 창고)을 연다
+GIFTS = {(19, 9): "key", (28, 9): "key", (31, 3): "bandage", (14, 3): "bandage", (6, 9): "bandage"}
+LOCKED = {(24, 11), (32, 11)}   # 혈액·약품 냉장실, 장비 창고 (예비 배터리가 하나씩 들어 있음)
 LIGHTS = [(3, 4), (35, 4)]   # 계단의 초록 비상 유도등만
 # ---------- 뒤질 곳 ----------
 import random as _rnd
 _R = _rnd.Random(11)
 FIXED_LOOT = {("desk", (17, 10)): "battery", ("shelf", (31, 8)): "battery", ("desk", (29, 10)): "battery",
-              ("cart", (29, 4)): "battery", ("shelf", (9, 8)): "chem", ("locker", (14, 10)): "chem",
+              ("shelf", (25, 8)): "battery", ("shelf", (9, 8)): "chem", ("locker", (14, 10)): "chem",
               # 붕대: 멸균물품실, 수술실 카트, 중환자실 처치 카트
               ("shelf", (11, 8)): "bandage", ("cart", (5, 4)): "bandage", ("cart", (15, 14)): "bandage"}
 def _tile_of(x, z): return (int(x // 2), int(z // 2))
@@ -241,6 +244,7 @@ NOTES = [
  ("수술 기록 — 제1수술실", "02:10 정전. 무영등 꺼짐.\n비상전원 배터리함이 비어 있었다.\n(지난달 점검 때 빼 간 뒤 아무도 안 채움)\n\n봉합은 끝냈다. 환자는 아직 마취에서 깨지 않았다.\n\n손전등 배터리를 모아서 배터리함에 꽂아 보자는 말이 나왔다.\n아무도 움직이지 않았다.\n\n— 마취과 정", (19.6, 0.92, 3.1)),
  ("중환자실 간호 기록 — 03:20", "인공호흡기 정지. 손으로 앰부를 짜는 중.\n\n3번 침대 환자분이 일어나 앉으셨다.\n의식이 없는데 눈은 떠 있다.\n\n천장 처치등만 켜면 다들 괜찮아질 것 같은데\n배터리함이 비어 있다.\n\n내 손도 무겁다.", (11.3, 0.775, 28.4)),
  ("연구 메모 A-11", "2층 수술동에는 창이 없다.\n중증 실험군을 이곳에 모은 이유.\n\n빛이 강할수록, 여러 명에게 한꺼번에 비출수록 회복이 빠름.\n(집단 노출 결과)\n\n단, 몸이 먼저 풀리고 정신은 늦게 돌아온다.\n그 사이에는 빛을 피해 달아나려 한다. 출입문 통제 필수.\n\n발전기만 돌면 층 전체를 한 번에 되돌릴 수 있다.\n발전기는 지하에.", (59.3, 0.775, 21.6)),
+ ("비상발전기 운전 수칙 (시설과)", "위치: 지하 1층 발전기실\n\n정전 시 자동 기동이 안 되면 수동 시동할 것.\n1. 연료 밸브 개방\n2. 수동 크랭크를 세 사람 이상이 함께 돌릴 것\n   (혼자서는 압축을 못 넘김)\n3. 회전이 붙으면 차단기를 층별로 하나씩 올릴 것\n   한꺼번에 올리면 다시 떨어짐\n\n※ 발전기실 열쇠는 시설과·경비실 보관", (35.0, 0.775, 21.6)),
  ("사물함에 붙은 쪽지", "이거 보는 사람\n\n수술실 배터리함에 배터리 좀 꽂아 줘요\n헤드램프 거랑 규격 같아요\n\n우리 아직 안에 있어요", (27.0, 0.01, 21.0)),
 ]
 # ---------- 검사 ----------
@@ -258,6 +262,8 @@ r = reach(EXIT_W, blocked)
 lost = floor - blocked - r
 assert not lost, f"가구 때문에 못 가는 칸: {sorted(lost)}"
 assert EXIT_E in r
+assert all(t in {p[0] for p in people} for t in GIFTS), "보상을 줄 사람이 그 칸에 없음"
+assert all(t in door_tiles for t in LOCKED)
 for t, n in people:
     assert t in floor and t not in blocked and t not in door_tiles, (t, n)
     for L in LIGHTS:
@@ -292,11 +298,12 @@ for grp in ("People", "Doors", "Lights", "Lamps", "Props", "Signs", "Notes", "Cl
 o.append(f'[node name="벽시계_스테이션" type="Node3D" parent="Clocks"]\ntransform = {T(37.0, 2.35, 22.0, 180)}\nscript = ExtResource("clock")\n')
 for t, n in people:
     x, z = cen(t)
-    o.append(f'[node name="{n.replace(" ", "_")}" parent="People" instance=ExtResource("person")]\ntransform = {T(x, 0, z, 0)}\nperson_name = "{n}"\n')
+    gift = f'gift = "{GIFTS[t]}"\n' if t in GIFTS else ""
+    o.append(f'[node name="{n.replace(" ", "_")}" parent="People" instance=ExtResource("person")]\ntransform = {T(x, 0, z, 0)}\nperson_name = "{n}"\n{gift}')
 for x, y, op in doors:
     cx, cz = cen((x, y))
     room_north = y in (5, 11)
-    o.append(f'[node name="문_{x}_{y}" parent="Doors" instance=ExtResource("door")]\ntransform = {T(cx, 0, cz, 180 if room_north else 0)}' + ("\nopen = true\n" if op else "\n"))
+    o.append(f'[node name="문_{x}_{y}" parent="Doors" instance=ExtResource("door")]\ntransform = {T(cx, 0, cz, 180 if room_north else 0)}' + ("\nopen = true\n" if op else ("\nlocked = true\n" if (x, y) in LOCKED else "\n")))
 for i, t in enumerate(LIGHTS):
     cx, cz = cen(t)
     o.append(f'[node name="비상등_{i}" parent="Lights" instance=ExtResource("elight")]\ntransform = {T(cx, 2.7, cz, 0)}\n')

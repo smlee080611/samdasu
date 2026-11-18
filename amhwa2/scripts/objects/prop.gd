@@ -24,8 +24,12 @@ func hold(seconds: float) -> bool:
 		Sfx.play_at("rummage", global_position + Vector3.UP * 0.6, -4.0)
 	if seconds < search_seconds:
 		return false
-	searched = true
 	var p = get_tree().get_first_node_in_group("player")
+	# 주머니가 꽉 찼으면 못 챙긴다 (그대로 남아 있어 나중에 다시 올 수 있음)
+	if (loot == "chem" and p.chemlights >= p.max_chemlights) or (loot == "bandage" and p.bandages >= p.max_bandages):
+		GameState.say("더 넣을 주머니가 없다.")
+		return true
+	searched = true
 	match loot:
 		"battery":
 			var level := get_tree().get_first_node_in_group("level") as Level
@@ -33,7 +37,7 @@ func hold(seconds: float) -> bool:
 			Sfx.play("click")
 			GameState.say("예비 배터리. 램프가 다시 밝아진다.")
 		"chem":
-			p.chemlights += 2
+			p.chemlights = mini(p.max_chemlights, p.chemlights + 2)
 			p._update_hand_stick()
 			Sfx.play("snap", -10.0)
 			GameState.say("케미라이트 두 개.")

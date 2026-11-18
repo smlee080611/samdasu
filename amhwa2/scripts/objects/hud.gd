@@ -18,7 +18,7 @@ const INTRO := [
 	"손끝이 조금씩 무거워진다.\n어둠 속에 오래 있으면 안 된다.",
 	"헤드램프 하나, 랜턴 둘.",
 ]
-const GOAL := "사람들을 깨워 현관 밖으로 내보내야 한다. 먼저 간호사실로 가 보자."
+const GOAL := "사람들을 깨워 현관 밖으로 내보내야 한다. 먼저 선반의 보급품부터 챙기자."
 const CONTROLS := "WASD 이동 · 마우스 둘러보기 · F/우클릭 헤드램프 · 휠 초점 · 좌클릭/V 휘두르기 · Space 밀치기 · Q 랜턴 · G 케미라이트(C 확인, C 길게 붕대) · E 문(누를 때마다 틈→활짝→닫힘) · E 길게 뒤지기 · Shift 달리기 · F9 다시"
 
 @onready var screen_mat: ShaderMaterial = $Root/Screen.material
@@ -182,6 +182,10 @@ func _process(dt: float) -> void:
 	stamina_bar.injury = player.injury
 	stamina_bar.winded = player.winded
 	stamina_bar.bandages = player.bandages
+	var items: Array[String] = ["랜턴 %d" % player.lanterns_held, "케미라이트 %d" % player.chemlights, "붕대 %d" % player.bandages]
+	if player.keys > 0:
+		items.append("열쇠")
+	stamina_bar.items_text = "  ·  ".join(items)
 	stamina_bar.bandage_k = player.bandage_t / player.bandage_seconds
 	stamina_bar.visible = not GameState.ui_blocking   # 시작 연출·쪽지 읽는 동안은 숨김
 
@@ -206,7 +210,7 @@ func _process(dt: float) -> void:
 		center.text = _result_text()
 		center.modulate.a = clampf((result_t - 2.0) / 1.5, 0.0, 1.0)
 	elif GameState.game_over:
-		center.text = "몸이 완전히 굳었다\n\nF9로 다시 시작"
+		center.text = "몸이 움직이지 않는다\n\n무전기에서 누군가 부르지만\n마당에는 들어올 직원이 없다\n\nF9로 다시 시작"
 	elif GameState.won:
 		center.text = "1층 확보\n구출 %d명\n\nF9로 다시 시작" % GameState.rescued
 	else:

@@ -31,6 +31,7 @@ const WALL_H := 3.0
 ## 엘리베이터 홀의 충전은 정전 뒤 엘리베이터 비상 축전지에 남은 전기라 끝이 있다.
 @export var hall_reserve := 300.0          ## 홀 충전에 남은 양 (배터리 %로 셈)
 @export var hall_charge_rate := 12.0       ## 홀에서 쉴 때 초당 차는 양
+@export_range(0.0, 1.0) var statue_grab_ratio := 0.3   ## 이 층 석상 중 어둠 속에서 붙잡는 석상의 비율 (person.gd grabber)
 @export var battery_amount := 60.0         ## 뒤져서 찾는 예비 배터리 하나가 채우는 양 (loot = "battery"인 소품 6곳)
 @export var wall_material: StandardMaterial3D     ## 벽 한 면(2m × 3m)에 한 장씩 붙는 텍스처
 @export var floor_material: StandardMaterial3D    ## 바닥 한 칸에 한 장

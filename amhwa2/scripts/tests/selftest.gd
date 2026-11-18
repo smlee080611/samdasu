@@ -20,6 +20,7 @@ func _run() -> void:
 	await _wait(5)
 	var level: Level = get_tree().get_first_node_in_group("level")
 	var player = get_tree().get_first_node_in_group("player")
+	await _supplies(level, player)
 	var p = get_tree().get_nodes_in_group("person")[0]
 	var stand: Vector2i = p.tile + Vector2i(0, 1)
 	if not level.is_walkable(stand):
@@ -60,8 +61,13 @@ func _run() -> void:
 		if q.state == 0:
 			heir = q
 			break
+	# 직원이 아니면 이어받지 못한다 → 그때는 게임 끝
 	heir._set_state(2)
 	heir.waiting = true
+	heir.person_name = "환자 시험"
+	_check("patients cannot relay", get_tree().get_first_node_in_group("main").find_heir() == null, "")
+	heir.person_name = "간호사 시험"
+	_check("staff can relay", get_tree().get_first_node_in_group("main").find_heir() == heir and get_tree().get_first_node_in_group("main").staff_waiting() == 1, "")
 	heir.tile = Vector2i(-100, -100)
 	heir.global_position = Vector3(6.6, 0, 16.5)
 	GameState.rescued = 1
@@ -414,6 +420,7 @@ func _floors(level1: Level, player) -> void:
 	if heir == null:
 		var w = level1.get_node("People").get_child(0)
 		w.waiting = true
+		w.person_name = "간호사 시험둘"
 		heir = w
 	var n2 := l2.get_node("People").get_child_count()
 	player.global_position = l2.tile_center(Vector2i(30, 6))
@@ -503,3 +510,101 @@ func _stamina(level: Level, player) -> void:
 		bp.hold(0.5); bp.hold(2.0)
 	_check("bandage loot", bp != null and player.bandages == b0 + 1, "")
 	player.headlamp.on = false
+
+
+## 11/18 회의: 보급품은 홀 선반에서 챙김, 직원이 열쇠를 줌, 잠긴 방, 불 끄고 지나가면 석상이 붙잡음
+func _supplies(level: Level, player) -> void:
+	_check("starts empty-handed", player.lanterns_held == 0 and player.chemlights == 0 and player.bandages == 0 and not player.has_baton and player.keys == 0, "")
+	var shelf = level.get_node("보급선반")
+	_check("shelf near start", shelf.global_position.distance_to(player.global_position) < 5.0 and shelf.get_hint() != "", "거리 %.1f" % shelf.global_position.distance_to(player.global_position))
+	shelf.interact(player)
+	_check("take what you can carry", player.lanterns_held == player.max_lanterns and player.chemlights == player.max_chemlights and player.bandages == player.max_bandages and player.has_baton
+			and shelf.lanterns == 1 and shelf.chemlights == 5 and shelf.bandages == 0, "남은 것: 랜턴 %d 케미 %d 붕대 %d" % [shelf.lanterns, shelf.chemlights, shelf.bandages])
+	await _wait(30)
+	_check("items shown above bar", get_node("/root/Main/HUD").stamina_bar.items_text.contains("랜턴 2") and get_node("/root/Main/HUD").stamina_bar.items_text.contains("붕대 2"), get_node("/root/Main/HUD").stamina_bar.items_text)
+	# 직원 수와 보상
+	var staff := 0
+	var keygivers := 0
+	for q in level.get_node("People").get_children():
+		if q.is_staff():
+			staff += 1
+		if q.gift == "key":
+			keygivers += 1
+	_check("1F staff", staff >= 5 and keygivers >= 2, "직원 %d 열쇠 줄 사람 %d" % [staff, keygivers])
+	# 잠긴 방: 열쇠 없이는 안 열리고, 구한 직원이 열쇠를 건네면 열린다
+	var locked_door = null
+	for d in level.get_node("Doors").get_children():
+		if d.locked:
+			locked_door = d
+			break
+	locked_door.interact(player)
+	_check("locked without key", locked_door.locked and locked_door.amount < 0.05, "")
+	locked_door.interact(null)   # 공포 사건 같은 스크립트로도 안 열림
+	_check("locked for scripts", locked_door.locked and locked_door.amount < 0.05, "")
+	var nurse = null
+	for q in level.get_node("People").get_children():
+		if q.gift == "key":
+			nurse = q
+			break
+	var home: Vector3 = player.global_position
+	player.global_position = nurse.global_position + Vector3(1.5, 0, 0)
+	await _wait(3)
+	_check("statue gives nothing", player.keys == 0, "")
+	nurse._set_state(2)
+	await _wait(3)
+	_check("cured staff gives key", player.keys == 1 and nurse.gift == "", "keys=%d" % player.keys)
+	nurse._set_state(0)
+	nurse.body_t = 0.0
+	nurse.gift = "key"
+	locked_door.interact(player)
+	_check("key unlocks", not locked_door.locked and locked_door.amount > 0.05, "amount=%.2f" % locked_door.amount)
+	locked_door.amount = 0.0
+	locked_door._apply()
+	locked_door.locked = true
+	# 불을 끄고 석상 옆을 지나가면 붙잡힌다. 불을 켜면 놓는다
+	var st = null
+	for q in level.get_node("People").get_children():
+		if q.state == 0 and q != nurse and level.tile_center(q.tile).distance_to(level.tile_center(Vector2i(19, 3))) > 12.0:
+			st = q
+			break
+	var grabbers := 0
+	for q in level.get_node("People").get_children():
+		if q.grabber == 1:
+			grabbers += 1
+	_check("some statues grab", grabbers >= 3 and grabbers <= 14, "붙잡는 석상 %d / %d" % [grabbers, level.get_node("People").get_child_count()])
+	st.grabber = 1
+	st.grab_rest_t = 0.0
+	player.headlamp.on = true
+	player.global_position = st.global_position + Vector3(1.0, 0, 0)
+	player.look_at(st.global_position + Vector3(5, 0, 0), Vector3.UP)   # 등지고 서서 석상을 비추지 않게
+	player.grab_cooldown = 0.0
+	await _wait(10)
+	_check("lamp on: no grab", player.held_by_statue == null, "")
+	player.headlamp.on = false
+	st.body_t = 0.0
+	await _wait(10)
+	var s0: float = player.stiff
+	var i0: float = player.injury
+	_check("lamp off: statue grabs", player.held_by_statue == st, "")
+	await _wait(60)
+	_check("held: stiff and injury rise, cannot move", player.stiff > s0 + 4.0 and player.injury > i0 + 2.0 and player.velocity.length() < 0.01, "stiff +%.1f injury +%.1f" % [player.stiff - s0, player.injury - i0])
+	var held_l: int = player.lanterns_held
+	player._toggle_lantern()
+	_check("held: cannot place lantern", player.kneel_t == 0.0 and player.lanterns_held == held_l, "")
+	player.headlamp.on = true
+	await _wait(5)
+	_check("lamp on releases", player.held_by_statue == null and st.grab_rest_t > 0.0, "")
+	# 나머지 점검은 예전 조건으로: 석상이 붙잡지 않게 하고, 상태를 되돌린다
+	for lv in get_tree().get_first_node_in_group("main").all_levels():
+		lv.statue_grab_ratio = 0.0
+		for q in lv.get_node("People").get_children():
+			q.grabber = 0
+	st.body_t = 0.0
+	st._random_statue_pose()
+	player.headlamp.on = true
+	player.headlamp.battery = 100.0
+	player.stiff = 0.0
+	player.injury = 0.0
+	player.keys = 0
+	player.bandages = 1
+	player.global_position = home

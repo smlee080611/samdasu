@@ -10,6 +10,13 @@ func _run() -> void:
 	var i := args.find("shot")
 	var out := args[i + 1]
 	var player = get_tree().get_first_node_in_group("player")
+	if not "empty" in args:   # 기본은 보급품을 챙긴 상태로 찍는다 ("empty"를 주면 빈손 그대로)
+		player.lanterns_held = 2
+		player.chemlights = 5
+		player.bandages = 1
+		player.set_baton(true)
+		player._update_hand_stick()
+		player.pocket_t = 0.0
 	for a in args:
 		if a.begins_with("floor="):
 			var main = get_tree().get_first_node_in_group("main")

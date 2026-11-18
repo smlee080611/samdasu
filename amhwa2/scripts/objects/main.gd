@@ -152,16 +152,26 @@ func send_to(p: Node, from_level: Level, to_floor: int) -> void:
 	n.person_name = p.person_name
 	n.state = n.State.CURED
 	n.came_down = true
+	n.gift = p.gift   # 아직 못 건넨 보상은 내려가서도 들고 있다
 	dest.get_node("People").add_child(n)
 	var t: Vector2i = stairs.arrive_tile if stairs else dest.rescue_tile()
 	n.position = dest.tile_center(t)   # 층의 원점은 (0,0,0)이라 position = 전역 위치
 	p.queue_free()
 	from_level.refresh_nav()
 
-## 교대할 사람: 어느 층이든 구출되어 기다리는 사람
+## 교대할 사람: 구출되어 마당에서 기다리는 직원 (간호사·의사·경비). 환자·보호자는 다시 들어오지 않는다
 func find_heir() -> Node:
 	for f in [current] + levels.keys():
 		for p in people_of(levels[f]):
-			if is_instance_valid(p) and not p.is_queued_for_deletion() and p.waiting:
+			if is_instance_valid(p) and not p.is_queued_for_deletion() and p.waiting and p.is_staff():
 				return p
 	return null
+
+## 마당에서 기다리는 직원 수 (남은 교대 인원)
+func staff_waiting() -> int:
+	var n := 0
+	for f in levels:
+		for p in people_of(levels[f]):
+			if is_instance_valid(p) and not p.is_queued_for_deletion() and p.waiting and p.is_staff():
+				n += 1
+	return n

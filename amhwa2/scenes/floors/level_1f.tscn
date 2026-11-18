@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/objects/level.gd" id="level"]
 [ext_resource type="Script" path="res://scripts/objects/events.gd" id="events"]
+[ext_resource type="PackedScene" path="res://scenes/supply_shelf.tscn" id="supply"]
 [ext_resource type="Script" path="res://scripts/objects/clock.gd" id="clock"]
 [ext_resource type="PackedScene" path="res://scenes/person.tscn" id="person"]
 [ext_resource type="PackedScene" path="res://scenes/door.tscn" id="door"]
@@ -253,21 +254,25 @@ person_name = "보호자 권미숙"
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 53, 0, 13)
 person_name = "보호자 남궁현"
 
-[node name="환자_고복순" parent="People" instance=ExtResource("person")]
+[node name="간호사_고복순" parent="People" instance=ExtResource("person")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 17, 0, 25)
-person_name = "환자 고복순"
+person_name = "간호사 고복순"
+gift = "bandage"
 
-[node name="환자_유재석" parent="People" instance=ExtResource("person")]
+[node name="경비_유재훈" parent="People" instance=ExtResource("person")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 61, 0, 25)
-person_name = "환자 유재석"
+person_name = "경비 유재훈"
+gift = "key"
 
 [node name="간호사_송현아" parent="People" instance=ExtResource("person")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 43, 0, 19)
 person_name = "간호사 송현아"
+gift = "key"
 
 [node name="간호사_황인철" parent="People" instance=ExtResource("person")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 15, 0, 19)
 person_name = "간호사 황인철"
+gift = "bandage"
 
 [node name="보호자_안금례" parent="People" instance=ExtResource("person")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 29, 0, 21)
@@ -276,6 +281,7 @@ person_name = "보호자 안금례"
 [node name="의사_노성호" parent="People" instance=ExtResource("person")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 5, 0, 31)
 person_name = "의사 노성호"
+gift = "bandage"
 
 [node name="문_6_5" parent="Doors" instance=ExtResource("door")]
 transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 13, 0, 11)
@@ -331,12 +337,14 @@ open = true
 
 [node name="문_24_11" parent="Doors" instance=ExtResource("door")]
 transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 49, 0, 23)
+locked = true
 
 [node name="문_28_7" parent="Doors" instance=ExtResource("door")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 57, 0, 15)
 
 [node name="문_32_11" parent="Doors" instance=ExtResource("door")]
 transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 65, 0, 23)
+locked = true
 
 [node name="문_2_13" parent="Doors" instance=ExtResource("door")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 5, 0, 27)
@@ -361,6 +369,9 @@ transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 39, 2.7, 3)
 
 [node name="비상등_2" parent="Lights" instance=ExtResource("elight")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 73, 2.7, 9)
+
+[node name="보급선반" parent="." instance=ExtResource("supply")]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 34.26, 0, 9.4)
 
 [node name="Events" type="Node" parent="."]
 script = ExtResource("events")
@@ -711,7 +722,7 @@ transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 51.055, 0.0, 7.0)
 
 [node name="locker_34" parent="Props" instance=ExtResource("p_locker")]
 transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 51.75, 0.0, 7.74)
-loot = "battery"
+loot = "empty"
 
 [node name="iv_stand_8" parent="Props" instance=ExtResource("p_iv_stand")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 51.55, 0.0, 6.3)
@@ -1052,11 +1063,11 @@ transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 31.0, 0.0, 21.05)
 
 [node name="shelf_6" parent="Props" instance=ExtResource("p_shelf")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 47.0, 0.0, 16.27)
-loot = "empty"
+loot = "battery"
 
 [node name="shelf_7" parent="Props" instance=ExtResource("p_shelf")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 51.0, 0.0, 16.27)
-loot = "empty"
+loot = "bandage"
 
 [node name="shelf_8" parent="Props" instance=ExtResource("p_shelf")]
 transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 46.27, 0.0, 19.0)
@@ -1683,3 +1694,36 @@ body = "야간 소등 안내
 
 (빨간 펜으로 덧쓴 글씨)
 절대 불 끄지 마. 절대로."
+
+[node name="쪽지_6" parent="Notes" instance=ExtResource("p_note")]
+transform = Transform3D(0.93969, 0, 0.34202, 0, 1, 0, -0.34202, 0, 0.93969, 39.4, 0.01, 13.2)
+title = "누군가의 메모 (1)"
+body = "병원이 갑자기 정전이 되었다.
+
+사람들의 몸이 굳기 시작했다.
+아마 어둠 속에 있으면
+이 증상이 시작되는 것 같다."
+
+[node name="쪽지_7" parent="Notes" instance=ExtResource("p_note")]
+transform = Transform3D(0.81915, 0, -0.57358, 0, 1, 0, 0.57358, 0, 0.81915, 25.3, 0.01, 12.7)
+title = "누군가의 메모 (2)"
+body = "나를 포함한 모든 사람들의 몸이
+서서히 굳어가고 있다.
+
+지하실에 발전기가 있었던 걸로 기억하는데,
+병원에 불을 켜면
+병의 진행을 멈출 수 있지 않을까."
+
+[node name="쪽지_8" parent="Notes" instance=ExtResource("p_note")]
+transform = Transform3D(0.5, 0, 0.86603, 0, 1, 0, -0.86603, 0, 0.5, 5.2, 0.01, 19.3)
+title = "누군가의 메모 (3)"
+body = "내 몸이 점점 굳어 간다.
+다리는 이제 굳어서 움직일 수도 없다.
+
+난 도대체 어떻게 되는 걸까.
+내가 왜 이런 상황에 처한 건지도 모르겠다..."
+
+[node name="쪽지_9" parent="Notes" instance=ExtResource("p_note")]
+transform = Transform3D(0.96593, 0, -0.25882, 0, 1, 0, 0.25882, 0, 0.96593, 17.5, 0.01, 25.6)
+title = "누군가의 메모 (4)"
+body = "죽기 싫어........"

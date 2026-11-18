@@ -8,8 +8,13 @@ func _ready() -> void:
 
 func _on_body(b: Node) -> void:
 	if b.is_in_group("player"):
-		b.chemlights += amount
+		var take: int = mini(amount, b.max_chemlights - b.chemlights)   # 들 수 있는 만큼만. 나머지는 남는다
+		if take <= 0:
+			return
+		b.chemlights += take
+		amount -= take
 		b._update_hand_stick()
 		Sfx.play("snap", -10.0)
-		GameState.say("케미라이트 %d개." % amount)
-		queue_free()
+		GameState.say("케미라이트 %d개." % take)
+		if amount <= 0:
+			queue_free()

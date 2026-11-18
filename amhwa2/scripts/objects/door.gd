@@ -15,6 +15,9 @@ const LAYER_DOOR_BLOCK := 16     ## 틈일 때: 플레이어만 막고 빛은 �
 @export var open := false        ## 처음에 활짝 열려 있는지
 @export var sideways := false    ## 문이 동서로 놓였으면 체크(90도 회전)
 @export var crack_amount := 0.25 ## 한 번 눌렀을 때 열리는 정도 (틈: 빛은 새고 사람은 못 지나감)
+## 잠긴 문 (약품실, 창고): 직원 열쇠가 있어야 열린다. 열쇠는 구한 직원이 건네준다(person.gd gift = "key").
+## 한 번 열면 계속 열려 있다. 공포 사건 등 스크립트로는 열리지 않는다
+@export var locked := false
 
 @onready var mesh: Node3D = $Mesh
 var amount := 0.0
@@ -45,6 +48,15 @@ func _process(dt: float) -> void:
 ## E 한 번 (player.gd), 스크립트(공포 사건, 자동 점검)도 같은 순서를 쓴다:
 ## 닫힘 → 틈 → 활짝 → 닫힘. 화면에 보이는 각도(shown)는 _process에서 부드럽게 따라간다
 func interact(_by: Node) -> void:
+	if locked:
+		if _by == null or _by.get("keys") == null or _by.keys <= 0:
+			if _by != null:
+				Sfx.play_at("door_close", global_position + Vector3.UP * 1.5, -10.0)
+				GameState.say("잠겨 있다. 직원 열쇠가 있어야 한다.")
+			return
+		locked = false
+		Sfx.play("click", -4.0)
+		GameState.say("열쇠가 맞는다.")
 	_closing = false
 	if amount < CRACK:
 		amount = crack_amount
@@ -93,6 +105,9 @@ func _apply(force := false) -> void:
 			level.refresh_nav()
 
 func get_hint() -> String:
+	if locked:
+		var p = get_tree().get_first_node_in_group("player")
+		return "E · 열쇠로 열기" if p and p.keys > 0 else "잠겨 있다"
 	if amount >= 0.98:
 		return "E · 문 닫기"
 	if amount > CRACK:

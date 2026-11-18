@@ -67,8 +67,11 @@ func curtain_opened() -> void:
 	curtains_open += 1
 	state_changed.emit()
 
-func relay_happened() -> void:
-	relay.emit("몸이 완전히 굳었다.\n\n\n...밖에서 기다리던 사람이\n떨어진 헤드램프를 집어 들었다.\n\n앞사람의 물건은 굳은 자리에 남아 있다.")
+## 교대: 주인공은 경비실 무전기를 차고 들어갔고, 마당의 직원이 그 채널을 듣고 있다.
+## 무전에 대답이 없으면 굳은 것으로 알고 다음 직원이 들어온다 (환자·보호자는 들어오지 않는다)
+func relay_happened(heir_name := "") -> void:
+	var who := heir_name if heir_name != "" else "기다리던 직원"
+	relay.emit("몸이 움직이지 않는다.\n\n“...들려요? 대답해요.”\n무전기에서 목소리가 멀어진다.\n\n\n마당에서 무전을 듣고 있던 %s이(가)\n예비 헤드램프를 쓰고 안으로 들어간다.\n\n앞사람의 물건은 굳은 자리에 남아 있다." % who)
 
 func can_leave() -> bool:
 	return rescued >= need_rescue and curtains_open >= curtains_total

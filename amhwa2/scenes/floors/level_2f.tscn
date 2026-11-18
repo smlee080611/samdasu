@@ -128,6 +128,7 @@ person_name = "환자 염순애"
 [node name="간호사_차경민" parent="People" instance=ExtResource("person")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 29, 0, 7)
 person_name = "간호사 차경민"
+gift = "bandage"
 
 [node name="의사_하동수" parent="People" instance=ExtResource("person")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 49, 0, 5)
@@ -144,18 +145,22 @@ person_name = "간호사 우태현"
 [node name="간호사_엄귀분" parent="People" instance=ExtResource("person")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 63, 0, 7)
 person_name = "간호사 엄귀분"
+gift = "bandage"
 
 [node name="의사_석준혁" parent="People" instance=ExtResource("person")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 13, 0, 19)
 person_name = "의사 석준혁"
+gift = "bandage"
 
 [node name="간호사_전말녀" parent="People" instance=ExtResource("person")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 39, 0, 19)
 person_name = "간호사 전말녀"
+gift = "key"
 
 [node name="의사_표성길" parent="People" instance=ExtResource("person")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 57, 0, 19)
 person_name = "의사 표성길"
+gift = "key"
 
 [node name="환자_함지은" parent="People" instance=ExtResource("person")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 13, 0, 31)
@@ -218,12 +223,14 @@ transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 29, 0, 15)
 
 [node name="문_24_11" parent="Doors" instance=ExtResource("door")]
 transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 49, 0, 23)
+locked = true
 
 [node name="문_28_7" parent="Doors" instance=ExtResource("door")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 57, 0, 15)
 
 [node name="문_32_11" parent="Doors" instance=ExtResource("door")]
 transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 65, 0, 23)
+locked = true
 
 [node name="문_2_13" parent="Doors" instance=ExtResource("door")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 5, 0, 27)
@@ -417,7 +424,7 @@ loot = "empty"
 
 [node name="cart_6" parent="Props" instance=ExtResource("p_cart")]
 transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 58.27, 0.0, 9.0)
-loot = "battery"
+loot = "empty"
 
 [node name="bed_5" parent="Props" instance=ExtResource("p_bed")]
 transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 65.0, 0.0, 9.055)
@@ -457,7 +464,7 @@ loot = "empty"
 
 [node name="locker_1" parent="Props" instance=ExtResource("p_locker")]
 transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 27.0, 0.0, 21.76)
-loot = "chem"
+loot = "empty"
 
 [node name="locker_2" parent="Props" instance=ExtResource("p_locker")]
 transform = Transform3D(-1.0, 0, 0.0, 0, 1, 0, -0.0, 0, -1.0, 29.0, 0.0, 21.76)
@@ -469,7 +476,7 @@ loot = "empty"
 
 [node name="locker_4" parent="Props" instance=ExtResource("p_locker")]
 transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 26.24, 0.0, 19.0)
-loot = "empty"
+loot = "chem"
 
 [node name="bench_1" parent="Props" instance=ExtResource("p_bench")]
 transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 31.73, 0.0, 17.0)
@@ -504,7 +511,7 @@ loot = "empty"
 
 [node name="shelf_13" parent="Props" instance=ExtResource("p_shelf")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 51.0, 0.0, 16.27)
-loot = "empty"
+loot = "battery"
 
 [node name="shelf_14" parent="Props" instance=ExtResource("p_shelf")]
 transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 46.27, 0.0, 19.0)
@@ -1195,7 +1202,21 @@ body = "2층 수술동에는 창이 없다.
 발전기는 지하에."
 
 [node name="쪽지_3" parent="Notes" instance=ExtResource("p_note")]
-transform = Transform3D(0.70711, 0, 0.70711, 0, 1, 0, -0.70711, 0, 0.70711, 27.0, 0.01, 21.0)
+transform = Transform3D(0.70711, 0, 0.70711, 0, 1, 0, -0.70711, 0, 0.70711, 35.0, 0.775, 21.6)
+title = "비상발전기 운전 수칙 (시설과)"
+body = "위치: 지하 1층 발전기실
+
+정전 시 자동 기동이 안 되면 수동 시동할 것.
+1. 연료 밸브 개방
+2. 수동 크랭크를 세 사람 이상이 함께 돌릴 것
+   (혼자서는 압축을 못 넘김)
+3. 회전이 붙으면 차단기를 층별로 하나씩 올릴 것
+   한꺼번에 올리면 다시 떨어짐
+
+※ 발전기실 열쇠는 시설과·경비실 보관"
+
+[node name="쪽지_4" parent="Notes" instance=ExtResource("p_note")]
+transform = Transform3D(0.5, 0, 0.86603, 0, 1, 0, -0.86603, 0, 0.5, 27.0, 0.01, 21.0)
 title = "사물함에 붙은 쪽지"
 body = "이거 보는 사람
 

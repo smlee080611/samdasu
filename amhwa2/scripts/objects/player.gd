@@ -21,7 +21,7 @@ extends CharacterBody3D
 @export var grab_stiff := 15.0             ## 광인에게 붙잡히면 굳음 +
 @export var grab_injury := 15.0            ## 광인에게 붙잡히면 부상 +
 ## 붕대: C를 길게 누르면 감는다 (주머니 확인과 같은 키). 감는 동안 못 움직임. 뒤지기로 찾는다
-@export var bandages := 1
+@export var bandages := 0
 @export var bandage_heal := 40.0
 @export var bandage_seconds := 1.5
 var stamina := 100.0
@@ -35,7 +35,18 @@ var pant: AudioStreamPlayer
 ## 케미라이트: G로 던져 길바닥에 깐다(약 75초 빛남). 약한 빛이라 몸을 지켜 주진 않지만 길 표시가 되고 광인이 그 자리를 피한다.
 ## 주머니에 넣어 다니고, 개수는 C를 누르고 있을 때 왼손에 펼쳐서 확인한다.
 @export var chemlight_scene: PackedScene = preload("res://scenes/chemlight.tscn")
-@export var chemlights := 5
+@export var chemlights := 0
+## 들고 다닐 수 있는 양. 보급품은 처음부터 주어지지 않고 1층 홀의 보급 선반(supply.gd)에서 챙긴다.
+## 한 번에 다 들 수 없어서 남은 것은 선반에 남고, 교대한 다음 사람이 그걸 들고 들어온다.
+@export var max_lanterns := 2
+@export var max_chemlights := 5
+@export var max_bandages := 2
+var keys := 0                  # 직원 열쇠 (구한 직원이 건네줌). 하나만 있어도 잠긴 문이 다 열린다
+## 어둠 속 석상에게 붙잡혔을 때: 못 움직이고, 붙잡혀 있는 동안 굳음·부상이 오른다. 헤드램프를 켜거나 밀치면 풀린다
+@export var statue_hold_stiff := 6.0      ## 초당 굳음
+@export var statue_hold_injury := 4.0     ## 초당 부상
+var held_by_statue: Node = null
+var _statue_hint_said := false
 var hand_stick: Node3D
 var toss_stick: MeshInstance3D
 var pocket_t := 0.0
@@ -55,7 +66,7 @@ var hold_target: Node = null   # E를 누르고 있는 대상 (차광막·문·�
 @export var recover_look_mult := 0.3      ## 무방비 동안 시점 회전 배율
 var recover_t := 0.0                      # 남은 무방비 시간(휘두르는 동작 포함)
 var baton: Node3D
-var has_baton := true
+@export var has_baton := false   ## 경광봉도 보급 선반에서 집는다
 var baton_cd := 0.0
 var swing_t := 0.0
 var swing_kind := 0
@@ -63,7 +74,7 @@ const BATON_REST_POS := Vector3(0.3, -0.34, -0.6)
 const BATON_REST_ROT := Vector3(-0.55, 0.0, -0.22)   # 끝이 앞쪽 위를 향하게
 @export var mouse_sens := 0.0025
 @export var lantern_scene: PackedScene
-@export var lanterns_held := 2
+@export var lanterns_held := 0
 
 @onready var head: Camera3D = $Head
 @onready var headlamp = $Head/Headlamp
@@ -91,6 +102,7 @@ func _ready() -> void:
 	pant.play()
 	_make_hand_stick()
 	_make_baton()
+	set_baton(has_baton)
 
 func _unhandled_input(e: InputEvent) -> void:
 	var was_captured := Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
@@ -127,7 +139,7 @@ func _unhandled_input(e: InputEvent) -> void:
 
 func _physics_process(dt: float) -> void:
 	var searching: bool = hold_target != null and is_instance_valid(hold_target) and hold_target.get("loot") != null and hold_target.loot != ""
-	if GameState.is_frozen() or kneel_t > 0.0 or searching or bandage_t > 0.0 or (swing_kind == 2 and swing_t > 0.0):
+	if GameState.is_frozen() or kneel_t > 0.0 or searching or bandage_t > 0.0 or held_by_statue != null or (swing_kind == 2 and swing_t > 0.0):
 		velocity = Vector3.ZERO
 		_regen(dt, false)
 		return
@@ -237,6 +249,7 @@ func _process(dt: float) -> void:
 		stiff += (0.6 if headlamp.is_on() else 2.0) * dt
 	_update_heartbeat()
 	_bandage(dt)
+	_statue_hold(dt)
 	if incapacitated():
 		var heir := _find_heir()
 		if heir:
@@ -289,9 +302,10 @@ func _relay(heir: Node) -> void:
 	lanterns_held = 0
 	# (줍는 물건은 다음 사람이 자리를 옮긴 뒤에 놓는다. 바로 놓으면 그 자리에서 바로 주워져 버림)
 	_drop_later.call_deferred(global_position, chemlights, has_baton, _floor())
-	# 다음 사람: 헤드램프(배터리 그대로)와 케미라이트 하나만 들고 밖에서 들어온다.
-	# 앞사람이 깔아 둔 초록 불빛(케미라이트는 꺼지지 않음)을 따라가 물건을 되찾는다
-	chemlights = 1
+	# 다음 사람: 헤드램프(배터리 그대로)만 들고 밖에서 들어온다. 보급 선반에 남은 것을 챙기고,
+	# 앞사람이 깔아 둔 초록 불빛(케미라이트는 꺼지지 않음)을 따라가 굳은 자리의 물건을 되찾는다
+	chemlights = 0
+	held_by_statue = null
 	set_baton(false)
 	for i in hand_stick.get_child_count():
 		hand_stick.get_child(i).visible = i < chemlights
@@ -313,7 +327,7 @@ func _relay(heir: Node) -> void:
 	grab_cooldown = 2.0
 	level.refresh_nav()
 	Sfx.play("petrify", -2.0, 0.0)
-	GameState.relay_happened()
+	GameState.relay_happened(heir.person_name)
 
 func _drop_later(pos: Vector3, chems: int, baton_too: bool, where: Node) -> void:
 	await get_tree().physics_frame
@@ -339,6 +353,36 @@ func looking_at() -> Node:
 	if ray.is_colliding():
 		return ray.get_collider()
 	return null
+
+## 어둠 속 석상이 붙잡았다 (person.gd _statue_grab)
+func seized(statue: Node) -> void:
+	held_by_statue = statue
+	grab_cooldown = 1.0
+	Sfx.play("grab", -2.0, 0.0)
+	shake = 0.8
+	if kneel_t > 0.0:
+		kneel_t = 0.0
+		kneel_action = Callable()
+	if not _statue_hint_said:
+		_statue_hint_said = true
+		GameState.say("돌 같은 손이 팔을 움켜쥐었다. 불을 켜야 한다.")
+
+func _statue_hold(dt: float) -> void:
+	if held_by_statue == null:
+		return
+	var s := held_by_statue
+	if not is_instance_valid(s) or s.state != 0 or headlamp.is_on():
+		_break_free()   # 빛을 받으면 손이 풀린다 (그 석상은 이제 빛을 받아 깨어나기 시작한다)
+		return
+	stiff += statue_hold_stiff * dt
+	injury = minf(100.0, injury + statue_hold_injury * dt)
+	shake = maxf(shake, 0.25)
+
+func _break_free() -> void:
+	if held_by_statue != null and is_instance_valid(held_by_statue):
+		held_by_statue.release_grip()
+	held_by_statue = null
+	grab_cooldown = 1.5
 
 ## 광인이 붙잡을 때 부른다. (막는 수단이 생기면 true를 돌려준다)
 func grabbed(by_name: String) -> bool:
@@ -472,6 +516,8 @@ func _baton_attack(kind: int) -> void:
 	recover_t = swing_t + baton_recover
 	baton_cd = recover_t
 	Sfx.play("whoosh", -4.0, 0.1)
+	if kind == 2 and held_by_statue != null:
+		_break_free()   # 밀치기로 석상의 손을 뿌리친다
 	var reach := 1.9 if kind == 1 else 1.5
 	var cone := 70.0 if kind == 1 else 85.0
 	var fwd := -global_transform.basis.z
@@ -544,6 +590,9 @@ func _toggle_lantern() -> void:
 	if lanterns_held <= 0:
 		GameState.say("랜턴이 없다.")
 		return
+	if held_by_statue != null:
+		GameState.say("붙잡혀서 몸을 숙일 수가 없다.")
+		return
 	if stiff >= lantern_lock_stiff:
 		GameState.say("손이 굳어서 랜턴 손잡이를 쥘 수가 없다.")
 		return
@@ -568,6 +617,9 @@ func _place() -> void:
 
 func _pick_up(l: Node3D) -> void:
 	if not is_instance_valid(l):
+		return
+	if lanterns_held >= max_lanterns:
+		GameState.say("랜턴을 더 들 손이 없다.")
 		return
 	placed_lanterns.erase(l)
 	l.put_out()

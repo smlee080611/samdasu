@@ -92,6 +92,19 @@ var came_down := false        # 위층에서 구해져 계단으로 내려온 �
 @export var auto_exit_steps := 7
 var leaving := false
 var counted := false
+## 구출 보상: 정신이 돌아온 뒤 플레이어가 가까이 오면 한 번 건네준다.
+##   "key" 직원 열쇠(잠긴 약품실·창고가 열림), "bandage" 붕대 한 롤, "" 없음. 직업에 맞는 것만 (환자는 줄 게 없다)
+@export var gift := ""
+@export var gift_range := 3.5
+## 석상 붙잡기: 플레이어가 헤드램프를 끈 채 어두운 곳에서 가까이 지나가면, 일부 석상이 굳은 팔로 붙잡는다
+## (다리는 굳었지만 상체는 아직 움직이는 사람들). 헤드램프를 켜면 놓는다. 밀치기로도 뿌리칠 수 있다.
+##   -1 = 층의 statue_grab_ratio에 따라 자동으로 정함, 0 = 안 붙잡음, 1 = 붙잡음
+@export_range(-1, 1) var grabber := -1
+@export var statue_grab_reach := 1.3     ## 이 거리(m) 안으로 오면 붙잡는다
+@export var statue_warn_reach := 3.2     ## 이 거리 안이면 돌 갈라지는 소리로 먼저 알린다
+@export var statue_grab_rest := 8.0      ## 놓친 뒤 다시 붙잡기까지(초)
+var grab_rest_t := 0.0
+var _grab_warned := false
 var wait_pos := Vector3.ZERO
 
 const CURED_LINES := ["...간호사님?", "여기가... 어디예요?", "몸이... 움직여요.", "불, 불 좀 켜 주세요...", "우리 애는요? 우리 애...", "추워요... 너무 추워요."]
@@ -126,6 +139,8 @@ func _late_ready() -> void:
 	level = get_parent().get_parent() as Level   # People의 부모 = 내가 속한 층
 	if level == null:
 		level = get_tree().get_first_node_in_group("level")
+	if grabber < 0:   # 사람마다 정해진 값(이름으로 정함)이라 다시 시작해도 같은 석상이 붙잡는다
+		grabber = 1 if (hash(person_name) % 100) < int(level.statue_grab_ratio * 100.0) else 0
 	player = get_tree().get_first_node_in_group("player")
 	tile = level.to_tile(global_position)
 	target = tile
@@ -152,9 +167,35 @@ func _set_state(s: State) -> void:
 	else:
 		breath.stop()
 
+## 직원인가 (이름 앞의 직업으로 구분). 직원만 교대해서 병원 안으로 들어올 수 있다
+func is_staff() -> bool:
+	for k in ["간호사", "의사", "마취과 의사", "경비"]:
+		if person_name.begins_with(k):
+			return true
+	return false
+
+## 구출 보상 건네기: 정신이 돌아온 직원에게 가까이 가면 한 번
+func _give_gift() -> void:
+	if gift == "" or player == null or global_position.distance_to(player.global_position) > gift_range:
+		return
+	match gift:
+		"key":
+			player.keys += 1
+			GameState.say("“이거... 직원 열쇠예요. 약품실이랑 창고가 열려요.”")
+			Sfx.play("click", -6.0)
+		"bandage":
+			if player.bandages >= player.max_bandages:
+				return   # 주머니가 찼으면 다음에 다시 왔을 때
+			player.bandages += 1
+			GameState.say("“붕대예요. 주머니에 있었어요.”")
+			Sfx.play("rummage", -10.0)
+	gift = ""
+
 func _process(dt: float) -> void:
 	if level == null or GameState.is_frozen():
 		return
+	if state == State.CURED:
+		_give_gift()
 	if waiting:
 		_wait_in_hall(dt)
 		return
@@ -260,6 +301,7 @@ func _statue(dt: float, ex: Array[RID]) -> void:
 		_drain_lamp(ex)
 	else:
 		body_t = max(0.0, body_t - dt * 0.15)
+		_statue_grab(dt)
 	for m in mats:
 		m.emission_energy_multiplier = body_t * 0.8
 	if body_t >= 1.0:
@@ -267,6 +309,32 @@ func _statue(dt: float, ex: Array[RID]) -> void:
 		dark_t = 0.0
 		_set_state(State.MAD)
 		Sfx.play_at("stone_crack", global_position + Vector3.UP)
+
+## 어둠 속 석상의 손: 플레이어가 불을 끄고 가까이 지나가면 붙잡는다 (이 석상이 빛을 받고 있지 않을 때만 불림)
+func _statue_grab(dt: float) -> void:
+	grab_rest_t = maxf(0.0, grab_rest_t - dt)
+	if grabber != 1 or grab_rest_t > 0.0 or player == null or player.headlamp.is_on():
+		_grab_warned = false
+		return
+	var d := global_position.distance_to(player.global_position)
+	if d > statue_warn_reach:
+		_grab_warned = false
+		return
+	if not _grab_warned:
+		_grab_warned = true   # 붙잡기 전에 소리로 먼저 알린다: 불을 켜거나 물러날 틈
+		Sfx.play_at("stone_crack", global_position + Vector3.UP, -8.0)
+	if d <= statue_grab_reach and player.held_by_statue == null and player.grab_cooldown <= 0.0:
+		_face(player.global_position)
+		pose["ArmXp"] = Vector3(1.35, 0, -0.1)   # 두 팔을 앞으로 뻗은 채 굳는다
+		pose["ArmXn"] = Vector3(1.35, 0, 0.1)
+		_apply_pose()
+		player.seized(self)
+
+## 플레이어가 빛을 켜거나 뿌리쳐서 손을 놓음
+func release_grip() -> void:
+	grab_rest_t = statue_grab_rest
+	_grab_warned = false
+	Sfx.play_at("stone_crack", global_position + Vector3.UP, -6.0)
 
 ## 헤드램프로 사람을 풀고 있으면 배터리가 크게 닳는다 (headlamp.wake_drain_per_sec)
 func _drain_lamp(ex: Array[RID]) -> void:
@@ -706,7 +774,8 @@ func _wait_in_hall(dt: float) -> void:
 		c.y = global_position.y
 		if c.distance_to(global_position) > 0.1:
 			look_at(c, Vector3.UP)
-		set_process(false)
+		if gift == "":
+			set_process(false)   # 줄 게 남아 있으면 플레이어가 올 때까지 계속 본다
 
 ## 칸 안에서 내가 서는 자리: 칸 중앙 + 내 줄(lane). 그 칸에 석상이 서 있으면 옆으로 비켜 선다
 func _point(t: Vector2i) -> Vector3:
