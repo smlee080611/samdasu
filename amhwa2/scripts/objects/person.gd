@@ -106,6 +106,7 @@ var counted := false
 ## 발전기 크랭크를 돌리러 내려온 사람 (main.gd call_helpers). crank_tile까지 걸어가 크랭크를 잡고 돌린다.
 ## 정신이 돌아온 사람이라 광인이 붙잡을 수 있다. 붙잡혀 있는 동안은 돌리지 못한다
 var helper := false
+@export var view_range := 28.0   ## 이보다 멀리 있으면 모델을 그리지 않는다 (성능)
 @export var helper_hurry := 1.6    ## 크랭크를 돌리러 갈 때는 서둘러 걷는다 (평소 걸음의 배수)
 var crank_tile := Vector2i.ZERO
 var generator: Node = null
@@ -123,6 +124,8 @@ func _ready() -> void:
 	add_to_group("person")
 	sync_to_physics = false
 	_collect_materials(model)
+	for mi in model.find_children("*", "MeshInstance3D", true, false):
+		mi.visibility_range_end = view_range   # 헤드램프(20m)보다 먼 사람은 어차피 어둠 속이라 그리지 않음
 	rotation.y = randf() * TAU
 	lane = Vector3(randf_range(-0.3, 0.3), 0, randf_range(-0.3, 0.3))
 	# 사람마다 조금씩 다르게: 속도 ±15%, 돌진 거리, 다시 굳는 시간

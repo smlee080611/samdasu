@@ -69,6 +69,7 @@ ol.steps li,ul li{margin-bottom:6px}
     <a href="#night">7-4. 하룻밤 · 배터리 총량</a>
     <a href="#meeting1118">7-45. 보급품 · 보상 · 교대 · 석상</a>
     <a href="#basement">7-47. 지하 · 발전기 · 엔딩</a>
+    <a href="#perf">7-48. 성능</a>
     <a href="#floors">7-5. 2층 · 층 이동 · 수술등</a>
     <a href="#main">8. Main</a>
     <a href="#extend">확장하는 법</a>
@@ -433,6 +434,16 @@ ol.steps li,ul li{margin-bottom:6px}
         <tr><td>석상 붙잡기</td><td>헤드램프를 끈 채 일부 석상에 1.3m 안으로 다가가면 굳은 팔로 붙잡습니다. 3.2m에서 돌 갈라지는 소리로 먼저 알립니다. 붙잡히면 못 움직이고 랜턴도 못 놓으며 굳음 6/초 · 부상 4/초. <b>헤드램프를 켜면 놓습니다</b>(그 석상은 빛을 받아 깨어나기 시작). 밀치기로도 풀립니다. 놓친 석상은 8초 뒤에 다시 붙잡을 수 있습니다</td><td>층의 <b>Statue Grab Ratio</b>(0.3 = 석상 열 중 셋), 사람의 <b>Grabber</b>(-1 자동 / 0 / 1), <code>player.gd</code> <code>statue_hold_stiff</code> / <code>statue_hold_injury</code></td></tr>
       </tbody>
     </table></div>
+
+    <h2 id="perf">7-48. 성능 (웹에서 버벅일 때)</h2>
+    <ul>
+      <li><b>소품 합치기:</b> 게임이 시작될 때 층의 소품을 12m 구역·재질별로 합쳐서 그립니다(<code>Level.batch_region</code>, <code>batch_view_range</code>). 충돌과 뒤지기는 소품 노드에 그대로 남습니다. 에디터에서는 합치지 않습니다.</li>
+      <li><b>그림자:</b> 점광원(OmniLight) 그림자는 장면을 여러 번 다시 그려서 가장 무겁습니다. 마당 달빛 3개와 케미라이트는 그림자를 껐고, 랜턴은 웹에서만 끕니다(<code>lantern.gd</code> <code>shadows</code>). 헤드램프 그림자는 남겨 두었습니다.</li>
+      <li><b>웹 해상도:</b> 웹에서는 3D를 0.75배 해상도로 그립니다(<code>project.godot</code> <code>rendering/scaling_3d/scale.web</code>). 더 느리면 0.6까지 내려도 됩니다.</li>
+      <li><b>사람 모델:</b> 환자 모델이 25만 삼각형이라 무겁습니다. 거리별 단순화(LOD)는 켜져 있고, 28m 밖은 그리지 않습니다(<code>person.view_range</code>). 소민님 모델로 바꿀 때 5만 삼각형 이하면 크게 가벼워집니다.</li>
+      <li><b>웹 마우스 튐:</b> 브라우저가 마우스를 휙 돌릴 때 가끔 엉뚱하게 큰 값을 보내서 시점이 순간이동하듯 돌아갑니다. 한 번에 180픽셀보다 큰 움직임은 버립니다(<code>player.web_mouse_spike</code>).</li>
+      <li><b>측정:</b> <code>godot --path amhwa2 -- perf</code> → 프레임당 스크립트 시간, 그리는 삼각형 수, 그리는 횟수(draw call)를 찍습니다.</li>
+    </ul>
 
     <h2 id="basement">7-47. 지하 1층 · 발전기 · 층별 차단기 · 엔딩</h2>
     <p>1층의 "기계실 계단"(옛 상담실, 북쪽 복도 동쪽)으로 내려갑니다. 빛이 전혀 없고 쉴 곳도 없는 층입니다. 석상 12명, 예비 배터리 2곳(시설과 책상, 자재 창고 선반).</p>

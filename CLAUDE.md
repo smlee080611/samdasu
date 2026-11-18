@@ -57,6 +57,7 @@
 - 예전 탈출 조건(`GameState.can_leave()`)은 코드에 남아 있지만 이제 계단은 층 이동이라 쓰이지 않는다
 - 빛은 `LightSystem` 오토로드가 판정한다. 빛을 내는 것은 그룹에 들어가고 `light_value()`를 가진다는 약속 하나로 돌아가니, 새 빛을 추가할 때 석상 코드는 고치지 않는다.
 - 오토로드: `GameState`(진행 상태), `LightSystem`(빛 판정), `Sfx`(효과음)
+- **성능 (11/19, 웹 렉):** 소품은 게임 시작 때 12m 구역·재질별로 합쳐 그린다(`Level._batch_props`, 그리는 횟수 약 25% 줄임). 점광원 그림자는 무거워서 마당 달빛·케미라이트는 그림자 끔, 랜턴은 웹에서만 끔. 웹은 3D를 0.75배 해상도로 그린다(`project.godot` `rendering/scaling_3d/scale.web`). 사람 모델은 28m 밖에서 안 그림(`person.view_range`). 웹에서 마우스를 휙 돌릴 때 튀는 값은 버린다(`player.web_mouse_spike`). 측정: `godot --path amhwa2 -- perf` (화면 있는 환경에서)
 - 생성기(층 씬을 통째로 새로 씀): `tools/gen_level_2f.py`, `tools/gen_level_b1.py`, `tools/gen_props_2f.py`, `tools/gen_props_b1.py` (`python3 tools/...`). 생성기를 다시 돌리면 씬을 통째로 새로 쓴다. 1층 씬은 생성기 없이 손으로 고친 상태라 직접 편집한다
 
 ### 조작

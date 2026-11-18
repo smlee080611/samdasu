@@ -46,6 +46,7 @@ var keys := 0                  # 직원 열쇠 (구한 직원이 건네줌). 하
 @export var statue_hold_stiff := 6.0      ## 초당 굳음
 @export var statue_hold_injury := 4.0     ## 초당 부상
 var held_by_statue: Node = null
+@export var web_mouse_spike := 180.0   ## 웹에서 한 번에 이 픽셀보다 크게 튀는 마우스 움직임은 버린다
 var _statue_hint_said := false
 var hand_stick: Node3D
 var toss_stick: MeshInstance3D
@@ -111,6 +112,10 @@ func _unhandled_input(e: InputEvent) -> void:
 	elif e is InputEventKey and e.pressed and e.physical_keycode == KEY_ESCAPE:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	elif e is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and not GameState.ui_blocking:
+		# 웹(브라우저 포인터 잠금)에서는 마우스를 휙 돌릴 때 가끔 엉뚱하게 큰 값이 한 번 튄다(브라우저 버그).
+		# 그대로 쓰면 시점이 순간이동하듯 돌아가서, 한 번에 이 이상 튀는 움직임은 버린다
+		if OS.has_feature("web") and e.relative.length() > web_mouse_spike:
+			return
 		var sens := mouse_sens * look_mult()
 		rotate_y(-e.relative.x * sens)
 		head.rotation.x = clamp(head.rotation.x - e.relative.y * sens, -1.3, 1.3)

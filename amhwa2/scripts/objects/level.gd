@@ -57,6 +57,7 @@ func _ready() -> void:
 	add_to_group("level")
 	_parse()
 	_build_walls()
+	_batch_props()
 	refresh_nav.call_deferred()
 
 func _parse() -> void:
@@ -78,6 +79,50 @@ func _editor_preview() -> void:
 	_build_walls()
 	for i in range(before, get_child_count()):
 		_preview.append(get_child(i))
+
+## 소품 합치기 (성능): 소품 수백 개를 구역(batch_region m 단위)·재질별로 메시 몇 개로 합친다.
+## 소품마다 따로 그리면 그리는 횟수(draw call)가 수백 번이라 웹에서 버벅인다. 소품의 충돌·뒤지기는 그대로 남고
+## 겉모습만 합친 메시로 바뀐다 (소품은 움직이지 않으니 괜찮다). 에디터에서는 합치지 않는다.
+@export var batch_region := 12.0
+@export var batch_view_range := 40.0   ## 합친 구역이 이보다 멀면 그리지 않음 (어차피 어둠 속)
+func _batch_props() -> void:
+	var props := get_node_or_null("Props")
+	if props == null:
+		return
+	var groups := {}   # Vector2i 구역 -> {재질: SurfaceTool}
+	var done: Array[MeshInstance3D] = []
+	for p in props.get_children():
+		for mi in p.find_children("*", "MeshInstance3D", true, false):
+			if mi.mesh == null or not mi.is_visible_in_tree():
+				continue
+			var xf: Transform3D = mi.global_transform
+			var key := Vector2i(floori(xf.origin.x / batch_region), floori(xf.origin.z / batch_region))
+			if not groups.has(key):
+				groups[key] = {}
+			for s in mi.mesh.get_surface_count():
+				var mat: Material = mi.material_override if mi.material_override else mi.mesh.surface_get_material(s)
+				if not groups[key].has(mat):
+					var st := SurfaceTool.new()
+					st.begin(Mesh.PRIMITIVE_TRIANGLES)
+					groups[key][mat] = st
+				groups[key][mat].append_from(mi.mesh, s, xf)
+			done.append(mi)
+	var root := Node3D.new()
+	root.name = "PropBatches"
+	add_child(root)
+	for key in groups:
+		var am := ArrayMesh.new()
+		for mat in groups[key]:
+			var st: SurfaceTool = groups[key][mat]
+			st.set_material(mat)
+			st.commit(am)
+		var mi := MeshInstance3D.new()
+		mi.mesh = am
+		mi.visibility_range_end = batch_view_range
+		root.add_child(mi)
+	for mi in done:
+		mi.get_parent().remove_child(mi)
+		mi.queue_free()
 
 ## 차단기를 올렸다: 이 층에 불이 들어온다 (main.gd power_floor)
 func power_on() -> void:

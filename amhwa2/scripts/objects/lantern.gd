@@ -8,6 +8,7 @@ extends Node3D
 @onready var fill: OmniLight3D = $Fill
 var base_fill := 0.22
 @export var light_up_time := 2.5
+@export var shadows := true   ## 랜턴 그림자 (웹에서는 늘 꺼짐)
 var lit_k := 0.0          # 0 꺼짐 ~ 1 다 밝아짐
 var base_power := 1.0
 var dying := false
@@ -16,6 +17,9 @@ var base_energy := 1.6
 var t := 0.0
 
 func _ready() -> void:
+	# 웹에서는 랜턴 그림자를 끈다: 점광원 그림자는 장면을 여러 번 다시 그려서 브라우저에서 가장 무겁다
+	if OS.has_feature("web") or not shadows:
+		light.shadow_enabled = false
 	base_energy = light.light_energy
 	base_fill = fill.light_energy
 	base_power = light.power
