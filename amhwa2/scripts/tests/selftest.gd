@@ -518,7 +518,7 @@ func _stamina(level: Level, player) -> void:
 func _supplies(level: Level, player) -> void:
 	_check("starts empty-handed", player.lanterns_held == 0 and player.chemlights == 0 and player.bandages == 0 and not player.has_baton and player.keys == 0, "")
 	var shelf = level.get_node("보급선반")
-	_check("shelf near start", shelf.global_position.distance_to(player.global_position) < 5.0 and shelf.get_hint() != "", "거리 %.1f" % shelf.global_position.distance_to(player.global_position))
+	_check("shelf near start (yard)", shelf.global_position.distance_to(player.global_position) < 9.0 and level.is_outdoor(level.to_tile(player.global_position)) and shelf.get_hint() != "", "거리 %.1f" % shelf.global_position.distance_to(player.global_position))
 	shelf.interact(player)
 	_check("take what you can carry", player.lanterns_held == player.max_lanterns and player.chemlights == player.max_chemlights and player.bandages == player.max_bandages and player.has_baton
 			and shelf.lanterns == 1 and shelf.chemlights == 5 and shelf.bandages == 0, "남은 것: 랜턴 %d 케미 %d 붕대 %d" % [shelf.lanterns, shelf.chemlights, shelf.bandages])

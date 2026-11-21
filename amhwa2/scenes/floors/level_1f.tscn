@@ -82,7 +82,7 @@ texture_filter = 4
 
 [sub_resource type="QuadMesh" id="q_upper"]
 material = SubResource("m_upper")
-size = Vector2(76, 11)
+size = Vector2(76, 4.2)
 
 [sub_resource type="StandardMaterial3D" id="m_trees"]
 transparency = 2
@@ -372,7 +372,7 @@ transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 39, 2.7, 3)
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 73, 2.7, 9)
 
 [node name="보급선반" parent="." instance=ExtResource("supply")]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 34.26, 0, 9.4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33, 0, 38.3)
 
 [node name="지하계단" parent="Props" instance=ExtResource("p_stair_down")]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 58, 0, 18)
@@ -403,7 +403,7 @@ arrive_tile = Vector2i(36, 4)
 [node name="Exterior" type="Node3D" parent="."]
 
 [node name="UpperFacade" type="MeshInstance3D" parent="Exterior"]
-transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 38, 8.5, 38.0)
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 38, 5.1, 38.0)
 mesh = SubResource("q_upper")
 
 [node name="Trees" type="MeshInstance3D" parent="Exterior"]

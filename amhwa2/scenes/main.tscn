@@ -50,7 +50,7 @@ visible = false
 visible = false
 
 [node name="Player" parent="." instance=ExtResource("3")]
-transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 37, 0, 7)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 39, 0, 43.5)
 
 [node name="HUD" parent="." instance=ExtResource("4")]
 
