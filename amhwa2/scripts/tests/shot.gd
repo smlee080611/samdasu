@@ -1,6 +1,6 @@
 extends Node
 ## 스크린샷: godot --path . -- shot <파일명> <x> <y> <각도> [pitch] [freeze]
-## 추가 옵션(어디든): power (그 층에 불), crank (발전기 돌리는 중), ending (발전기 엔딩 기사), injury=30 stamina=40 bandages=2 (스태미나 막대), floor=2 (그 층에서 찍기), lamps (그 층 수술등을 모두 켜기), dawn=0.9 (밤이 그만큼 지난 하늘·시계), battery=15, rescued=3, stiff=70 (굳음 고정), note (첫 쪽지 열기), intro (시작 연출 찍기), grab (붙잡힘)
+## 추가 옵션(어디든): power (그 층에 불), crank (발전기 돌리는 중), ending (발전기 엔딩 기사), injury=30 stamina=40 bandages=2 (스태미나 막대), floor=2 (그 층에서 찍기), lamps (그 층 수술등을 모두 켜기), dawn=0.9 (밤이 그만큼 지난 하늘·시계), battery=15, rescued=3, stiff=70 (굳음 고정), note (첫 쪽지 열기), intro (시작 연출 찍기), grab (붙잡힘), tip=2 (튜토리얼 그 단계의 안내, 0부터)
 
 func _ready() -> void:
 	_run.call_deferred()
@@ -101,6 +101,9 @@ func _run() -> void:
 			best._set_state(1)
 			best.sanity = float(a.substr(4))
 			best.sanity_speed = 0.0
+	for a in args:
+		if a.begins_with("tip=") and level.has_node("Tutorial"):   # 튜토리얼 안내 자막과 키 표시
+			level.get_node("Tutorial").preview(int(a.substr(4)))
 	var stiff := -1.0
 	for a in args:
 		if a.begins_with("stiff="):

@@ -6,6 +6,10 @@ signal state_changed
 signal note_opened(title: String, body: String)
 signal status_poke   # 상태(구출 수, 랜턴, 배터리)를 잠깐 보여줄 때
 signal relay(text: String)   # 교대: 굳은 나 대신 기다리던 사람이 이어받음
+## 튜토리얼 안내(tutorial.gd → hud.gd): 자막 한 줄 + 작은 키 표시. hold면 그 단계를 끝낼 때까지 키 표시가 흐리게 남는다
+signal tip(keys: String, text: String, seconds: float, hold: bool)
+signal tip_cleared
+signal first_time(kind: String)   # 처음 겪는 일 (붙잡힘, 다침, 잠긴 문, 쪽지, 수술등 배터리함). tutorial.gd가 한 번씩만 안내한다
 
 const LAYER_WALL := 1
 const LAYER_PERSON := 2
@@ -28,6 +32,9 @@ var dawn_cured := 0         # 해가 뜰 때 햇빛이 닿아 저절로 깨어�
 var dawn_left := 0          # 해가 떠도 어둠 속에 남은 사람(석상·광인)
 var ui_blocking := false   # 시작 연출, 쪽지 읽는 중: 플레이어와 광인이 멈춘다
 var intro_seen := false    # 시작 연출은 처음 한 번만 (F9로 다시 해도 안 나옴). reset()에서 지우지 않는다
+var tutorial_seen := false # 튜토리얼도 처음 한 판만. reset()에서 지우지 않는다
+var tutorial_on := false   # 이번 판에 튜토리얼이 돌고 있다 (HUD가 조작 안내 줄을 한꺼번에 띄우지 않게)
+var hints_seen := {}       # 이미 안내한 "처음 겪는 일". reset()에서 지우지 않는다
 
 func reset() -> void:
 	rescued = 0
@@ -38,6 +45,7 @@ func reset() -> void:
 	game_over = false
 	won = false
 	ui_blocking = false
+	tutorial_on = false
 	night_k = 0.0
 	clock_minutes = 130.0
 	night_over = false
@@ -54,6 +62,19 @@ func is_frozen() -> bool:
 func say(text: String) -> void:
 	print(text)
 	message.emit(text)
+
+## 튜토리얼 안내 한 줄. say()와 달리 키 표시가 같이 가고, 자막 신호(message)는 울리지 않는다
+func show_tip(keys: String, text: String, seconds := 6.0, hold := false) -> void:
+	print("[안내] ", ("[%s] " % keys) if keys != "" else "", text)
+	tip.emit(keys, text, seconds, hold)
+
+func clear_tip() -> void:
+	tip_cleared.emit()
+
+## 처음 겪는 일을 알린다. 이미 안내한 일은 조용히 넘어간다 (매 프레임 불러도 됨)
+func first(kind: String) -> void:
+	if not hints_seen.has(kind):
+		first_time.emit(kind)
 
 ## 다른 사람이 하는 말. 플레이어 근처(약 6칸)에서만 들린다.
 func speak(from: Vector3, line: String, hear_range := 12.0) -> void:

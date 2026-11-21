@@ -6,6 +6,7 @@ extends CanvasLayer
 ##  - 스태미나: 왼쪽 아래 막대 하나(PEAK식). 굳음·부상이 최대치를 오른쪽 끝부터 깎는다(stamina_bar.gd). 붕대 개수도 옆에
 ##  - 구출 수·차광막 수: 숫자 없음. 구한 사람은 엘리베이터 홀에 모이고, 목표는 간호사실 현황판에
 ##  - 메시지: 주인공의 생각과 들리는 말만 아래쪽 자막으로 / 상호작용: 조준점 아래 작은 글씨
+##  - 튜토리얼 안내: 같은 자막 한 줄 + 그 위의 작은 키 표시 (tutorial.gd가 GameState.show_tip으로 보냄)
 ##  - 개발용: F1을 누르는 동안 왼쪽 아래에 배터리·랜턴·구출·차광막 (에디터 실행 때만)
 ##  - 쪽지 읽기 패널, 시작 연출
 ## 게임 로직은 모르고 GameState와 플레이어 값을 읽어서 보여주기만 한다.
@@ -38,6 +39,11 @@ const CONTROLS := "WASD 이동 · 마우스 둘러보기 · F/우클릭 헤드�
 var player: Node
 var fader: ColorRect
 var subtitle_tw: Tween
+var key_box: CenterContainer   # 튜토리얼의 작은 키 표시 (자막 바로 위)
+var key_label: Label
+var key_tw: Tween
+var key_hold := false         # 그 단계를 끝낼 때까지 흐리게 남겨 두는 중
+@export var key_hold_alpha := 0.4   ## 자막이 사라진 뒤 흐리게 남는 키 표시의 진하기
 var intro_tw: Tween
 var stiff_shown := 0.0
 var result_t := 0.0
@@ -57,7 +63,10 @@ func _ready() -> void:
 	fader.modulate.a = 0.0
 	$Root.add_child(fader)
 	$Root.move_child(fader, $Root/Subtitle.get_index())   # 자막(층에 올라왔을 때의 생각)은 막 위에 보이게
-	GameState.message.connect(_show_subtitle)
+	GameState.message.connect(_on_message)
+	_make_key_hint()
+	GameState.tip.connect(_show_tip)
+	GameState.tip_cleared.connect(_clear_tip)
 	GameState.note_opened.connect(_open_note)
 	GameState.relay.connect(_play_relay)
 	note.visible = false
@@ -92,6 +101,8 @@ func _end_intro() -> void:
 	t.tween_property(intro, "modulate:a", 0.0, 1.5)
 	t.tween_callback(intro.hide)
 	_show_subtitle(GOAL, 6.0)
+	if GameState.tutorial_on:
+		return   # 첫 판은 튜토리얼이 키를 하나씩 알려 준다. 조작 안내를 한 줄로 한꺼번에 띄우지 않는다
 	var c := create_tween()
 	c.tween_property(controls, "modulate:a", 0.85, 1.0)
 	c.tween_interval(12.0)
@@ -152,6 +163,62 @@ func _show_subtitle(text: String, seconds := 4.0) -> void:
 	subtitle_tw.tween_property(subtitle, "modulate:a", 1.0, 0.25)
 	subtitle_tw.tween_interval(seconds)
 	subtitle_tw.tween_property(subtitle, "modulate:a", 0.0, 1.0)
+
+## 주인공의 생각·들리는 말이 새로 뜨면, 밝게 떠 있던 키 표시는 그 자막의 것이 아니니 물러난다
+func _on_message(text: String) -> void:
+	_show_subtitle(text)
+	if key_label.text != "" and key_box.modulate.a > key_hold_alpha:
+		_fade_key(key_hold_alpha if key_hold else 0.0, 0.3)
+
+# ---------- 튜토리얼 안내 ----------
+## 작은 키 표시: 자막 바로 위, 가는 테두리의 키 모양 하나. 깜빡이거나 움직이지 않는다
+func _make_key_hint() -> void:
+	key_box = CenterContainer.new()
+	key_box.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	key_box.offset_top = -166.0
+	key_box.offset_bottom = -136.0
+	key_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	key_box.modulate.a = 0.0
+	key_label = Label.new()
+	key_label.add_theme_font_size_override("font_size", 15)
+	key_label.add_theme_color_override("font_color", Color(0.92, 0.9, 0.84))
+	var box := StyleBoxFlat.new()
+	box.bg_color = Color(0.0, 0.0, 0.0, 0.45)
+	box.border_color = Color(0.92, 0.9, 0.84, 0.6)
+	box.set_border_width_all(1)
+	box.set_corner_radius_all(4)
+	box.content_margin_left = 10.0
+	box.content_margin_right = 10.0
+	box.content_margin_top = 2.0
+	box.content_margin_bottom = 3.0
+	key_label.add_theme_stylebox_override("normal", box)
+	key_box.add_child(key_label)
+	$Root.add_child(key_box)
+	$Root.move_child(key_box, subtitle.get_index() + 1)
+
+func _show_tip(keys: String, text: String, seconds: float, hold: bool) -> void:
+	_show_subtitle(text, seconds)
+	key_hold = hold and keys != ""
+	if keys == "":
+		_fade_key(0.0, 0.25)
+		return
+	key_label.text = keys
+	if key_tw:
+		key_tw.kill()
+	key_tw = create_tween()
+	key_tw.tween_property(key_box, "modulate:a", 1.0, 0.25)
+	key_tw.tween_interval(seconds)
+	key_tw.tween_property(key_box, "modulate:a", key_hold_alpha if key_hold else 0.0, 1.0)
+
+func _clear_tip() -> void:
+	key_hold = false
+	_fade_key(0.0, 0.4)
+
+func _fade_key(to_alpha: float, seconds: float) -> void:
+	if key_tw:
+		key_tw.kill()
+	key_tw = create_tween()
+	key_tw.tween_property(key_box, "modulate:a", to_alpha, seconds)
 
 # ---------- 해돋이 결과 ----------
 ## 그때까지 현관 밖으로 데려온 사람이 결과다. 햇빛에 깨어난 사람은 따로 적는다 (차광막을 걷은 보람)
@@ -219,6 +286,7 @@ func _process(dt: float) -> void:
 	stamina_bar.items_text = "  ·  ".join(items)
 	stamina_bar.bandage_k = player.bandage_t / player.bandage_seconds
 	stamina_bar.visible = not GameState.ui_blocking and not GameState.night_over   # 시작 연출·쪽지·결과 화면에서는 숨김
+	key_box.visible = stamina_bar.visible
 
 	# 개발용 상태 표시 (F1, 에디터에서 실행할 때만). 플레이어에게는 숫자를 보여주지 않는다
 	var lamp = player.headlamp

@@ -107,6 +107,8 @@ func _apply(force := false) -> void:
 func get_hint() -> String:
 	if locked:
 		var p = get_tree().get_first_node_in_group("player")
+		if p and p.keys <= 0:
+			GameState.first("locked_door")
 		return "E · 열쇠로 열기" if p and p.keys > 0 else "잠겨 있다"
 	if amount >= 0.98:
 		return "E · 문 닫기"

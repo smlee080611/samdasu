@@ -31,6 +31,8 @@ func _enter_tree() -> void:
 	var args := OS.get_cmdline_user_args()
 	if ("selftest" in args or "shot" in args or "perf" in args) and not "intro" in args:
 		GameState.intro_seen = true   # 자동 점검·스크린샷에서는 시작 연출 건너뜀
+	if ("selftest" in args or "shot" in args or "perf" in args) and not "tutorial" in args:
+		GameState.tutorial_seen = true   # 튜토리얼도 건너뜀 (자동 점검은 필요할 때 직접 켠다)
 
 func _unhandled_input(e: InputEvent) -> void:
 	if e.is_action_pressed("restart"):

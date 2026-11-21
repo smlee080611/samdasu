@@ -253,6 +253,8 @@ func _process(dt: float) -> void:
 	else:
 		stiff += (0.6 if headlamp.is_on() else 2.0) * dt
 	_update_heartbeat()
+	if injury > 0.5 and bandages > 0:
+		GameState.first("hurt")   # 다쳤고 붕대가 있을 때 처음 한 번 감는 법을 안내
 	_bandage(dt)
 	_statue_hold(dt)
 	if incapacitated():
@@ -371,6 +373,7 @@ func seized(statue: Node) -> void:
 	if not _statue_hint_said:
 		_statue_hint_said = true
 		GameState.say("돌 같은 손이 팔을 움켜쥐었다. 불을 켜야 한다.")
+	GameState.first("grabbed")   # 처음 붙잡혔을 때 밀치기 안내 (위 생각 자막이 지나간 뒤에 뜬다)
 
 func _statue_hold(dt: float) -> void:
 	if held_by_statue == null:
@@ -394,6 +397,7 @@ func grabbed(by_name: String) -> bool:
 	if grab_cooldown > 0.0:
 		return false
 	grab_cooldown = 1.2
+	GameState.first("grabbed")
 	stiff += grab_stiff
 	injury = minf(100.0, injury + grab_injury)   # 손톱·이빨 자국. 최대 스태미나를 깎고 붕대로만 낫는다
 	Sfx.play("grab", 0.0, 0.0)

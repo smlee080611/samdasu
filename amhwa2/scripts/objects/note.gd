@@ -11,4 +11,5 @@ func interact(_by: Node) -> void:
 	GameState.open_note(title, body)
 
 func get_hint() -> String:
+	GameState.first("note")
 	return "E · 읽기"

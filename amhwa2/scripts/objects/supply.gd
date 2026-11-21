@@ -13,6 +13,7 @@ extends StaticBody3D
 var _items: Node3D
 
 func _ready() -> void:
+	add_to_group("supply")   # 튜토리얼이 "보급품을 챙겼나"를 볼 때 찾는다
 	_items = Node3D.new()
 	add_child(_items)
 	_redraw()

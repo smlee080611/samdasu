@@ -1,5 +1,6 @@
 extends Node
 ## 자동 점검: godot --headless --path . -- selftest
+## 튜토리얼 점검만 빨리 돌리기: godot --headless --path . -- selftest only_tutorial
 
 func _ready() -> void:
 	_run.call_deferred()
@@ -20,7 +21,14 @@ func _run() -> void:
 	await _wait(5)
 	var level: Level = get_tree().get_first_node_in_group("level")
 	var player = get_tree().get_first_node_in_group("player")
+	if "only_tutorial" in OS.get_cmdline_user_args():
+		await _tutorial(level, player)
+		print("SELFTEST 새 점검 실패 ", fails, "개")
+		get_tree().quit()
+		return
 	await _supplies(level, player)
+	var lobby_statue = level.get_node("Tutorial").get_node(level.get_node("Tutorial").statue)
+	_check("lobby statue stays stone in the dark", lobby_statue.state == 0 and lobby_statue.body_t == 0.0 and level.to_tile(lobby_statue.global_position) == Vector2i(21, 14), "body_t=%.2f" % lobby_statue.body_t)
 	var p = get_tree().get_nodes_in_group("person")[0]
 	var stand: Vector2i = p.tile + Vector2i(0, 1)
 	if not level.is_walkable(stand):
@@ -253,6 +261,7 @@ func _new_tests(level: Level, player) -> void:
 	level = get_tree().get_first_node_in_group("level")
 	await _basement(level, player)
 	level = get_tree().get_first_node_in_group("level")
+	await _tutorial(level, player)
 	# 하룻밤: 시계와 하늘. 시간은 HUD에 숫자로 안 나온다
 	var night = get_tree().get_first_node_in_group("night")
 	_check("night 35min (1F+2F+B1)", absf(night.night_seconds - 2100.0) < 1.0, "night=%ds" % night.night_seconds)
@@ -744,3 +753,193 @@ func _basement(level1: Level, player) -> void:
 	player.stiff = 0.0
 	player.injury = 0.0
 	player.headlamp.on = false
+
+## 튜토리얼 (tutorial.gd): 단계가 조건대로만 넘어가는지, 자리에 와야 뜨는지, 이미 한 행동은 건너뛰는지, 두 번째 판엔 안 나오는지
+func _tutorial(level: Level, player) -> void:
+	var tut = level.get_node("Tutorial")
+	var st = tut.get_node(tut.statue)
+	var shelf = level.get_node("보급선반")
+	# 자동 점검은 "이미 본 판"으로 시작한다 (F9로 다시 시작한 판과 같은 길): 단계 안내가 꺼져 있어야 한다
+	_check("tutorial not shown when already seen", GameState.tutorial_seen and not tut.active, "")
+	# 깨끗한 상태로: 광인은 다시 석상으로(단계 11은 광인이 가까워도 뜨니까), 플레이어는 마당 시작 자리
+	GameState.ui_blocking = false
+	GameState.game_over = false
+	for q in level.get_node("People").get_children():
+		if q.state == 1:
+			q._set_state(0)
+	st._set_state(0)
+	st.body_t = 0.0
+	player.stiff = 0.0
+	player.injury = 0.0
+	player.stamina = 100.0
+	player.since_use = 99.0
+	player.headlamp.battery = 100.0
+	player.headlamp.zoom = 0.4   # 처음 값 (앞 점검에서 끝까지 조여 놓았다)
+	player.lanterns_held = 1
+	player.chemlights = 3
+	player.set_baton(true)
+	shelf.lanterns = 1
+	player.global_position = level.tile_center(Vector2i(19, 21))
+	player.rotation = Vector3.ZERO
+	var tips: Array = []
+	var on_tip := func(keys: String, text: String, _s: float, _h: bool): tips.append([keys, text])
+	GameState.tip.connect(on_tip)
+	tut.start_delay = 0.0
+	tut.line_gap = 0.0
+	tut.message_wait = 0.0
+	tut.remind_seconds = 1.0
+	tut._next_free_ms = 0   # 앞 점검의 자막 때문에 기다리지 않게
+	GameState.tutorial_seen = false
+	tut.begin()
+	await _wait(8)
+	_check("tutorial begins: lamp off, lobby statue never grabs, marked seen", tut.active and not player.headlamp.on and st.grabber == 0 and GameState.tutorial_seen, "")
+	# 1. 걷기. 키 이름은 입력 맵에서 읽는다. 가만히 있으면 1번 더 띄우고(한 번만), 시간이 지나도 넘어가지 않는다
+	_check("step 1 tip, keys from input map", tips.size() == 1 and tips[0][0] == "WASD" and tut.index == 0, str(tips))
+	await _wait(150)
+	_check("reminded once, never advanced by time", tips.size() == 2 and tips[1][1] == tips[0][1] and tut.index == 0, "tips=%d index=%d" % [tips.size(), tut.index])
+	for i in 25:
+		player.global_position.x += 0.1
+		await _wait(1)
+	await _wait(3)
+	_check("step 1 done by walking 2m", tut.index == 1, "index=%d" % tut.index)
+	# 2. 선반 (마당, 선반 근처라 바로 뜬다)
+	_check("step 2 tip near shelf", tips[-1][0] == "E" and tips[-1][1].contains("챙기자"), str(tips[-1]))
+	shelf.interact(player)
+	await _wait(5)
+	_check("step 2 done by taking supplies", tut.index == 2, "index=%d" % tut.index)
+	# 3. 헤드램프: 현관 문 앞에 가야 뜬다
+	var n: int = tips.size()
+	await _wait(40)
+	_check("step 3 waits for its place", tips.size() == n and tut.index == 2, "tips %d→%d" % [n, tips.size()])
+	player.global_position = level.tile_center(Vector2i(19, 19))
+	await _wait(5)
+	_check("step 3 tip at the door", tips.size() == n + 1 and tips[-1][0] == "F", str(tips[-1]))
+	player.headlamp.toggle()
+	await _wait(5)
+	_check("step 3 done by lamp on", tut.index == 3 and player.headlamp.on, "index=%d" % tut.index)
+	# 4. 휠: 한쪽만 돌려서는 안 넘어간다 (석상을 비추지 않게 남쪽을 보고)
+	player.global_position = level.tile_center(Vector2i(19, 16))
+	player.rotation.y = PI
+	await _wait(5)
+	player.headlamp.adjust_zoom(0.1)
+	await _wait(5)
+	var one_way: int = tut.index
+	player.headlamp.adjust_zoom(-0.1)
+	await _wait(5)
+	_check("step 4 needs wheel both ways", tips[-2][0] == "마우스 휠" and one_way == 3 and tut.index == 4, "한쪽만=%d 양쪽=%d" % [one_way, tut.index])
+	# 5. 로비 석상: 광인이 되는 순간 한 줄
+	_check("step 5 tip by the lobby statue", tips[-1][1].contains("굳은 사람이 풀린다"), str(tips[-1]))
+	player.headlamp.on = false   # 여기부터는 다른 석상을 깨우지 않게 끄고 다닌다
+	st._set_state(1)
+	await _wait(5)
+	_check("step 5 done when statue turns mad, with a line", tut.index == 5 and tut.said.has("정신은 아직이다. 빛을 피해 도망친다."), "index=%d" % tut.index)
+	st._set_state(0)
+	st.body_t = 0.0
+	# 6~7. 랜턴 놓기, 줍기 (광인이 됐다는 한 줄을 읽을 틈을 둔 뒤에 뜬다)
+	await _wait(5)
+	var too_soon: bool = tips[-1][0] == "Q"
+	await _wait(70)
+	_check("step 6 tip, after a pause", not too_soon and tips[-1][0] == "Q" and tips[-1][1].contains("내려놓으면"), str(tips[-1]))
+	player.stiff = 0.0
+	player._toggle_lantern()
+	await _wait(70)
+	_check("step 6 done by placing a lantern", tut.index == 6 and tips[-1][1].contains("다시 주울"), "index=%d %s" % [tut.index, str(tips[-1])])
+	player._toggle_lantern()
+	await _wait(60)
+	_check("step 7 done by picking it up", tut.index == 7, "index=%d" % tut.index)
+	# 8. 케미라이트: 남쪽 복도 입구
+	player.global_position = level.tile_center(Vector2i(19, 12))
+	player.stamina = 100.0
+	await _wait(5)
+	_check("step 8 tip at the corridor", tips[-1][0] == "G", str(tips[-1]))
+	player._throw_chemlight()
+	await _wait(5)
+	_check("step 8 done by throwing", tut.index == 8, "index=%d" % tut.index)
+	# 9. 달리기: 복도를 8m쯤 더 걸어야 뜬다
+	n = tips.size()
+	await _wait(20)
+	var early: int = tips.size()
+	for i in 60:
+		player.global_position.x += 0.15
+		await _wait(1)
+	await _wait(5)
+	_check("step 9 tip after walking on", early == n and tips.size() == n + 1 and tips[-1][0] == "Shift", "먼저 %d, 걸은 뒤 %d" % [early - n, tips.size() - n])
+	player.stiff = 0.0
+	player.stamina = 100.0
+	player.rotation.y = PI * 0.5   # 서쪽(복도 방향)을 보고 달린다
+	Input.action_press("sprint"); Input.action_press("move_forward")
+	await _wait(150)
+	Input.action_release("sprint"); Input.action_release("move_forward")
+	_check("step 9 done by sprinting 2s", tut.index == 9, "index=%d sprint_t=%.1f" % [tut.index, tut._sprint_t])
+	# 10. 막대 설명: 이 단계만 시간으로 (4초)
+	await _wait(100)
+	var mid: int = tut.index
+	await _wait(170)
+	_check("step 10 explains the bar, then 4s", mid == 9 and tut.index == 10 and tut.said.has("막대가 다 떨어지면 한동안 못 뛴다. 몸이 굳으면 막대도 짧아진다."), "2초=%d 4.5초=%d" % [mid, tut.index])
+	# 11. 경광봉: 홀 근처(또는 광인이 가까울 때)
+	player.global_position = level.tile_center(Vector2i(19, 6))
+	player.stiff = 0.0
+	player.stamina = 100.0
+	player.since_use = 99.0
+	await _wait(5)
+	_check("step 11 tip", tips[-1][0] == "V · Space" and tips[-1][1].begins_with("[V]"), str(tips[-1]))
+	player._baton_attack(1)
+	await _wait(5)
+	_check("step 11 done by swinging", tut.index == 11, "index=%d" % tut.index)
+	# 12. 홀에서 쉬기
+	player.global_position = level.tile_center(level.entrance_tile)
+	await _wait(60)
+	var resting: int = tut.index
+	await _wait(140)
+	_check("step 12 done by resting 3s in the hall", resting == 11 and tut.index == 12 and tut.said.has("여기는 비상 전원이 들어온다. 쉬면 몸이 풀리고 배터리가 찬다."), "1초=%d 3초=%d" % [resting, tut.index])
+	# 13. 주머니 → 끝
+	_check("step 13 tip", tips[-1][0] == "C", str(tips[-1]))
+	Input.action_press("check_pocket")
+	await _wait(5)
+	Input.action_release("check_pocket")
+	await _wait(5)
+	_check("tutorial ends with the goal line", not tut.active and tips[-1][1] == tut.end_text, str(tips[-1]))
+	# 두 번째 판: 씬을 다시 불러온 것처럼 새 튜토리얼 노드를 만들어도 시작하지 않는다
+	var again := Node.new()
+	again.set_script(load("res://scripts/objects/tutorial.gd"))
+	level.add_child(again)
+	await _wait(3)
+	_check("second run: no tutorial", not again.active and GameState.tutorial_seen, "")
+	again.queue_free()
+	# 이미 해 본 행동은 건너뛴다: 차례가 오기 전에 헤드램프를 켰으면 현관 앞에서 "켜자"가 안 나온다
+	shelf.lanterns = 1
+	player.lanterns_held = 1
+	player.global_position = level.tile_center(Vector2i(19, 21))
+	GameState.tutorial_seen = false
+	tut.begin()
+	await _wait(5)
+	player.headlamp.toggle()
+	for i in 25:
+		player.global_position.x += 0.1
+		await _wait(1)
+	shelf.interact(player)
+	await _wait(5)
+	player.global_position = level.tile_center(Vector2i(19, 19))
+	await _wait(20)
+	_check("skips a step already done", tut.index == 3 and not tut.said.has("안은 깜깜하다. 헤드램프를 켜자."), "index=%d said=%s" % [tut.index, str(tut.said)])
+	tut.active = false
+	GameState.clear_tip()
+	# 처음 겪을 때만: 한 번만 나온다
+	GameState.hints_seen.erase("locked_door")
+	n = tips.size()
+	GameState.first("locked_door")
+	GameState.first("locked_door")
+	await _wait(3)
+	_check("first-time hint only once", tips.size() == n + 1 and tips[-1][1].begins_with("직원 열쇠가 있어야 한다"), "tips +%d" % (tips.size() - n))
+	GameState.tip.disconnect(on_tip)
+	# 뒤 점검을 위해 되돌린다
+	player.headlamp.on = false
+	player.stiff = 0.0
+	player.injury = 0.0
+	player.stamina = 100.0
+	for l in player.placed_lanterns.duplicate():
+		if is_instance_valid(l):
+			player._pick_up(l)
+	for q in level.get_node("People").get_children():
+		if q.state == 1:
+			q._set_state(0)

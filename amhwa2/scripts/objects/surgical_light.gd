@@ -114,6 +114,7 @@ func release(_seconds: float) -> void:
 	_last_hold = 0.0
 
 func get_hint() -> String:
+	GameState.first("surgical_box")
 	var p = get_tree().get_first_node_in_group("player")
 	if p and p.headlamp.battery <= 0.0:
 		return "옮길 배터리가 없다"

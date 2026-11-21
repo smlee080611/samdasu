@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/objects/level.gd" id="level"]
 [ext_resource type="Script" path="res://scripts/objects/events.gd" id="events"]
+[ext_resource type="Script" path="res://scripts/objects/tutorial.gd" id="tutorial"]
 [ext_resource type="PackedScene" path="res://scenes/supply_shelf.tscn" id="supply"]
 [ext_resource type="PackedScene" path="res://scenes/props/stair_down.tscn" id="p_stair_down"]
 [ext_resource type="Script" path="res://scripts/objects/clock.gd" id="clock"]
@@ -276,8 +277,9 @@ person_name = "간호사 황인철"
 gift = "bandage"
 
 [node name="보호자_안금례" parent="People" instance=ExtResource("person")]
-transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 29, 0, 21)
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 43, 0, 29)
 person_name = "보호자 안금례"
+grabber = 0
 
 [node name="의사_노성호" parent="People" instance=ExtResource("person")]
 transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 5, 0, 31)
@@ -387,6 +389,10 @@ zone = Vector3(3.8, 1, 0.5)
 
 [node name="Events" type="Node" parent="."]
 script = ExtResource("events")
+
+[node name="Tutorial" type="Node" parent="."]
+script = ExtResource("tutorial")
+statue = NodePath("../People/보호자_안금례")
 
 [node name="StairsW" parent="." instance=ExtResource("stairs")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, 6.6)
